@@ -144,10 +144,10 @@ void loop() {
 // rpmVal = rpmRead();
 
 //    float oilTemp = (oilBeta*roomOilTemp/(oilBeta+(roomOilTemp*math.log(oilRes/s/roomOilResist)))) - 273.15
-//    float oilTRes = 10110.0*data.data.adc[1]/(3.3-data.data.adc[1]);
-//    float oilPRes = 101.9*data.data.adc[0]/(3.3-data.data.adc[0]);
-//    float oilTemp = 3800.0*(21.8 + 273.15)/(3800.0+((21.8 + 273.15)*log(oilTRes/58000.0))) - 273.15;
-//    float oilPress = (oilPRes-3.0)/(160.0-3.0)*10.0;
+    float oilTRes = 10110.0*data.data.adc[1]/(3.3-data.data.adc[1]);
+    float oilPRes = 101.9*data.data.adc[0]/(3.3-data.data.adc[0]);
+    float oilTemp = 3800.0*(21.8 + 273.15)/(3800.0+((21.8 + 273.15)*log(oilTRes/58000.0))) - 273.15;
+    float oilPress = (oilPRes-3.0)/(160.0-3.0)*10.0;
 
 
 //    Serial.print("resistance 1: ");
@@ -159,13 +159,13 @@ void loop() {
 //    Serial.print(", press: ");
 //    Serial.println(oilPress);
 
-    Screen::getInstance()->updateNeedle(0, sin(x/PI/18)/2+0.5);
-//Screen::getInstance()->updateNeedle(0, oilTemp);
+//    Screen::getInstance()->updateNeedle(0, sin(x/PI/18)/2+0.5);
+Screen::getInstance()->updateNeedle(0, oilTemp);
 //    test();
     // Screen::getInstance()->updateNeedle(0, rpmVal/8000.0);
 //    // rpmVal = rpmRead();
-    Screen::getInstance()->updateNeedle(1, cos(x/PI/18)/2+0.5);
-//Screen::getInstance()->updateNeedle(1, oilPress);
+//    Screen::getInstance()->updateNeedle(1, cos(x/PI/18)/2+0.5);
+Screen::getInstance()->updateNeedle(1, oilPress);
     x+=2;
     if(x>=360) {
       x-=360;

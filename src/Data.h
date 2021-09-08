@@ -15,14 +15,6 @@
 class Data {
 
 public:
-        Data();
-        void init();
-        RTC_DS3231 rtc;
-        MCP2515 mcp = MCP2515(5);
-        ADS1115 ads = ADS1115(0x48);
-        GxFT5436 touch = GxFT5436(/*SDA=*/21, /*SCL=*/22,/*RST=*/0);
-        DateTime getTime();
-
     typedef struct DataStruct {
         ADS1115* adsPtr;
         RTC_DS3231* rtcPtr;
@@ -32,6 +24,14 @@ public:
         int brightness = 255;
     } DataStruct;
 
+        Data();
+        void init();
+        RTC_DS3231 rtc;
+        MCP2515 mcp = MCP2515(5);
+        ADS1115 ads = ADS1115(0x48);
+        GxFT5436 touch = GxFT5436(/*SDA=*/21, /*SCL=*/22,/*RST=*/0);
+        DateTime getTime();
+        DataStruct data;
 
 private:
         static void IRAM_ATTR touchStart();
