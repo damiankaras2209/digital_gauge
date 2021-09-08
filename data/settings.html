@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+    <head>
+        <title>ESP32</title>
+        <meta charset='UTF-8'>
+        <script>
+        function ajaxpost(){
+          var data = new FormData();
+          data.append('offsetX', document.getElementById('offsetX').value);
+          data.append('offsetY', document.getElementById('offsetY').value);
+          data.append('ellipseA', document.getElementById('ellipseA').value);
+          data.append('ellipseB', document.getElementById('ellipseB').value);
+          data.append('needleCenterRadius', document.getElementById('needleCenterRadius').value);
+          data.append('needleCenterOffset', document.getElementById('needleCenterOffset').value);
+          data.append('needleLength', document.getElementById('needleLength').value);
+          data.append('needleBottomWidth', document.getElementById('needleBottomWidth').value);
+          data.append('needleTopWidth', document.getElementById('needleTopWidth').value);
+
+          for(let i=0; i<6; i++) {
+              data.append('input_' + i + '_en', document.getElementById('input_' + i + '_en').checked ? "1" : "0");
+              data.append('input_' + i + '_rballance', document.getElementById('input_' + i + '_rballance').value);
+              data.append('input_' + i + '_type', document.getElementById('input_' + i + '_type').value);
+              data.append('input_' + i + '_beta', document.getElementById('input_' + i + '_beta').value);
+              data.append('input_' + i + '_r25', document.getElementById('input_' + i + '_r25').value);
+              data.append('input_' + i + '_rmin', document.getElementById('input_' + i + '_rmin').value);
+              data.append('input_' + i + '_rmax', document.getElementById('input_' + i + '_rmax').value);
+              data.append('input_' + i + '_max_val', document.getElementById('input_' + i + '_max_val').value);
+          }
+
+          var xhr = new XMLHttpRequest();
+          xhr.open('POST', 'settingsSet');
+          xhr.onload = function(){ console.log(this.response); };
+          xhr.send(data);
+          return false;}
+        </script>
+    </head>
+    <body>
+        <form onsubmit='return ajaxpost()'>
+            <h1>Ustawienia</h1>
+            <h2>Ustawienia wyświetlania</h2>
+            <p>Przesunięcie X</p><input value='%offsetX%' type='number' id='offsetX'>
+            <p>Przesunięcie Y</p><input value='%offsetY%' type='number' id='offsetY'>
+            <p>Szerokość elipsy</p><input value='%ellipseA%' type='number' id='ellipseA'>
+            <p>Wysokość elipsy</p><input value='%ellipseB%' type='number' id='ellipseB'>
+            <p>Promień środka wskazówki</p><input value='%needleCenterRadius%' type='number' id='needleCenterRadius'>
+            <p>Odległość środka wskazówki od środka elipsy</p><input value='%needleCenterOffset%' type='number' id='needleCenterOffset'>
+            <p>Długość wskazówki</p><input value='%needleLength%' type='number' id='needleLength'>
+            <p>Szerokość podstawy wskazówki</p><input value='%needleBottomWidth%' type='number' id='needleBottomWidth'>
+            <p>Szerokość końcówki wskazówki</p><input value='%needleTopWidth%' type='number' id='needleTopWidth'>
+            <p>Kolor</p><input type='color' id='color'>
+            <h2>Wejścia analogowe</h2>
+            %input_table%
+            </br><input type='submit'>
+        </form>
+    </body>
+</html>
