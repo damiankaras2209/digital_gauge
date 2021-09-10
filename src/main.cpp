@@ -144,8 +144,8 @@ void loop() {
 // rpmVal = rpmRead();
 
 //    float oilTemp = (oilBeta*roomOilTemp/(oilBeta+(roomOilTemp*math.log(oilRes/s/roomOilResist)))) - 273.15
-    float oilTRes = 10110.0*data.data.adc[1]/(3.3-data.data.adc[1]);
-    float oilPRes = 101.9*data.data.adc[0]/(3.3-data.data.adc[0]);
+    float oilTRes = 10110.0*data.data.adcVoltage[1]/(3.3-data.data.adcVoltage[1]);
+    float oilPRes = 101.9*data.data.adcVoltage[0]/(3.3-data.data.adcVoltage[0]);
     float oilTemp = 3800.0*(21.8 + 273.15)/(3800.0+((21.8 + 273.15)*log(oilTRes/58000.0))) - 273.15;
     float oilPress = (oilPRes-3.0)/(160.0-3.0)*10.0;
 

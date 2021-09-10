@@ -12,6 +12,10 @@
 #include "time.h"
 #include "WiFi.h"
 
+#include <numeric>
+
+#define SAMPLES 4
+
 class Data {
 
 public:
@@ -19,7 +23,8 @@ public:
         ADS1115* adsPtr;
         RTC_DS3231* rtcPtr;
         GxFT5436* touchPtr;
-        float adc[4] = {0, 0, 0, 0};
+        float adc[4][SAMPLES];
+        float adcVoltage[4];
         DateTime now;
         int brightness = 255;
     } DataStruct;

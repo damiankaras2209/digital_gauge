@@ -157,7 +157,18 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
 //        Serial.print(", ");
         for(int i=0; i<4; i++) {
 
-            params->adc[i] = params->adsPtr->toVoltage(params->adsPtr->readADC(i));
+            for(int j=SAMPLES; j>0; j--) {
+                params->adc[i][j] = params->adc[i][j-1];
+                params->adc[i][0] = params->adsPtr->readADC(i);
+            }
+            float sum = 0;
+            for(int j=0; j<SAMPLES; j++) {
+                Serial.print(params->adc[i][j]);
+                Serial.print(", ");
+                sum += params->adc[i][j];
+            }
+            Serial.println("");
+            params->adcVoltage[i] = params->adsPtr->toVoltage(sum/SAMPLES);
 
             //            Serial.println("looooop");
 //            Serial.print(i);w
