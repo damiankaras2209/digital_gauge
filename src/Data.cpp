@@ -4,7 +4,6 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;
 const int   daylightOffset_sec = 3600;
 
-static Data::DataStruct data;
 volatile bool i2cBusy = false;
 volatile ulong touchDetectedTime = 0;
 
@@ -45,15 +44,15 @@ volatile ulong time2 = 0;
                 //                Serial.print("brightness: ");
                 //                Serial.println(*brightness);
                 //                ledcWrite(0, *brightness);
-                Serial.print("touch id: ");
-                Serial.print(touchInfo.id[i]);
-                Serial.print(", event: ");
-                Serial.print(touchInfo.event[i]);
-                Serial.print(" (");
-                Serial.print(touchInfo.x[i]);
-                Serial.print(", ");
-                Serial.print(touchInfo.y[i]);
-                Serial.print(") ");
+//                Serial.print("touch id: ");
+//                Serial.print(touchInfo.id[i]);
+//                Serial.print(", event: ");
+//                Serial.print(touchInfo.event[i]);
+//                Serial.print(" (");
+//                Serial.print(touchInfo.x[i]);
+//                Serial.print(", ");
+//                Serial.print(touchInfo.y[i]);
+//                Serial.print(") ");
             }
             Serial.println("");
 
@@ -73,38 +72,36 @@ Data::Data() {
 
 
 void Data::init() {
-    HardwareSerial& DiagnosticStream = Serial;
-    touch.init(&Serial);
 
     data = DataStruct();
     data.adsPtr = &ads;
     data.rtcPtr = &rtc;
     data.touchPtr = &touch;
+    data.mcp23X08Ptr = &mcp23008;
+    data.mcp2515Ptr = &mcp;
+    data.rcPtr = &rc;
 
     if (!rtc.begin())
         Serial.println("Couldn't find RTC");
     if(rtc.lostPower()) {
         Serial.println("Lost power");
-        rtc.adjust(DateTime(1, 1, 1, 0, 0, 0));
+        rtc.adjust(DateTime(1, 1, 1, 22, 22, 22));
     }
 
-    //    TaskHandle_t handle1;
-    //    Serial.println(
-    //            xTaskCreatePinnedToCore(adjustRTCTask,
-    //                                    "adjustRTC",
-    //                                    32*1024,
-    //                                    &data,
-    //                                    3,
-    //                                    &handle1,
-    //                                    1));
+    TaskHandle_t rtcAdjustHandle;
+    Serial.println(xTaskCreatePinnedToCore(adjustRTCTask,
+                                    "adjustRTC",
+                                    4*1024,
+                                    &data,
+                                    3,
+                                    &rtcAdjustHandle,
+                                    0) ? "" : "Failed to start rtc adjust task");
 
 
 
-    //    mcp.reset();
-    //    mcp.setBitrate(CAN_500KBPS, MCP_8MHZ);
-    //    mcp.setListenOnlyMode();
-
-
+    mcp.reset();
+    mcp.setBitrate(CAN_500KBPS, MCP_8MHZ);
+    mcp.setListenOnlyMode();
 
 
     ads.begin();
@@ -112,31 +109,37 @@ void Data::init() {
     ads.setDataRate(7);
 
 
+    touch.init(&Serial);
     pinMode(33, INPUT_PULLDOWN);
     attachInterrupt(digitalPinToInterrupt(33), touchStart, RISING);
-    //    attachInterrupt(digitalPinToInterrupt(33), touchEnd, FALLING);
 
+
+    TaskHandle_t adcHandle;
+    Serial.println(xTaskCreatePinnedToCore(adcLoop,
+                                    "adcLoop",
+                                    4*1024,
+                                    &data,
+                                    1,
+                                    &adcHandle,
+                                    0) ? "" : "Failed to start adcLoop task");
 
     TaskHandle_t touchHandle;
-    //    Serial.print(" touch start: ");
-//    Serial.println(
-//            xTaskCreatePinnedToCore(test,
-//                                    "touch",
-//                                    4*1024,
-//                                    &data,
-//                                    1,
-//                                    &touchHandle, 0) ? "" : "Failed to start touch task");
+    Serial.println( xTaskCreatePinnedToCore(test,
+                                    "touch",
+                                    4*1024,
+                                    &data,
+                                    1,
+                                    &touchHandle, 0) ? "" : "Failed to start touch task");
 
-    TaskHandle_t handle2;
-    Serial.print("adcLoop task: ");
-    Serial.println(
-            xTaskCreatePinnedToCore(adcLoop,
-                "adcLoop",
-                4*1024,
-                &data,
-                1,
-                &handle2,
-                0) ? "" : "Failed to start adcLoop task");
+    TaskHandle_t canHandle;
+    Serial.println( xTaskCreatePinnedToCore(canLoop,
+                                            "can",
+                                            32*1024,
+                                            &data,
+                                            1,
+                                            &canHandle, 0) ? "" : "Failed to start can task");
+
+    rc.enableReceive(3);
 
 }
 
@@ -153,43 +156,53 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
         while(i2cBusy)
            delay(1);
         i2cBusy = true;
-//        Serial.print(((DataStruct*)pvParameters)->adsPtr->getMaxVoltage());
-//        Serial.print(", ");
+
         for(int i=0; i<4; i++) {
 
-            for(int j=SAMPLES; j>0; j--) {
+            for(int j=SAMPLES-1; j>0; j--)
                 params->adc[i][j] = params->adc[i][j-1];
-                params->adc[i][0] = params->adsPtr->readADC(i);
-            }
+            params->adc[i][0] = params->adsPtr->readADC(i);
             float sum = 0;
+//            Serial.print(i);
+//            Serial.print(" ");
             for(int j=0; j<SAMPLES; j++) {
-                Serial.print(params->adc[i][j]);
-                Serial.print(", ");
+//                Serial.print(params->adc[i][j]);
+//                Serial.print(", ");
                 sum += params->adc[i][j];
             }
-            Serial.println("");
+//            Serial.println("");
             params->adcVoltage[i] = params->adsPtr->toVoltage(sum/SAMPLES);
-
-            //            Serial.println("looooop");
-//            Serial.print(i);w
-//            Serial.print(": ");
-//            Serial.print(((DataStruct*)pvParameters)->adc[i]);
-//            Serial.print(" ");
         }
-//        Serial.println(" ");
-//        test();
+
         params->now = params->rtcPtr->now();
-//        test(params->touchPtr, &(params->brightness));
+
+        if (params->rcPtr->available()) {
+
+            Serial.print("Received ");
+            Serial.print(params->rcPtr->getReceivedValue() );
+            Serial.print(" / ");
+            Serial.print(params->rcPtr->getReceivedBitlength() );
+            Serial.print("bit ");
+            Serial.print("Protocol: ");
+            Serial.println( params->rcPtr->getReceivedProtocol() );
+
+            params->rcPtr->resetAvailable();
+        }
 
         i2cBusy = false;
         delay(10);
     }
-    vTaskDelete(NULL);
 }
 
-//_Noreturn void rpmRead(void * pvParameters) {
-//    while(true) {
-//
+_Noreturn void Data::canLoop(void * pvParameters) {
+
+
+    struct can_frame canMsg;
+    DataStruct *params = (DataStruct*)pvParameters;
+
+    int rpm[3];
+
+    for(;;) {
 //        struct can_frame frame;
 //        frame.can_id = 0x213;
 //        frame.can_dlc = 4;
@@ -197,42 +210,43 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
 //        frame.data[1] = 0xFF;
 //        frame.data[2] = 0xFF;
 //        frame.data[3] = 0xF0;
-//        //  mcp2515.sendMessage(&frame);
-//
-//        MCP2515::ERROR err = mcp.readMessage(&canMsg);
-//
-//        if (err == MCP2515::ERROR_OK && canMsg.can_id == 0x201) {
+    //  mcp2515.sendMessage(&frame);
+
+    MCP2515::ERROR err = ((DataStruct*)pvParameters)->mcp2515Ptr->readMessage(&canMsg);
+
+        if (err == MCP2515::ERROR_OK && canMsg.can_id == 0x201) {
 //            Serial.print(canMsg.can_id, HEX); // print ID
 //            Serial.print(" ");
 //            Serial.print(canMsg.can_dlc, HEX); // print DLC
 //            Serial.print(" ");
-//
+
 //            for (int i = 0; i<canMsg.can_dlc; i++)  {  // print the data
 //                Serial.print(canMsg.data[i],HEX);
 //                Serial.print(" ");
 //            }
-//
-//            rpm[2] = rpm[1];
-//            rpm[1] = rpm[0];
-//            rpm[0] = (canMsg.data[0]*256 + canMsg.data[1])/4;
-//
-//
+
+
+            rpm[2] = rpm[1];
+            rpm[1] = rpm[0];
+            rpm[0] = (canMsg.data[0]*256 + canMsg.data[1])/4;
+
+
 //            Serial.print("RPM: ");
 //            Serial.print((rpm[0]+rpm[1]+rpm[2])/3);
 //
 //            Serial.println();
-//            rpmVal = (rpm[0]+rpm[1]+rpm[2])/3;
-//        } else {
-//            // return rpmVal;
-//            //    if( err != MCP2515::ERROR_NOMSG) {
-//            //     Serial.print("Error: ");
-//            //     Serial.print(err);
-//            //     Serial.print("\n");
-//            //    }
-//        }
-//        delay(10);
-//    }
-//}
+            ((DataStruct*)pvParameters)->rpm = (rpm[0]+rpm[1]+rpm[2])/3;
+        } else {
+            // return rpmVal;
+            //    if( err != MCP2515::ERROR_NOMSG) {
+            //     Serial.print("Error: ");
+            //     Serial.print(err);
+            //     Serial.print("\n");
+            //    }
+        }
+        delay(10);
+    }
+}
 
 
 DateTime Data::getTime() {
@@ -240,6 +254,9 @@ DateTime Data::getTime() {
 }
 
 void Data::adjustRTCTask(void * pvParameters) {
+    Serial.print(pcTaskGetTaskName(NULL));
+    Serial.print(" started on core ");
+    Serial.println(xPortGetCoreID());
     while(WiFi.status() != WL_CONNECTED) {
         delay(100);
     }

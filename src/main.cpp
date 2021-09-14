@@ -9,13 +9,7 @@
 #include <WiFi.h>
 #include "time.h"
 
-
-#include "mcp2515.h"
-#include "RTClib.h"
 #include "TFT_eSPI.h"
-#include "GxFT5436.h"
-#include <Adafruit_MCP23X08.h>
-#include "ADS1X15.h"
 
 
 const int ledPin = 32;
@@ -63,7 +57,6 @@ unsigned long total, t;
 
 
 Networking networking;
-//Adafruit_MCP23X08 mcp23008;
 Data data;
 
 
