@@ -5,6 +5,7 @@ Screen* Screen::screen = nullptr;
 Screen::Screen() {
     isBusy = false;
     settings = Settings::getInstance();
+    vis = &(settings->visual);
 }
 
 Screen* Screen::getInstance()
@@ -33,9 +34,9 @@ float calcY(int16_t startY, int16_t deg, int16_t radius) {
 void Screen::fillTables() {
 	Settings* settings = Settings::getInstance();
 	int density = 1;
-	int a = settings->ellipseA;
-	int b = settings->ellipseB;
-	int offset = settings->needleCenterOffset;
+	int a = vis->ellipseA;
+	int b = vis->ellipseB;
+	int offset = vis->needleCenterOffset;
 	for(int i=0; i<91; i++) {
 		double tga = tan(rad(i));
 		double r = 0.0;
@@ -44,9 +45,9 @@ void Screen::fillTables() {
 			for(int nx=1; nx<(a+1)*density; nx++) {
 				double x = 1.0/density*nx;
 				double y=tga*x;
-				//tft->drawPixel(settings->width/2+settings->needleCenterOffset+x,settings->height/2+y, TFT_RED);
+				//tft->drawPixel(vis->width/2+vis->needleCenterOffset+x,vis->height/2+y, TFT_RED);
 				if(1.0*(x+offset)*(x+offset)/(a*a)+1.0*y*y/(b*b)> 0.98) {
-					//tft->drawPixel(settings->width/2+settings->needleCenterOffset+x,settings->height/2+y, TFT_WHITE);
+					//tft->drawPixel(vis->width/2+vis->needleCenterOffset+x,vis->height/2+y, TFT_WHITE);
 					arrX[i] = x;
 					arrY[i] = y;
 					arrR[i] = sqrt(x*x+y*y);
@@ -57,9 +58,9 @@ void Screen::fillTables() {
 			for(int ny=1; ny<(b+1)*density; ny++) {
 				double y = 1.0/density*ny;
 				double x=y/tga;
-				//tft->drawPixel(settings->width/2+settings->needleCenterOffset+x,settings->height/2+y, TFT_RED);
+				//tft->drawPixel(vis->width/2+vis->needleCenterOffset+x,vis->height/2+y, TFT_RED);
 				if(1.0*(x+offset)*(x+offset)/(a*a)+1.0*y*y/(b*b)> 0.98) {
-					//tft->drawPixel(settings->width/2+settings->needleCenterOffset+x,settings->height/2+y, TFT_WHITE);
+					//tft->drawPixel(vis->width/2+vis->needleCenterOffset+x,vis->height/2+y, TFT_WHITE);
 					
 					arrX[i] = x;
 					arrY[i] = y;
@@ -96,8 +97,8 @@ void Screen::drawScalePiece(void* c, boolean isSprite, int a, int b, int offset,
 
 	//if(deg <1) {
 
-		//tft->drawPixel(settings->width/2+settings->needleCenterOffset+x1,settings->height/2+y1, TFT_PINK);
-		//tft->drawPixel(settings->width/2+settings->needleCenterOffset+x2,settings->height/2+y2, TFT_BLUE);
+		//tft->drawPixel(vis->width/2+vis->needleCenterOffset+x1,vis->height/2+y1, TFT_PINK);
+		//tft->drawPixel(vis->width/2+vis->needleCenterOffset+x2,vis->height/2+y2, TFT_BLUE);
 
 
 		// Serial.print(x1);
@@ -109,13 +110,13 @@ void Screen::drawScalePiece(void* c, boolean isSprite, int a, int b, int offset,
 		// Serial.println(y2);
 
 	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->drawWideLine(
-        (isSprite ? 0 : settings->offsetX) + settings->width/2+side*(settings->needleCenterOffset+x1)-originX,
-        (isSprite ? 0 : settings->offsetY) + settings->height/2+m*(y1)-originY,
-        (isSprite ? 0 : settings->offsetX) + settings->width/2+side*(settings->needleCenterOffset+x2)-originX,
-        (isSprite ? 0 : settings->offsetY) + settings->height/2+m*(y2)-originY,
+        (isSprite ? 0 : vis->offsetX) + vis->width/2+side*(vis->needleCenterOffset+x1)-originX,
+        (isSprite ? 0 : vis->offsetY) + vis->height/2+m*(y1)-originY,
+        (isSprite ? 0 : vis->offsetX) + vis->width/2+side*(vis->needleCenterOffset+x2)-originX,
+        (isSprite ? 0 : vis->offsetY) + vis->height/2+m*(y2)-originY,
 		width, 
 		color,
-		settings->backgroundColor);
+		vis->backgroundColor);
 	// }
 }
 
@@ -126,19 +127,19 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
 
 //	t2=millis();
 
-	float stepSmall = (end-start)/((settings->scaleLargeSteps*settings->scaleSmallSteps)*1.0);
-	int steps = settings->scaleLargeSteps*settings->scaleSmallSteps+1;
+	float stepSmall = (end-start)/((vis->scaleLargeSteps*vis->scaleSmallSteps)*1.0);
+	int steps = vis->scaleLargeSteps*vis->scaleSmallSteps+1;
 	for(uint8_t i=0; i<steps; i++) {
 		int16_t deg = start+stepSmall*i;
-		drawScalePiece((isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c), isSprite, settings->ellipseA, settings->ellipseB, settings->needleCenterOffset, deg, side, x1, y1,
-		(i%(steps/settings->scaleLargeSteps)==0) ? settings->scaleLargeLength : settings->scaleSmallLength, 
-		(i%(steps/settings->scaleLargeSteps)==0) ? settings->scaleLargeWidth : settings->scaleSmallWidth, 
-		(i%settings->scaleAccColorEvery==0) ? settings->scaleAccColor : settings->scaleColor);
+		drawScalePiece((isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c), isSprite, vis->ellipseA, vis->ellipseB, vis->needleCenterOffset, deg, side, x1, y1,
+		(i%(steps/vis->scaleLargeSteps)==0) ? vis->scaleLargeLength : vis->scaleSmallLength, 
+		(i%(steps/vis->scaleLargeSteps)==0) ? vis->scaleLargeWidth : vis->scaleSmallWidth, 
+		(i%vis->scaleAccColorEvery==0) ? vis->scaleAccColor : vis->scaleColor);
 
-		// drawScalePiece((isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c), isSprite, settings->ellipseA, settings->ellipseB, settings->needleCenterOffset, deg, side, x1, y1,
-		// settings->scaleSmallLength, 
-		// settings->scaleSmallWidth, 
-		// settings->scaleColor);
+		// drawScalePiece((isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c), isSprite, vis->ellipseA, vis->ellipseB, vis->needleCenterOffset, deg, side, x1, y1,
+		// vis->scaleSmallLength, 
+		// vis->scaleSmallWidth, 
+		// vis->scaleColor);
 
 	}
 
@@ -148,28 +149,28 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
 
 
 	// (isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->fillEllipse(
-	// 	settings->width/2+settings->offsetX+x1,
-	// 	settings->height/2+settings->offsetY+y1,
-	// 	settings->ellipseA-settings->scaleLargeLength,
-	// 	settings->ellipseB-settings->scaleLargeLength, 
-	// 	settings->backgroundColor);
+	// 	vis->width/2+vis->offsetX+x1,
+	// 	vis->height/2+vis->offsetY+y1,
+	// 	vis->ellipseA-vis->scaleLargeLength,
+	// 	vis->ellipseB-vis->scaleLargeLength, 
+	// 	vis->backgroundColor);
 	// (isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->drawEllipse(
-	// 	settings->width/2+settings->offsetX+x1,
-	// 	settings->height/2+settings->offsetY+y1,
-	// 	settings->ellipseA,
-	// 	settings->ellipseB, 
-	// 	settings->backgroundColor);
+	// 	vis->width/2+vis->offsetX+x1,
+	// 	vis->height/2+vis->offsetY+y1,
+	// 	vis->ellipseA,
+	// 	vis->ellipseB, 
+	// 	vis->backgroundColor);
 	// (isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->drawEllipse(
-	// 	settings->width/2+settings->offsetX+x1,
-	// 	settings->height/2+settings->offsetY+y1,
-	// 	settings->ellipseA+1,
-	// 	settings->ellipseB+1, 
-	// 	settings->backgroundColor);
+	// 	vis->width/2+vis->offsetX+x1,
+	// 	vis->height/2+vis->offsetY+y1,
+	// 	vis->ellipseA+1,
+	// 	vis->ellipseB+1, 
+	// 	vis->backgroundColor);
 
-	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextColor(settings->fontColor, settings->backgroundColor);
+	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextColor(vis->fontColor, vis->backgroundColor);
 	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextDatum(side ? CL_DATUM : CR_DATUM);
 	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextPadding(20);
-//	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->loadFont("GaugeHeavyNumbers"+(String)settings->scaleSize);
+//	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->loadFont("GaugeHeavyNumbers"+(String)vis->scaleSize);
 	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->loadFont("GaugeHeavyNumbers12");
 
 
@@ -181,25 +182,25 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
 		// Serial.print("i: ");
 		// Serial.print(i);
 		// Serial.print(", ");
-		// Serial.print(side ? settings->scaleXRight[i]-x1 : settings->scaleXLeft[i]-x1);
+		// Serial.print(side ? vis->scaleXRight[i]-x1 : vis->scaleXLeft[i]-x1);
 		// Serial.print(", ");
-		// Serial.println(settings->scaleY[i]-y1);
+		// Serial.println(vis->scaleY[i]-y1);
 
 		if(side) {
-			// if(settings->width/2+settings->offsetX+settings->needleCenterOffset+settings->scaleXRight[i] < x1+w+5) {
+			// if(vis->width/2+vis->offsetX+vis->needleCenterOffset+vis->scaleXRight[i] < x1+w+5) {
 				// Serial.print(i);
 				(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->drawString(
-					((String)settings->scaleRight[i]).c_str(),
-					settings->width/2+(isSprite ? 0 : settings->offsetX)+settings->needleCenterOffset+settings->scaleXRight[i]-x1,
-					settings->height/2+(isSprite ? 0 : settings->offsetY)+settings->scaleY[i]-y1
+					((String)vis->scaleRight[i]).c_str(),
+					vis->width/2+(isSprite ? 0 : vis->offsetX)+vis->needleCenterOffset+vis->scaleXRight[i]-x1,
+					vis->height/2+(isSprite ? 0 : vis->offsetY)+vis->scaleY[i]-y1
 				);
 			// }
 
 		} else {
 			(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->drawString(
-				((String)settings->scaleLeft[i]).c_str(),
-				settings->width/2+(isSprite ? 0 : settings->offsetX)-settings->needleCenterOffset+settings->scaleXLeft[i]-x1,
-				settings->height/2+(isSprite ? 0 : settings->offsetY)+settings->scaleY[i]-y1
+				((String)vis->scaleLeft[i]).c_str(),
+				vis->width/2+(isSprite ? 0 : vis->offsetX)-vis->needleCenterOffset+vis->scaleXLeft[i]-x1,
+				vis->height/2+(isSprite ? 0 : vis->offsetY)+vis->scaleY[i]-y1
 			);
 		}
 	}
@@ -230,22 +231,22 @@ void Screen::reset() {
 	drawScale(tft, false, 1, 0, 0, 0);	//right
     updateText(true, 0);
 
-//	tft->setTextColor(settings->fontColor, settings->backgroundColor);
+//	tft->setTextColor(vis->fontColor, vis->backgroundColor);
 //	tft->setTextDatum(CC_DATUM);
 //	// tft->setTextPadding(20);
-//	tft->loadFont("GaugeHeavyNumbers"+(String)settings->scaleSize);
+//	tft->loadFont("GaugeHeavyNumbers"+(String)vis->scaleSize);
 //	for(int i=0; i<5; i++)
 //		tft->drawString(
-//			((String)settings->scaleLeft[i]).c_str(),
-//			settings->width/2+settings->offsetX-settings->needleCenterOffset+settings->scaleXLeft[i],
-//			settings->height/2+settings->offsetY+settings->scaleY[i]
+//			((String)vis->scaleLeft[i]).c_str(),
+//			vis->width/2+vis->offsetX-vis->needleCenterOffset+vis->scaleXLeft[i],
+//			vis->height/2+vis->offsetY+vis->scaleY[i]
 //		);
 //	tft->setTextDatum(CC_DATUM);
 //	for(int i=0; i<5; i++)
 //		tft->drawString(
-//			((String)settings->scaleRight[i]).c_str(),
-//			settings->width/2+settings->offsetX+settings->needleCenterOffset+settings->scaleXRight[i],
-//			settings->height/2+settings->offsetY+settings->scaleY[i]
+//			((String)vis->scaleRight[i]).c_str(),
+//			vis->width/2+vis->offsetX+vis->needleCenterOffset+vis->scaleXRight[i],
+//			vis->height/2+vis->offsetY+vis->scaleY[i]
 //		);
 
 	// update(c, rtc, 0.3);
@@ -292,32 +293,32 @@ void Screen::updateNeedle(int side, float value) {
 	// Serial.print(" ");
 	// Serial.println(deg);
 
-	float length = settings->needleLength-16*sin(8.7-(90-deg)/22.65);
+	float length = vis->needleLength-16*sin(8.7-(90-deg)/22.65);
 	//Serial.println(deg);
 	// Serial.print(" ");
 	// Serial.println(length);
 
 	int x, y, x1=0, y1=200, w=0, h=0;
 
-	int off = 5+settings->needleTopWidth;
+	int off = 5+vis->needleTopWidth;
 
 	if(deg >= 0) {
 		x = length*cos(rad(deg));
 		y = length*sin(rad(deg));
-		y1 = settings->height/2-settings->needleCenterRadius;
-		h = max(y+settings->needleCenterRadius, settings->needleCenterRadius*2)+off;
+		y1 = vis->height/2-vis->needleCenterRadius;
+		h = max(y+vis->needleCenterRadius, vis->needleCenterRadius*2)+off;
 //		tft->drawRect(x1, y1, w, h, TFT_RED);
 	} else {
 		y = length*cos(rad(deg+90));
 		x = length*sin(rad(deg+90));
-		y1 = settings->height/2-max((int)settings->needleCenterRadius, y)-off;
-		h = max(y+settings->needleCenterRadius, settings->needleCenterRadius*2)+off;
+		y1 = vis->height/2-max((int)vis->needleCenterRadius, y)-off;
+		h = max(y+vis->needleCenterRadius, vis->needleCenterRadius*2)+off;
 //		tft->drawRect(x1, y1, w, h, TFT_RED);
 	}
 
-	x1 = settings->width/2+(settings->needleCenterOffset-settings->needleCenterRadius);
-	w = max(x+settings->needleCenterRadius, settings->needleCenterRadius*2)+off;
-	w = settings->ellipseA-settings->needleCenterOffset+settings->needleCenterRadius;
+	x1 = vis->width/2+(vis->needleCenterOffset-vis->needleCenterRadius);
+	w = max(x+vis->needleCenterRadius, vis->needleCenterRadius*2)+off;
+	w = vis->ellipseA-vis->needleCenterOffset+vis->needleCenterRadius;
 
 	// Serial.print("x1:");
 	// Serial.print(x1);
@@ -355,23 +356,23 @@ void Screen::updateNeedle(int side, float value) {
 //	    t2=millis();
 		if(deg >= 0) {
 			update.drawWedgeLine(
-				settings->needleCenterRadius,
-				y1-min(y1, pY1[side])+settings->needleCenterRadius,
-				calcX(settings->needleCenterRadius, deg, length),
-				calcY(y1-min(y1, pY1[side])+settings->needleCenterRadius, deg, length),
-				settings->needleBottomWidth,
-				settings->needleTopWidth,
-				settings->needleColor
+				vis->needleCenterRadius,
+				y1-min(y1, pY1[side])+vis->needleCenterRadius,
+				calcX(vis->needleCenterRadius, deg, length),
+				calcY(y1-min(y1, pY1[side])+vis->needleCenterRadius, deg, length),
+				vis->needleBottomWidth,
+				vis->needleTopWidth,
+				vis->needleColor
 			);	
 		} else {
 			update.drawWedgeLine(
-				settings->needleCenterRadius,
-				settings->height/2 - min(y1, pY1[side]),
-				calcX(settings->needleCenterRadius, deg, length),
-				calcY(settings->height/2 - min(y1, pY1[side]), deg, length),
-				settings->needleBottomWidth,
-				settings->needleTopWidth,
-				settings->needleColor
+				vis->needleCenterRadius,
+				vis->height/2 - min(y1, pY1[side]),
+				calcX(vis->needleCenterRadius, deg, length),
+				calcY(vis->height/2 - min(y1, pY1[side]), deg, length),
+				vis->needleBottomWidth,
+				vis->needleTopWidth,
+				vis->needleColor
 			);
 		}
 
@@ -379,14 +380,14 @@ void Screen::updateNeedle(int side, float value) {
 //		Serial.print(millis()-t2);
 //		t2=millis();
 
-		update.fillCircle(settings->needleCenterRadius, settings->height/2 - min(y1, pY1[side]), settings->needleCenterRadius, settings->needleCenterColor);
+		update.fillCircle(vis->needleCenterRadius, vis->height/2 - min(y1, pY1[side]), vis->needleCenterRadius, vis->needleCenterColor);
 		std::stringstream ss;
 		ss.precision(1);
 		ss << std::fixed << value;
 		update.setTextDatum(CC_DATUM);
-		update.setTextColor(settings->fontColor, TFT_TRANSPARENT);
-		update.drawString(ss.str().c_str(), settings->needleCenterRadius, settings->height/2 - min(y1, pY1[side]));
-		update.pushSprite(x1 + settings->offsetX, min(y1, pY1[side]) + settings->offsetY);
+		update.setTextColor(vis->fontColor, TFT_TRANSPARENT);
+		update.drawString(ss.str().c_str(), vis->needleCenterRadius, vis->height/2 - min(y1, pY1[side]));
+		update.pushSprite(x1 + vis->offsetX, min(y1, pY1[side]) + vis->offsetY);
 
 
 //		Serial.print(" push calcs: ");
@@ -401,39 +402,39 @@ void Screen::updateNeedle(int side, float value) {
 		// 	pY1[side]+pH[side] > y1+h ? pY1[side]+pH[side]-min(y1, pY1[side]) : h+abs(y1-pY1[side]),
 		// 	TFT_VIOLET);
 	} else {
-	    drawScale(&update, true, side, settings->width/2 - abs(settings->width/2 - x1) - max(w, pW[side]), min(y1, pY1[side]), max(w, pW[side]));
+	    drawScale(&update, true, side, vis->width/2 - abs(vis->width/2 - x1) - max(w, pW[side]), min(y1, pY1[side]), max(w, pW[side]));
 		if(deg >= 0) {
 			update.drawWedgeLine(
-            max(w, pW[side])-settings->needleCenterRadius,
-            y1-min(y1, pY1[side])+settings->needleCenterRadius,
-            max(w, pW[side])-calcX(settings->needleCenterRadius, deg, length),
-            calcY(y1-min(y1, pY1[side])+settings->needleCenterRadius, deg, length),
-                settings->needleBottomWidth,
-				settings->needleTopWidth,
-				settings->needleColor
+            max(w, pW[side])-vis->needleCenterRadius,
+            y1-min(y1, pY1[side])+vis->needleCenterRadius,
+            max(w, pW[side])-calcX(vis->needleCenterRadius, deg, length),
+            calcY(y1-min(y1, pY1[side])+vis->needleCenterRadius, deg, length),
+                vis->needleBottomWidth,
+				vis->needleTopWidth,
+				vis->needleColor
 			);	
 		} else {
 			update.drawWedgeLine(
-				max(w, pW[side])-settings->needleCenterRadius,
-				settings->height/2 - min(y1, pY1[side]),
-				max(w, pW[side])-calcX(settings->needleCenterRadius, deg, length),
-				calcY(settings->height/2 - min(y1, pY1[side]), deg, length),
-				settings->needleBottomWidth,
-				settings->needleTopWidth,
-				settings->needleColor
+				max(w, pW[side])-vis->needleCenterRadius,
+				vis->height/2 - min(y1, pY1[side]),
+				max(w, pW[side])-calcX(vis->needleCenterRadius, deg, length),
+				calcY(vis->height/2 - min(y1, pY1[side]), deg, length),
+				vis->needleBottomWidth,
+				vis->needleTopWidth,
+				vis->needleColor
 			);
 		}
 
-		update.fillCircle(max(w, pW[side])-settings->needleCenterRadius, settings->height/2 - min(y1, pY1[side]), settings->needleCenterRadius, settings->needleCenterColor);
+		update.fillCircle(max(w, pW[side])-vis->needleCenterRadius, vis->height/2 - min(y1, pY1[side]), vis->needleCenterRadius, vis->needleCenterColor);
 		std::stringstream ss;
 		ss.precision(1);
 		ss << std::fixed << value;
 		update.setTextDatum(CC_DATUM);
-		update.setTextColor(settings->fontColor, TFT_TRANSPARENT);
-		update.drawString(ss.str().c_str(), max(w, pW[side])-settings->needleCenterRadius, settings->height/2 - min(y1, pY1[side]));
-		update.pushSprite(settings->width/2 - abs(settings->width/2 - x1) - max(w, pW[side])  + settings->offsetX, min(y1, pY1[side]) + settings->offsetY);
+		update.setTextColor(vis->fontColor, TFT_TRANSPARENT);
+		update.drawString(ss.str().c_str(), max(w, pW[side])-vis->needleCenterRadius, vis->height/2 - min(y1, pY1[side]));
+		update.pushSprite(vis->width/2 - abs(vis->width/2 - x1) - max(w, pW[side])  + vis->offsetX, min(y1, pY1[side]) + vis->offsetY);
 		// tft->drawRect(
-		// 	settings->width/2 - abs(settings->width/2 - x1) - max(w, pW[side]), 
+		// 	vis->width/2 - abs(vis->width/2 - x1) - max(w, pW[side]), 
 		// 	min(y1, pY1[side]), 
 		// 	max(w, pW[side]), 
 		// 	pY1[side]+pH[side] > y1+h ? pY1[side]+pH[side]-min(y1, pY1[side]) : h+abs(y1-pY1[side]),
@@ -459,41 +460,41 @@ void Screen::updateText(boolean force, int fps) {
 	if(	now.month() > 3 && now.month() < 10 ||
 		now.month() == 3 && now.day() > 28)
 
-	tft->setTextColor(settings->fontColor, settings->backgroundColor);
+	tft->setTextColor(vis->fontColor, vis->backgroundColor);
 	tft->setTextDatum(CC_DATUM);
 	tft->setTextPadding(24);
 
 	if(now.minute() != pMinute || force) {
 		int min = now.minute();
-//		tft->loadFont("GaugeHeavy"+(String)settings->timeSize);
+//		tft->loadFont("GaugeHeavy"+(String)vis->timeSize);
 		tft->loadFont("GaugeHeavy36");
 		std::stringstream ss;
 		ss << std::setfill('0') << std::setw(2) << ((String)now.hour()).c_str() << ":" << std::setw(2) << ((String)min).c_str();
 		tft->drawString(
 			ss.str().c_str(),
-			settings->width/2+settings->offsetX,
-			settings->height/2+settings->offsetY+settings->timePosY);
+			vis->width/2+vis->offsetX,
+			vis->height/2+vis->offsetY+vis->timePosY);
 		pMinute = min;
 	}
 	if(now.day() != pDay || force) {
 		std::stringstream ss2;
 		ss2 << std::setfill('0') << std::setw(2) << ((String)now.day()).c_str() << "." << std::setw(2) << ((String)now.month()).c_str()  << "." << std::setw(2) << ((String)now.year()).substring(2).c_str();
-//		tft->loadFont("GaugeHeavy"+(String)settings->dateSize);
+//		tft->loadFont("GaugeHeavy"+(String)vis->dateSize);
 		tft->loadFont("GaugeHeavy16");
 		tft->drawString(
 			ss2.str().c_str(),
-			settings->width/2+settings->offsetX,
-			settings->height/2+settings->offsetY+settings->datePosY);
+			vis->width/2+vis->offsetX,
+			vis->height/2+vis->offsetY+vis->datePosY);
 		pDay = now.day();
 	}
 
 //	std::stringstream ss3;
 //	ss3 << "frametime: " << ((String)fps).c_str();
-//	tft->loadFont("GaugeHeavy"+(String)settings->dateSize);
+//	tft->loadFont("GaugeHeavy"+(String)vis->dateSize);
 //	tft->drawString(
 //	        ss3.str().c_str(),
-//	        settings->width/2+settings->offsetX,
-//	        settings->height/2+settings->offsetY-settings->datePosY);
+//	        vis->width/2+vis->offsetX,
+//	        vis->height/2+vis->offsetY-vis->datePosY);
 
 //	 int16_t val_0 = ads->readADC(0);
 //  	 int16_t val_1 = ads->readADC(1);
@@ -506,8 +507,8 @@ void Screen::updateText(boolean force, int fps) {
 //	 ss3 << ((String)(val_0 * f)).c_str() << "\n" << ((String)(val_1 * f)).c_str() << "\n" << ((String)(val_2 * f)).c_str() << "\n" << ((String)(val_3 * f)).c_str();
 //	 tft->drawString(
 //	 ss3.str().c_str(),
-//	 settings->width/2+settings->offsetX,
-//	 settings->height/2+settings->offsetY+settings->timePosY);
+//	 vis->width/2+vis->offsetX,
+//	 vis->height/2+vis->offsetY+vis->timePosY);
     isBusy = false;
 }
 
@@ -520,11 +521,11 @@ void Screen::showPrompt(String text) {
     promptShown = true;
     setPromptFont();
     tft->fillScreen(TFT_BLACK);
-    tft->drawRect(settings->width/2-settings->promptWidth/2,
-                  settings->height/2-settings->promptHeight/2,
-                  settings->promptWidth,
-                  settings->promptHeight,
-                  settings->fontColor);
+    tft->drawRect(vis->width/2-vis->promptWidth/2,
+                  vis->height/2-vis->promptHeight/2,
+                  vis->promptWidth,
+                  vis->promptHeight,
+                  vis->fontColor);
     tft->setTextDatum(CC_DATUM);
 
     std::string str = text.c_str();
@@ -540,7 +541,7 @@ void Screen::showPrompt(String text) {
 //        Serial.println(nextLine);
 
         nextLine = str.find_first_of('\n');
-        tft->drawString(str.substr(0, nextLine).c_str(), settings->width/2, settings->height/2-40+(lines++)*(tft->fontHeight()+3+8));
+        tft->drawString(str.substr(0, nextLine).c_str(), vis->width/2, vis->height/2-40+(lines++)*(tft->fontHeight()+3+8));
         str = str.substr(nextLine+1);
     }
 }
@@ -555,7 +556,7 @@ void Screen::addToPrompt(String text) {
     std::size_t nextLine = 0;
     while(nextLine != std::string::npos) {
         nextLine = str.find_first_of('\n');
-        tft->drawString(str.substr(0, nextLine).c_str(), settings->width/2, settings->height/2-40+(lines++)*(tft->fontHeight()+3));
+        tft->drawString(str.substr(0, nextLine).c_str(), vis->width/2, vis->height/2-40+(lines++)*(tft->fontHeight()+3));
         str = str.substr(nextLine+1);
     }
 }

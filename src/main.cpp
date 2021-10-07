@@ -117,7 +117,7 @@ void IRAM_ATTR touchStart() {
                     Serial.printf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu)", i, startX[i], startY[i], endX[i], endY[i]);
                     if((abs(startX[i]-endX[i]) < SINGLE_POINT_DISTANCE) && (abs(startY[i]-endY[i]) < SINGLE_POINT_DISTANCE)) {
 
-                        if(!menuShown && endX[i] > settings->width/2 - settings->needleCenterOffset && endX[i] < settings->width/2 + settings->needleCenterOffset && endY[i] < settings->height/2) {
+                        if(!menuShown && endX[i] > settings->visual.width/2 - settings->visual.needleCenterOffset && endX[i] < settings->visual.width/2 + settings->visual.needleCenterOffset && endY[i] < settings->visual.height/2) {
                             showMenu = true;
                         }
 

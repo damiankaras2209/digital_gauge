@@ -70,23 +70,23 @@ String processor(const String& var){
 //    Serial.println(var);
     char c[10];
     if(var == "offsetX"){
-        return itoa(settings->offsetX, c, 10);
+        return itoa(settings->visual.offsetX, c, 10);
     } else if(var == "offsetY") {
-        return itoa(settings->offsetY, c, 10);
+        return itoa(settings->visual.offsetY, c, 10);
     } else if(var == "ellipseA") {
-        return itoa(settings->ellipseA, c, 10);
+        return itoa(settings->visual.ellipseA, c, 10);
     } else if(var == "ellipseB") {
-        return itoa(settings->ellipseB, c, 10);
+        return itoa(settings->visual.ellipseB, c, 10);
     } else if(var == "needleCenterRadius") {
-        return itoa(settings->needleCenterRadius, c, 10);
+        return itoa(settings->visual.needleCenterRadius, c, 10);
     } else if(var == "needleCenterOffset") {
-        return itoa(settings->needleCenterOffset, c, 10);
+        return itoa(settings->visual.needleCenterOffset, c, 10);
     } else if(var == "needleLength") {
-        return itoa(settings->needleLength, c, 10);
+        return itoa(settings->visual.needleLength, c, 10);
     } else if(var == "needleBottomWidth") {
-        return itoa(settings->needleBottomWidth, c, 10);
+        return itoa(settings->visual.needleBottomWidth, c, 10);
     } else if(var == "needleTopWidth") {
-        return itoa(settings->needleTopWidth, c, 10);
+        return itoa(settings->visual.needleTopWidth, c, 10);
 
     } else if(var == "input_table") {
 
@@ -197,23 +197,23 @@ void Networking::serverSetupTask(void * pvParameters) {
                 }
 
                 if(p->name()=="offsetX")
-                    settings->offsetX = atoi(p->value().c_str());
+                    settings->visual.offsetX = atoi(p->value().c_str());
                 else if(p->name()=="offsetY")
-                    settings->offsetY = atoi(p->value().c_str());
+                    settings->visual.offsetY = atoi(p->value().c_str());
                 else if(p->name()=="ellipseA")
-                    settings->ellipseA = atoi(p->value().c_str());
+                    settings->visual.ellipseA = atoi(p->value().c_str());
                 else if(p->name()=="ellipseB")
-                    settings->ellipseB = atoi(p->value().c_str());
+                    settings->visual.ellipseB = atoi(p->value().c_str());
                 else if(p->name()=="needleCenterRadius")
-                    settings->needleCenterRadius = atoi(p->value().c_str());
+                    settings->visual.needleCenterRadius = atoi(p->value().c_str());
                 else if(p->name()=="needleCenterOffset")
-                    settings->needleCenterOffset = atoi(p->value().c_str());
+                    settings->visual.needleCenterOffset = atoi(p->value().c_str());
                 else if(p->name()=="needleLength")
-                    settings->needleLength = atoi(p->value().c_str());
+                    settings->visual.needleLength = atoi(p->value().c_str());
                 else if(p->name()=="needleBottomWidth")
-                    settings->needleBottomWidth = atoi(p->value().c_str());
+                    settings->visual.needleBottomWidth = atoi(p->value().c_str());
                 else if(p->name()=="needleTopWidth")
-                    settings->needleTopWidth = atoi(p->value().c_str());
+                    settings->visual.needleTopWidth = atoi(p->value().c_str());
 
 
             }

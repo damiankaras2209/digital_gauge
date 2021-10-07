@@ -42,7 +42,8 @@ class Screen {
 	private:
 		TFT_eSPI *tft;
         Data *data;
-        Settings* settings;
+        Settings *settings;
+        volatile VisualSettings *vis;
 		double arrR[91], arrX[91], arrY[91];
 		bool promptShown = false;
 		int lines = 0;
