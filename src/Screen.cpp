@@ -4,6 +4,7 @@ Screen* Screen::screen = nullptr;
 
 Screen::Screen() {
     isBusy = false;
+    settings = Settings::getInstance();
 }
 
 Screen* Screen::getInstance()
@@ -74,8 +75,7 @@ void Screen::fillTables() {
 unsigned long t2;
 
 void Screen::drawScalePiece(void* c, boolean isSprite, int a, int b, int offset, int deg, int side, int originX, int originY, int length, int width, uint16_t color) {
-	Settings* settings = Settings::getInstance();
-	
+
 	if(!side)
 		side = -1;
 
@@ -122,7 +122,6 @@ void Screen::drawScalePiece(void* c, boolean isSprite, int a, int b, int offset,
 
 
 void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int w) {
-	Settings* settings = Settings::getInstance();
 	int16_t start = 0, end = 180;
 
 //	t2=millis();
@@ -217,11 +216,14 @@ void Screen::init(TFT_eSPI *t, Data *d) {
 	data = d;
 }
 
+void Screen::blank() {
+    tft->fillScreen(TFT_BLACK);
+}
+
 void Screen::reset() {
     if(isBusy)
         return;
     isBusy = true;
-	Settings* settings = Settings::getInstance();
 	tft->fillScreen(TFT_BLACK);
 	fillTables();
 	drawScale(tft, false, 0, 0, 0, 0);	//left
@@ -274,8 +276,6 @@ void Screen::updateNeedle(int side, float value) {
 
     t2 = millis();
 
-
-	Settings* settings = Settings::getInstance();
 
 	float val = side ? value/10 : (value-30)/120;
 //    val = value;
@@ -454,7 +454,6 @@ void Screen::updateText(boolean force, int fps) {
     if(isBusy)
         return;
     isBusy = true;
-	Settings* settings = Settings::getInstance();
 	DateTime now = data->getTime();
 
 	if(	now.month() > 3 && now.month() < 10 ||
@@ -510,4 +509,53 @@ void Screen::updateText(boolean force, int fps) {
 //	 settings->width/2+settings->offsetX,
 //	 settings->height/2+settings->offsetY+settings->timePosY);
     isBusy = false;
+}
+
+void Screen::setPromptFont() {
+    tft->loadFont("GaugeHeavy12");
+}
+
+
+void Screen::showPrompt(String text) {
+    promptShown = true;
+    setPromptFont();
+    tft->fillScreen(TFT_BLACK);
+    tft->drawRect(settings->width/2-settings->promptWidth/2,
+                  settings->height/2-settings->promptHeight/2,
+                  settings->promptWidth,
+                  settings->promptHeight,
+                  settings->fontColor);
+    tft->setTextDatum(CC_DATUM);
+
+    std::string str = text.c_str();
+
+//    Serial.println(str.c_str());
+
+    std::size_t nextLine = 0;
+    lines = 0;
+
+    while(nextLine != std::string::npos) {
+
+//        Serial.println(str.c_str());
+//        Serial.println(nextLine);
+
+        nextLine = str.find_first_of('\n');
+        tft->drawString(str.substr(0, nextLine).c_str(), settings->width/2, settings->height/2-40+(lines++)*(tft->fontHeight()+3+8));
+        str = str.substr(nextLine+1);
+    }
+}
+
+void Screen::addToPrompt(String text) {
+    if(!promptShown) {
+        Serial.print("addToPrompt() called without showPrompt()");
+        return;
+    }
+    setPromptFont();
+    std::string str = text.c_str();
+    std::size_t nextLine = 0;
+    while(nextLine != std::string::npos) {
+        nextLine = str.find_first_of('\n');
+        tft->drawString(str.substr(0, nextLine).c_str(), settings->width/2, settings->height/2-40+(lines++)*(tft->fontHeight()+3));
+        str = str.substr(nextLine+1);
+    }
 }

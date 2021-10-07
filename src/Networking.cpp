@@ -1,9 +1,8 @@
-#include <AsyncElegantOTA.h>
+//#include <AsyncElegantOTA.h>
 #include "Networking.h"
 
 const char* host = "esp32";
-const char* ssid = "dlink-74A1";
-const char* password = "fdpqg49953";
+
 
 
 AsyncWebServer server(80);
@@ -13,41 +12,26 @@ AsyncWebServer server(80);
 Settings* settings = Settings::getInstance();
 Screen* screen = Screen::getInstance();
 
-void Networking::connectWiFi() {
+[[noreturn]] void Networking::WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+    Serial.print("Connected to ");
+    Serial.println(WiFi.SSID());
+//    Serial.print("IP address: ");
+//    Serial.println(IPAddress(info.ap_staipassigned.ip.addr));
+//    Serial.println(WiFi.localIP());
 
-    Serial.print("Connecting to WiFi task: ");
+//  UpdaterClass updater;
+//  updater.checkForUpdate();
 
-    WiFi.begin(ssid, password);
-//    WiFi.begin(ssid, password);
-//    Serial.println("");
-    TaskHandle_t connectWiFiTaskHandle;
-    Serial.println(
-            xTaskCreatePinnedToCore(connectWiFiTask,
-                "connectWifi",
-                16*1024,
-                NULL,
-                1,
-                &connectWiFiTaskHandle,
-                1) ? "started" : "failed");
+
 }
 
-void Networking::connectWiFiTask(void * pvParameters) {
-    // Connect to WiFi network
-//    WiFi.mode(WIFI_STA);
-    Serial.println("");
+[[noreturn]] void Networking::WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
+{
 
-    // Wait for connection
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(50);
-        Serial.print(".");
-    }
-    Serial.println("");
-    Serial.print("Connected to ");
-    Serial.println(ssid);
     Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
+    Serial.println(IPAddress(info.ap_staipassigned.ip.addr));
 
-    /*use mdns for host name resolution*/
     if (!MDNS.begin(host)) { //http://esp32.local
         Serial.println("Error setting up MDNS responder!");
         while (1) {
@@ -57,7 +41,24 @@ void Networking::connectWiFiTask(void * pvParameters) {
 
     Serial.print("mDNS responder started, hostname: ");
     Serial.println("http://esp32.local");
-    vTaskDelete(NULL);
+
+    serverSetup();
+
+}
+
+int Networking::connectWiFi(int wait, const char* ssid, const char* pass) {
+
+    if(WiFi.status() == WL_CONNECTED)
+        return WiFi.status();
+
+    WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
+    WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
+
+    Serial.print("Connecting to WiFi network: \"");
+    Serial.print(ssid);
+    Serial.println("\"");
+
+    WiFi.begin(ssid, pass);
 }
 
 boolean Networking::isWiFiConnected() {
@@ -146,9 +147,10 @@ void Networking::serverSetupTask(void * pvParameters) {
 
 
     while (WiFi.status() != WL_CONNECTED) {
-        delay(100);
+        delay(50);
         Serial.print(".");
     }
+
 
     server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(SPIFFS, "/settings.html", String(), false, processor);
@@ -227,9 +229,15 @@ void Networking::serverSetupTask(void * pvParameters) {
 //    setSettings();
 //  });
 
-    AsyncElegantOTA.begin(&server);
+//    AsyncElegantOTA.begin(&server);
+
+    server.on("/reset", HTTP_POST, [](AsyncWebServerRequest *request){
+        settings->loadDefault();
+    });
 
   server.begin();
+
+  Serial.println("Server started");
 
   vTaskDelete(NULL);
 }

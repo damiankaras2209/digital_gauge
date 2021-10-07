@@ -19,6 +19,7 @@ float calcY(int16_t, int16_t, int16_t);
 double rad(int16_t);
 
 
+
 class Screen {
 
 	protected:
@@ -31,22 +32,28 @@ class Screen {
 		static Screen *getInstance();
 		void init(TFT_eSPI*, Data*);
 		void reset();
+		void blank();
 		void updateNeedle(int, float);
 		void updateText(boolean, int fps);
+		void showPrompt(String text);
+		void addToPrompt(String text);
 		uint16_t c24to16(int);
 
 	private:
 		TFT_eSPI *tft;
         Data *data;
+        Settings* settings;
 		double arrR[91], arrX[91], arrY[91];
+		bool promptShown = false;
+		int lines = 0;
 		void drawScalePiece(void*, boolean, int, int, int, int, int, int, int, int, int, uint16_t);
 		void drawScale(void*, boolean, int, int, int, int);
 		void fillTables();
+		void setPromptFont();
 		void drawNeedle();
 
 	//void readSettings();
 
 };
-
 
 #endif

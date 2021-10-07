@@ -18,6 +18,14 @@
 
 #define SAMPLES 16
 
+//typedef struct Event {
+//    uint16_t event;
+//    uint16_t beginX[5], beginY[5];
+//    uint16_t endX[5], endY[5];
+//} Event;
+//
+//typedef std::function<void(t_httpUpdate_return status)> Callback;
+
 class Data {
 
 public:
@@ -29,12 +37,14 @@ public:
             Adafruit_MCP23X08* mcp23X08Ptr;
             RCSwitch* rcPtr;
 
+            GxFT5436::TouchInfo touchInfo;
             float adc[4][SAMPLES];
             float adcVoltage[4];
             DateTime now;
             int brightness = 255;
             struct can_frame canMsgg;
             int rpm;
+            volatile bool i2cBusy = false;
         } DataStruct;
 
         Data();

@@ -31,6 +31,9 @@ void Settings::loadDefault() {
 	ellipseA = 216;
 	ellipseB = 116;
 
+	promptWidth = 330;
+	promptHeight = 120;
+
 	needleCenterRadius = 20;
 	needleCenterOffset = 75;
 	needleLength = 112; //97

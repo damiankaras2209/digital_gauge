@@ -4,7 +4,7 @@
         <title>ESP32</title>
         <meta charset='UTF-8'>
         <script>
-        function ajaxpost(){
+        function send(){
           var data = new FormData();
           data.append('offsetX', document.getElementById('offsetX').value);
           data.append('offsetY', document.getElementById('offsetY').value);
@@ -32,12 +32,21 @@
           xhr.onload = function(){ console.log(this.response); };
           xhr.send(data);
           return false;}
+
+        function reset() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'reset');
+            xhr.onload = function(){ console.log(this.response); };
+            xhr.send(data);
+            return false;
+        }
         </script>
     </head>
     <body>
-        <form onsubmit='return ajaxpost()'>
+        <form onsubmit='return send()'>
             <h1>Ustawienia</h1>
             <h2>Ustawienia wyświetlania</h2>
+            <button onclick='return reset();window.location.reload(true); '>Przywróć domyślne</button>
             <p>Przesunięcie X</p><input value='%offsetX%' type='number' id='offsetX'>
             <p>Przesunięcie Y</p><input value='%offsetY%' type='number' id='offsetY'>
             <p>Szerokość elipsy</p><input value='%ellipseA%' type='number' id='ellipseA'>

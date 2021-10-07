@@ -4,67 +4,6 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;
 const int   daylightOffset_sec = 3600;
 
-volatile bool i2cBusy = false;
-volatile ulong touchDetectedTime = 0;
-
-volatile ulong time2 = 0;
-
-[[noreturn]] void Data::test(void * pvParameters) {
-    Serial.print(pcTaskGetTaskName(NULL));
-    Serial.print(" started on core ");
-    Serial.println(xPortGetCoreID());
-    while(1) {
-//        Serial.print("millis() - touchDetectedTime: ");
-//        Serial.println (millis() - touchDetectedTime);
-        if(millis() - touchDetectedTime < 10) {
-            while(i2cBusy)
-                delay(1);
-            i2cBusy = true;
-
-            GxFT5436* touch = ((DataStruct*)pvParameters)->touchPtr;
-            GxFT5436::TouchInfo touchInfo = touch->scanMultipleTouch();
-
-            for (uint8_t i = 0; i < touchInfo.touch_count; i++) {
-
-                uint16_t x1 = touchInfo.x[i];
-                touchInfo.x[i] = touchInfo.y[i];
-                touchInfo.y[i] = 319-x1;
-//                        Serial.print("gesture: ");
-//                        Serial.print(touchinfo.gesture);
-//                    transpose(touchinfo);
-                //                if(touchinfo.y[i] > TFT_WIDTH/2) {
-                //                    *brightness += 25;
-                //                    if(*brightness>255)
-                //                        *brightness=255;
-                //                } else {
-                //                    *brightness -= 25;
-                //                    if(*brightness<0)
-                //                        *brightness=0;
-                //                }
-                //                Serial.print("brightness: ");
-                //                Serial.println(*brightness);
-                //                ledcWrite(0, *brightness);
-//                Serial.print("touch id: ");
-//                Serial.print(touchInfo.id[i]);
-//                Serial.print(", event: ");
-//                Serial.print(touchInfo.event[i]);
-//                Serial.print(" (");
-//                Serial.print(touchInfo.x[i]);
-//                Serial.print(", ");
-//                Serial.print(touchInfo.y[i]);
-//                Serial.print(") ");
-            }
-            Serial.println("");
-
-            i2cBusy = false;
-        }
-        delay(7);
-    }
-}
-
-void IRAM_ATTR Data::touchStart() {
-    touchDetectedTime = millis();
-}
 
 Data::Data() {
 
@@ -110,9 +49,6 @@ void Data::init() {
 
 
     touch.init(&Serial);
-    pinMode(33, INPUT_PULLDOWN);
-    attachInterrupt(digitalPinToInterrupt(33), touchStart, RISING);
-
 
     TaskHandle_t adcHandle;
     Serial.println(xTaskCreatePinnedToCore(adcLoop,
@@ -123,13 +59,6 @@ void Data::init() {
                                     &adcHandle,
                                     0) ? "" : "Failed to start adcLoop task");
 
-    TaskHandle_t touchHandle;
-    Serial.println( xTaskCreatePinnedToCore(test,
-                                    "touch",
-                                    4*1024,
-                                    &data,
-                                    1,
-                                    &touchHandle, 0) ? "" : "Failed to start touch task");
 
     TaskHandle_t canHandle;
     Serial.println( xTaskCreatePinnedToCore(canLoop,
@@ -153,9 +82,9 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
     DataStruct *params = (DataStruct*)pvParameters;
 
     for(;;) {
-        while(i2cBusy)
+        while(params->i2cBusy)
            delay(1);
-        i2cBusy = true;
+        params->i2cBusy = true;
 
         for(int i=0; i<4; i++) {
 
@@ -189,7 +118,7 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
             params->rcPtr->resetAvailable();
         }
 
-        i2cBusy = false;
+        params->i2cBusy = false;
         delay(10);
     }
 }
@@ -270,9 +199,10 @@ void Data::adjustRTCTask(void * pvParameters) {
         Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
         ((DataStruct*)pvParameters)->rtcPtr->adjust(DateTime(timeinfo.tm_year, timeinfo.tm_mon+1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec));
 //        Serial.println("halo: ");
-//        DateTime now  = RTC_DS3231::now();
+        DateTime now  = ((DataStruct*)pvParameters)->rtcPtr->now();
 //        Serial.println("min: ");
 //        Serial.println(now.minute());
+//        Serial.println(now.year());
     }
     vTaskDelete(NULL);
 }

@@ -39,6 +39,8 @@ class Settings {
 		volatile int16_t offsetY;
 		volatile int16_t ellipseA;
 		volatile int16_t ellipseB;
+		volatile int16_t promptWidth;
+		volatile int16_t promptHeight;
 
 		volatile bool antialiasing;
 		volatile bool dark;
