@@ -33,7 +33,7 @@ class Screen {
 		void init(TFT_eSPI*, Data*);
 		void reset();
 		void blank();
-		void updateNeedle(int, float);
+		void updateNeedle(int, Data::DataSource);
 		void updateText(boolean, int fps);
 		void showPrompt(String text);
 		void addToPrompt(String text);
@@ -48,7 +48,7 @@ class Screen {
 		bool promptShown = false;
 		int lines = 0;
 		void drawScalePiece(void*, boolean, int, int, int, int, int, int, int, int, int, uint16_t);
-		void drawScale(void*, boolean, int, int, int, int);
+		void drawScale(void*, boolean, int, int, int, int, int, int);
 		void fillTables();
 		void setPromptFont();
 		void drawNeedle();

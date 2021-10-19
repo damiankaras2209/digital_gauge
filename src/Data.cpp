@@ -80,27 +80,56 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
     Serial.println(xPortGetCoreID());
 
     DataStruct *params = (DataStruct*)pvParameters;
+    Settings *settings = Settings::getInstance();
 
     for(;;) {
         while(params->i2cBusy)
            delay(1);
         params->i2cBusy = true;
 
-        for(int i=0; i<4; i++) {
+        float readings[6][SAMPLES];
 
-            for(int j=SAMPLES-1; j>0; j--)
-                params->adc[i][j] = params->adc[i][j-1];
-            params->adc[i][0] = params->adsPtr->readADC(i);
-            float sum = 0;
-//            Serial.print(i);
-//            Serial.print(" ");
-            for(int j=0; j<SAMPLES; j++) {
-//                Serial.print(params->adc[i][j]);
-//                Serial.print(", ");
-                sum += params->adc[i][j];
+        for(int i=0; i<6; i++) {
+            if(settings->input[i].enable) {
+
+                for(int j=SAMPLES-1; j>0; j--)
+                    readings[i][j] = readings[i][j - 1];
+
+                if(i<4)
+                    readings[i][0] = params->adsPtr->readADC(i);
+                else if(i==4)
+                    readings[i][0] = analogRead(36);
+                else if(i==5)
+                    readings[i][0] = analogRead(39);
+
+                float sum = 0;
+    //            Serial.print(i);
+    //            Serial.print(" ");
+                for(int j=0; j<SAMPLES; j++) {
+    //                Serial.print(params->adc[i][j]);
+    //                Serial.print(", ");
+                    sum += readings[i][j];
+                }
+    //            Serial.println("");
+
+                float voltage = params->adsPtr->toVoltage(sum / SAMPLES);
+//                float voltage = params->adsPtr->toVoltage(params->adsPtr->readADC(i));
+
+                Serial.printf("Voltage %d: %f", i, voltage);
+
+                volatile InputSettings *input = &(settings->input[i]);
+                float res = input->r * voltage / (3.3 - voltage);
+
+                Serial.printf(", res: %f", res);
+
+                switch(input->type){
+                    case Logarithmic: params->inputValue[i] = input->beta * (25.0 + 273.15) / (input->beta + ((25.0 + 273.15) * log(res / input->r25))) - 273.15; break;
+                    case Linear: params->inputValue[i] = (res - input->rmin) / (input->rmax - input->rmin) * input->maxVal; break;
+                }
+
+
+                Serial.printf(", inputValue: %f\n", params->inputValue[i]);
             }
-//            Serial.println("");
-            params->adcVoltage[i] = params->adsPtr->toVoltage(sum/SAMPLES);
         }
 
         params->now = params->rtcPtr->now();

@@ -122,15 +122,12 @@ void Screen::drawScalePiece(void* c, boolean isSprite, int a, int b, int offset,
 
 
 
-void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int w) {
-	int16_t start = 0, end = 180;
+void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int w, int start, int end) {
 
-//	t2=millis();
-
-	float stepSmall = (end-start)/((vis->scaleLargeSteps*vis->scaleSmallSteps)*1.0);
+	float stepSmall = 180/((vis->scaleLargeSteps*vis->scaleSmallSteps)*1.0);
 	int steps = vis->scaleLargeSteps*vis->scaleSmallSteps+1;
 	for(uint8_t i=0; i<steps; i++) {
-		int16_t deg = start+stepSmall*i;
+		int16_t deg = stepSmall*i;
 		drawScalePiece((isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c), isSprite, vis->ellipseA, vis->ellipseB, vis->needleCenterOffset, deg, side, x1, y1,
 		(i%(steps/vis->scaleLargeSteps)==0) ? vis->scaleLargeLength : vis->scaleSmallLength, 
 		(i%(steps/vis->scaleLargeSteps)==0) ? vis->scaleLargeWidth : vis->scaleSmallWidth, 
@@ -190,7 +187,7 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
 			// if(vis->width/2+vis->offsetX+vis->needleCenterOffset+vis->scaleXRight[i] < x1+w+5) {
 				// Serial.print(i);
 				(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->drawString(
-					((String)vis->scaleRight[i]).c_str(),
+					((String)(start + i*(end-start)/vis->scaleTextSteps)).c_str(),
 					vis->width/2+(isSprite ? 0 : vis->offsetX)+vis->needleCenterOffset+vis->scaleXRight[i]-x1,
 					vis->height/2+(isSprite ? 0 : vis->offsetY)+vis->scaleY[i]-y1
 				);
@@ -198,7 +195,7 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
 
 		} else {
 			(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->drawString(
-				((String)vis->scaleLeft[i]).c_str(),
+                ((String)(start + i*(end-start)/vis->scaleTextSteps)).c_str(),
 				vis->width/2+(isSprite ? 0 : vis->offsetX)-vis->needleCenterOffset+vis->scaleXLeft[i]-x1,
 				vis->height/2+(isSprite ? 0 : vis->offsetY)+vis->scaleY[i]-y1
 			);
@@ -227,8 +224,8 @@ void Screen::reset() {
     isBusy = true;
 	tft->fillScreen(TFT_BLACK);
 	fillTables();
-	drawScale(tft, false, 0, 0, 0, 0);	//left
-	drawScale(tft, false, 1, 0, 0, 0);	//right
+	drawScale(tft, false, 0, 0, 0, 0, 0, 0);	//left
+	drawScale(tft, false, 1, 0, 0, 0, 0, 0);	//right
     updateText(true, 0);
 
 //	tft->setTextColor(vis->fontColor, vis->backgroundColor);
@@ -270,16 +267,36 @@ static const uint16_t pallete[] = {
 };
 
 
-void Screen::updateNeedle(int side, float value) {
+void Screen::updateNeedle(int side, Data::DataSource source) {
     if(isBusy)
         return;
     isBusy = true;
 
     t2 = millis();
 
+    int start, end;
+    float value;
 
-	float val = side ? value/10 : (value-30)/120;
-//    val = value;
+    Serial.print(side ? "right" : "left");
+    Serial.print(": ");
+    Serial.print(source);
+
+    switch (source) {
+        case Data::ADS1115_0: value = data->data.inputValue[0]; start = settings->input[0].scaleStart; end = settings->input[0].scaleEnd; break;
+        case Data::ADS1115_1: value = data->data.inputValue[1]; start = settings->input[1].scaleStart; end = settings->input[1].scaleEnd; break;
+        case Data::ADS1115_2: value = data->data.inputValue[2]; start = settings->input[2].scaleStart; end = settings->input[2].scaleEnd; break;
+        case Data::ADS1115_3: value = data->data.inputValue[3]; start = settings->input[3].scaleStart; end = settings->input[3].scaleEnd; break;
+        case Data::ADC_5:     value = data->data.inputValue[4]; start = settings->input[4].scaleStart; end = settings->input[4].scaleEnd; break;
+        case Data::ADC_6:     value = data->data.inputValue[5]; start = settings->input[5].scaleStart; end = settings->input[5].scaleEnd; break;
+        case Data::VOLTAGE:   value = data->data.internalVoltage; start = 6; end = 18; break;
+        case Data::CAN_RPM:   value = data->data.rpm; start = 0; end = 8; break;
+    }
+
+    Serial.printf("value: %f, start: %d, end: %d\n", value, start, end);
+
+
+    float val = (value-start)/end;
+
 	if(val<0.0)
 	    val = 0.0;
 	if(val>1.0)
@@ -349,7 +366,7 @@ void Screen::updateNeedle(int side, float value) {
 //	    Serial.print(millis()-t2);
 //	    t2=millis();
 
-	    drawScale(&update, true, side, x1, min(y1, pY1[side]), max(w, pW[side]));
+	    drawScale(&update, true, side, x1, min(y1, pY1[side]), max(w, pW[side]), start, end);
 
 //	    Serial.print("draw scale: ");
 //	    Serial.print(millis()-t2);
@@ -402,7 +419,7 @@ void Screen::updateNeedle(int side, float value) {
 		// 	pY1[side]+pH[side] > y1+h ? pY1[side]+pH[side]-min(y1, pY1[side]) : h+abs(y1-pY1[side]),
 		// 	TFT_VIOLET);
 	} else {
-	    drawScale(&update, true, side, vis->width/2 - abs(vis->width/2 - x1) - max(w, pW[side]), min(y1, pY1[side]), max(w, pW[side]));
+	    drawScale(&update, true, side, vis->width/2 - abs(vis->width/2 - x1) - max(w, pW[side]), min(y1, pY1[side]), max(w, pW[side]), start, end);
 		if(deg >= 0) {
 			update.drawWedgeLine(
             max(w, pW[side])-vis->needleCenterRadius,

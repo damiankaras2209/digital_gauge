@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <fstream>
+#include <cstring>
 #include <TFT_eSPI.h>
 #include "ArduinoJson.h"
 
@@ -35,10 +36,6 @@ typedef struct VisualSettings {
    int16_t dateSize;
    int16_t scaleSize;
 
-   int16_t scaleStart;
-   int16_t scaleEnd;
-   int16_t scaleLeft[5];
-   int16_t scaleRight[5];
    int16_t scaleXLeft[5];
    int16_t scaleXRight[5];
    int16_t scaleY[5];
@@ -64,16 +61,30 @@ typedef struct VisualSettings {
    uint32_t needleColor;
 } VisualSettings;
 
+enum InputType {
+    Linear, Logarithmic, Dummy
+};
+
+const String inputTypeString[] = {"Linear", "Logarithmic"};
+
 typedef struct InputSettings {
 	boolean enable;
+	char name[30];
+	char unit[5];
+	int16_t scaleStart;
+	int16_t scaleEnd;
 	float r;
-	int type;
+	InputType type;
 	float beta;
 	float r25;
 	float rmin;
 	float rmax;
 	float maxVal;
 } InputSettings;
+
+//typedef struct DataDisplaySettings {
+//
+//} DataDisplaySettings;
 
 class Settings {
 
@@ -91,6 +102,7 @@ class Settings {
 		
 		volatile InputSettings input[6];
 		volatile VisualSettings visual;
+//		volatile DataDisplaySettings leftGauge, rightGauge;
 
 };
 

@@ -102,11 +102,35 @@ String processor(const String& var){
         for(int i=0; i<6; i++)
             ss << "<td>Włącz<input type='checkbox' id='input_" << i << "_en' " << (settings->input[i].enable ? "checked" : "") << "></td>";
         ss << "</tr>\n<tr>";
+
+        for(int i=0; i<6; i++)
+            ss << "<td>Preset<select id='input_" << i << "_preset' onchange='preset(" << i <<")' type='checkbox' ><option value='-1'>Puste</option><option value='0'>Ciśń. oleju</option><option value='1'>Temp. oleju</option></section></td>";
+        ss << "</tr>\n<tr>";
+
+        for(int i=0; i<6; i++)
+            ss << "<td>Nazwa<input value='" << (char *)(settings->input[i].name) << "' type='text' id='input_" << i << "_name'></td>";
+        ss << "</tr>\n<tr>";
+        for(int i=0; i<6; i++)
+            ss << "<td>Jednostka<input value='" << (char *)(settings->input[i].unit) << "' type='text' id='input_" << i << "_unit'></td>";
+        ss << "</tr>\n<tr>";
+        for(int i=0; i<6; i++)
+            ss << "<td>Początek skali<input value='" << settings->input[i].scaleStart << "' type='number' step='1' id='input_" << i << "_scaleStart'></td>";
+        ss << "</tr>\n<tr>";
+        for(int i=0; i<6; i++)
+            ss << "<td>Koniec skali<input value='" << settings->input[i].scaleEnd << "' type='number' step='1' id='input_" << i << "_scaleEnd'></td>";
+        ss << "</tr>\n<tr>";
+
         for(int i=0; i<6; i++)
             ss << "<td>R<input value='" << settings->input[i].r << "' type='number' step='0.1' id='input_" << i << "_rballance'></td>";
         ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>Typ<select id='input_" << i << "_type'><option value='0' " << (settings->input[i].type ? "" : "selected") << ">Liniowe</option><option value='1'" << (settings->input[i].type ? "selected" : "")  << ">Log</option></select></td>";
+        for(int i=0; i<6; i++) {
+            ss << "<td>Typ<select id='input_" << i << "_type'>";
+            for(int j=0; j != Dummy; j++){
+                InputType type = static_cast<InputType>(j);
+                ss << "<option value='" << j <<"' " << (settings->input[i].type == j ? "selected" : "") << ">" << inputTypeString[j].c_str() << "</option>";
+            }
+            ss << "</select></td>";
+        }
         ss << "</tr>\n<tr>";
         for(int i=0; i<6; i++)
             ss << "<td>Beta<input value='" << settings->input[i].beta << "' type='number' step='0.1' id='input_" << i << "_beta'></td>";
@@ -124,6 +148,7 @@ String processor(const String& var){
             ss << "<td>Maks. wartość<input value='" << settings->input[i].maxVal << "' type='number' step='0.1' id='input_" << i << "_max_val'></td>";
         ss << "</tr>\n<table>";
         return String(ss.str().c_str());
+
     }
     return String("2137");
 }
@@ -179,10 +204,18 @@ void Networking::serverSetupTask(void * pvParameters) {
 
                     if(str2.compare("en") == 0)
                         settings->input[i].enable = atoi(p->value().c_str());
+                    else if(str2.compare("name") == 0)
+                        strcpy((char *)settings->input[i].name, p->value().c_str());
+                    else if(str2.compare("unit") == 0)
+                        strcpy((char *)settings->input[i].unit, p->value().c_str());
+                    else if(str2.compare("scaleStart") == 0)
+                        settings->input[i].scaleStart = strtof(p->value().c_str(), NULL);
+                    else if(str2.compare("scaleEnd") == 0)
+                        settings->input[i].scaleEnd = strtof(p->value().c_str(), NULL);
                     else if(str2.compare("rballance") == 0)
                         settings->input[i].r = strtof(p->value().c_str(), NULL);
                     else if(str2.compare("type") == 0)
-                        settings->input[i].type = strtof(p->value().c_str(), NULL);
+                        settings->input[i].type = static_cast<InputType>(strtof(p->value().c_str(), NULL));
                     else if(str2.compare("beta") == 0)
                         settings->input[i].beta = strtof(p->value().c_str(), NULL);
                     else if(str2.compare("r25") == 0)
@@ -214,7 +247,6 @@ void Networking::serverSetupTask(void * pvParameters) {
                     settings->visual.needleBottomWidth = atoi(p->value().c_str());
                 else if(p->name()=="needleTopWidth")
                     settings->visual.needleTopWidth = atoi(p->value().c_str());
-
 
             }
         }

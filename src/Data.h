@@ -11,6 +11,7 @@
 #include <Adafruit_MCP23X08.h>
 #include "RCSwitch.h"
 
+#include "Settings.h"
 #include "time.h"
 #include "WiFi.h"
 
@@ -29,7 +30,12 @@
 class Data {
 
 public:
-        typedef struct DataStruct {
+
+    enum DataSource {
+        ADS1115_0, ADS1115_1, ADS1115_2, ADS1115_3, ADC_5, ADC_6, VOLTAGE, CAN_RPM
+    };
+
+    typedef struct DataStruct {
             RTC_DS3231* rtcPtr;
             MCP2515* mcp2515Ptr;
             ADS1115* adsPtr;
@@ -38,8 +44,8 @@ public:
             RCSwitch* rcPtr;
 
             GxFT5436::TouchInfo touchInfo;
-            float adc[4][SAMPLES];
-            float adcVoltage[4];
+            float internalVoltage;
+            float inputValue[6];
             DateTime now;
             int brightness = 255;
             struct can_frame canMsgg;

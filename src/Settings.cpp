@@ -46,19 +46,17 @@ void Settings::loadDefault() {
 	visual.dateSize = 16;
 	visual.scaleSize = 12;
 
-	visual.scaleStart = 30;
-	visual.scaleEnd = 150;
 
-	int16_t sscaleLeft[] = 	{30, 60, 90, 120, 150};
+//	int16_t sscaleLeft[] = 	{30, 60, 90, 120, 150};
 //	int16_t sscaleLeft[] = 	{0, 2000, 4000, 6000, 8000};
-	int16_t sscaleRight[] = 	{6, 9, 12, 15, 18};
+//	int16_t sscaleRight[] = 	{6, 9, 12, 15, 18};
 	int16_t sscaleXLeft[] = 	{-0, 	-75, 	-100, 	-75, 	-0};
 	int16_t sscaleXRight[] = 	{0, 	75, 	100, 	75, 	0};
 	int16_t sscaleY[] = 		{75, 	45, 	0,		-45, 	-75};
 
 	for(int i=0; i<5; i++){
-		visual.scaleLeft[i] = sscaleLeft[i];
-		visual.scaleRight[i] = sscaleRight[i];
+//		visual.scaleLeft[i] = sscaleLeft[i];
+//		visual.scaleRight[i] = sscaleRight[i];
 		visual.scaleXLeft[i] = sscaleXLeft[i];
 		visual.scaleXRight[i] = sscaleXRight[i];
 		visual.scaleY[i] = sscaleY[i];
@@ -94,8 +92,12 @@ void Settings::loadDefault() {
 
 	for(int i=0; i<6; i++) {
         input[i].enable = false;
+        strcpy((char *)(input[i].name), "");
+        strcpy((char *)(input[i].unit), "u");
+        input[i].scaleStart = 0;
+        input[i].scaleEnd = 0;
         input[i].r = 0;
-        input[i].type = 0;
+        input[i].type = Logarithmic;
         input[i].beta = 0;
         input[i].r25 = 0;
         input[i].rmin = 0;
@@ -103,13 +105,12 @@ void Settings::loadDefault() {
         input[i].maxVal = 0;
 	}
 
-
 }
 
 void Settings::load() {
     Serial.println("Loading settings");
     if(SPIFFS.exists("/settings.json")) {
-        StaticJsonDocument<2048> doc;
+        StaticJsonDocument<4*1024> doc;
         fs::File file = SPIFFS.open("/settings.json", "r");
         DeserializationError error = deserializeJson(doc, file);
         if (error) {
@@ -128,14 +129,18 @@ void Settings::load() {
         visual.needleTopWidth = doc["needleTopWidth"] | 0;
 
         for(int i=0; i<6; i++) {
-            input[i].enable =   doc["input_" + (String)i + "_en"] | 0;
-            input[i].r =        doc["input_" + (String)i + "_rballance"] | 0;
-            input[i].type =     doc["input_" + (String)i + "_type"] | 0;
-            input[i].beta =     doc["input_" + (String)i + "_beta"] | 0;
-            input[i].r25 =      doc["input_" + (String)i + "_r25"] | 0;
-            input[i].rmin =     doc["input_" + (String)i + "_rmin"] | 0;
-            input[i].rmax =     doc["input_" + (String)i + "_rmax"] | 0;
-            input[i].maxVal =   doc["input_" + (String)i + "_max_val"] | 0;
+            input[i].enable =       doc["input_" + (String)i + "_en"] | 0;
+            strcpy((char *)settings->input[i].name, doc["input_" + (String)i + "_name"] | "");
+            strcpy((char *)settings->input[i].unit, doc["input_" + (String)i + "_unit"] | "u");
+            input[i].scaleStart =   doc["input_" + (String)i + "_scaleStart"] | 0;
+            input[i].scaleEnd =     doc["input_" + (String)i + "_scaleEnd"] | 0;
+            input[i].r =            doc["input_" + (String)i + "_rballance"].as<float>();
+            input[i].type =         doc["input_" + (String)i + "_type"] | Linear;
+            input[i].beta =         doc["input_" + (String)i + "_beta"].as<float>();
+            input[i].r25 =          doc["input_" + (String)i + "_r25"].as<float>();
+            input[i].rmin =         doc["input_" + (String)i + "_rmin"].as<float>();
+            input[i].rmax =         doc["input_" + (String)i + "_rmax"].as<float>();
+            input[i].maxVal =       doc["input_" + (String)i + "_max_val"].as<float>();
         }
 
         file.close();
@@ -154,6 +159,10 @@ void Settings::load() {
 
         for(int i=0; i<6; i++) {
             Serial.println("[input_" + (String)i + ".enable]" + (String)input[i].enable);
+            Serial.println("[input_" + (String)i + ".name]" + (String)(char *)input[i].name);
+            Serial.println("[input_" + (String)i + ".unit]" + (String)(char *)input[i].unit);
+            Serial.println("[input_" + (String)i + ".scaleStart]" + (String)input[i].scaleStart);
+            Serial.println("[input_" + (String)i + ".scaleEnd]" + (String)input[i].scaleEnd);
             Serial.println("[input_" + (String)i + ".r]" + (String)input[i].r);
             Serial.println("[input_" + (String)i + ".type]" + (String)input[i].type);
             Serial.println("[input_" + (String)i + ".beta]" + (String)input[i].beta);
@@ -174,7 +183,8 @@ void Settings::save() {
     if(SPIFFS.exists("/settings.json"))
         SPIFFS.remove("/settings.json");
     fs::File file = SPIFFS.open("/settings.json", "w");
-    StaticJsonDocument<2048> doc;
+    StaticJsonDocument<4*1024> doc;
+
     doc["offsetX"] = visual.offsetX;
     doc["offsetY"] = visual.offsetY;
     doc["ellipseA"] = visual.ellipseA;
@@ -186,6 +196,10 @@ void Settings::save() {
     doc["needleTopWidth"] = visual.needleTopWidth;
     for(int i=0; i<6; i++) {
         doc["input_" + (String)i + "_en"] = input[i].enable;
+        doc["input_" + (String)i + "_name"] = (String)(char*)input[i].name;
+        doc["input_" + (String)i + "_unit"] = (String)(char*)input[i].unit;
+        doc["input_" + (String)i + "_scaleStart"] = input[i].scaleStart;
+        doc["input_" + (String)i + "_scaleEnd"] = input[i].scaleEnd;
         doc["input_" + (String)i + "_rballance"] = input[i].r;
         doc["input_" + (String)i + "_type"] = input[i].type;
         doc["input_" + (String)i + "_beta"] = input[i].beta;
