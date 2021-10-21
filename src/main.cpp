@@ -258,17 +258,18 @@ void setup(void) {
 
       data.init();
 
-      pinMode(33, INPUT_PULLDOWN);
-      attachInterrupt(digitalPinToInterrupt(33), touchStart, RISING);
+      if(data.data.GxFT5436Available) {
+          pinMode(33, INPUT_PULLDOWN);
+          attachInterrupt(digitalPinToInterrupt(33), touchStart, RISING);
 
-      TaskHandle_t touchHandle;
-      Serial.println( xTaskCreatePinnedToCore(touch,
-                                              "touch",
-                                              4*1024,
-                                              &(data.data),
-                                              1,
-                                              &touchHandle, 0) ? "" : "Failed to start touch task");
-
+          TaskHandle_t touchHandle;
+          Serial.print( xTaskCreatePinnedToCore(touch,
+                                                  "touch",
+                                                  4*1024,
+                                                  &(data.data),
+                                                  1,
+                                                  &touchHandle, 0) ? "" : "Failed to start touch task\n");
+      }
     //  tft.fillScreen(TFT_BLUE);
 
     //  TwoWire twoWire(1);
@@ -304,6 +305,7 @@ void setup(void) {
       ledcAttachPin(ledPin, ledChannel);
       ledcWrite(0, 255);
   }
+  Serial.println("Setup() complete");
 }
 
 Data::DataSource left = Data::ADS1115_1;

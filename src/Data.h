@@ -43,6 +43,7 @@ public:
             Adafruit_MCP23X08* mcp23X08Ptr;
             RCSwitch* rcPtr;
 
+            bool GxFT5436Available;
             GxFT5436::TouchInfo touchInfo;
             float internalVoltage;
             float inputValue[6];
@@ -66,10 +67,10 @@ public:
         DataStruct data;
 
 private:
-        static void IRAM_ATTR touchStart();
+//        static void IRAM_ATTR touchStart();
 
-    [[noreturn]] static void test(void *);
-        static boolean RTCAvailable;
+//        [[noreturn]] static void test(void *);
+//        static boolean RTCAvailable;
         static void adjustRTCTask(void *);
         _Noreturn  static void adcLoop(void *);
         _Noreturn  static void canLoop(void *);

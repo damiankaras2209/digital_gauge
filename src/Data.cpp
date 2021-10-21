@@ -22,19 +22,23 @@ void Data::init() {
 
     if (!rtc.begin())
         Serial.println("Couldn't find RTC");
-    if(rtc.lostPower()) {
-        Serial.println("Lost power");
-        rtc.adjust(DateTime(1, 1, 1, 22, 22, 22));
+    else {
+        Serial.println("RTC good");
+        if(rtc.lostPower()) {
+            Serial.println("RTC lost power");
+            rtc.adjust(DateTime(1, 1, 1, 22, 22, 22));
+        }
     }
 
+
     TaskHandle_t rtcAdjustHandle;
-    Serial.println(xTaskCreatePinnedToCore(adjustRTCTask,
+    Serial.print(xTaskCreatePinnedToCore(adjustRTCTask,
                                     "adjustRTC",
                                     4*1024,
                                     &data,
                                     3,
                                     &rtcAdjustHandle,
-                                    0) ? "" : "Failed to start rtc adjust task");
+                                    0) ? "" : "Failed to start rtc adjust task\n");
 
 
 
@@ -43,30 +47,35 @@ void Data::init() {
     mcp.setListenOnlyMode();
 
 
-    ads.begin();
-    ads.setGain(1);
-    ads.setDataRate(7);
+    if(!ads.begin())
+        Serial.println("ADS1115 not found");
+    else {
+        Serial.println("ADS1115 found");
+        ads.setGain(1);
+        ads.setDataRate(7);
+    }
 
 
-    touch.init(&Serial);
+
+    data.GxFT5436Available = touch.init(&Serial);
 
     TaskHandle_t adcHandle;
-    Serial.println(xTaskCreatePinnedToCore(adcLoop,
+    Serial.print(xTaskCreatePinnedToCore(adcLoop,
                                     "adcLoop",
                                     4*1024,
                                     &data,
                                     1,
                                     &adcHandle,
-                                    0) ? "" : "Failed to start adcLoop task");
+                                    0) ? "" : "Failed to start adcLoop task\n");
 
 
     TaskHandle_t canHandle;
-    Serial.println( xTaskCreatePinnedToCore(canLoop,
+    Serial.print( xTaskCreatePinnedToCore(canLoop,
                                             "can",
                                             32*1024,
                                             &data,
                                             1,
-                                            &canHandle, 0) ? "" : "Failed to start can task");
+                                            &canHandle, 0) ? "" : "Failed to start can task\n");
 
     rc.enableReceive(3);
 
@@ -89,7 +98,7 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
 
         float readings[6][SAMPLES];
 
-        for(int i=0; i<6; i++) {
+        for(int i=0; i<6 && params->adsPtr->isConnected(); i++) {
             if(settings->input[i].enable) {
 
                 for(int j=SAMPLES-1; j>0; j--)
@@ -115,12 +124,12 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
                 float voltage = params->adsPtr->toVoltage(sum / SAMPLES);
 //                float voltage = params->adsPtr->toVoltage(params->adsPtr->readADC(i));
 
-                Serial.printf("Voltage %d: %f", i, voltage);
+//                Serial.printf("Voltage %d: %f", i, voltage);
 
                 volatile InputSettings *input = &(settings->input[i]);
                 float res = input->r * voltage / (3.3 - voltage);
 
-                Serial.printf(", res: %f", res);
+//                Serial.printf(", res: %f", res);
 
                 switch(input->type){
                     case Logarithmic: params->inputValue[i] = input->beta * (25.0 + 273.15) / (input->beta + ((25.0 + 273.15) * log(res / input->r25))) - 273.15; break;
@@ -128,11 +137,14 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
                 }
 
 
-                Serial.printf(", inputValue: %f\n", params->inputValue[i]);
+//                Serial.printf(", inputValue: %f\n", params->inputValue[i]);
             }
         }
 
-        params->now = params->rtcPtr->now();
+
+        Wire.beginTransmission(DS3231_ADDRESS);
+        if(Wire.endTransmission() == 0)
+            params->now = params->rtcPtr->now();
 
         if (params->rcPtr->available()) {
 

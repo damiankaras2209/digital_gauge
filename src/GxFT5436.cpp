@@ -76,7 +76,7 @@ GxFT5436::GxFT5436(int8_t sda, int8_t scl, int8_t rst) : _sda(sda), _scl(scl), _
 
 #endif
 
-void GxFT5436::init(Stream* pDiagnosticOutput)
+bool GxFT5436::init(Stream* pDiagnosticOutput)
 {
   _pDiagnosticOutput = pDiagnosticOutput;
   _info[0].clear();
@@ -101,9 +101,10 @@ void GxFT5436::init(Stream* pDiagnosticOutput)
   uint8_t error = I2C.endTransmission();
   if (error != 0)
   {
-    DiagOut.print("GxFT5436::init() - I2C failed for address 0x"); DiagOut.print(FT5436_I2C_ADDR, HEX);
+    DiagOut.println("GxFT5436::init() - I2C failed for address 0x"); DiagOut.print(FT5436_I2C_ADDR, HEX);
+    return false;
   }
-  DiagOut.println("No error");
+  DiagOut.println("GxFT5436 init() successful");
   I2C_Write(FT5436_I2C_ADDR, FT_REG_DEV_MODE, 0);
 //  I2C_Write(FT5436_I2C_ADDR, FT_REG_THGROUP, 1);
 //  I2C_Write(FT5436_I2C_ADDR, 0x81, 1);
@@ -115,6 +116,7 @@ void GxFT5436::init(Stream* pDiagnosticOutput)
 //  DiagOut.println(I2C_Read(FT5436_I2C_ADDR, 0x81));
 //  DiagOut.print("ERROR: ");
 //  DiagOut.println(I2C_Read(FT5436_I2C_ADDR, 0xA9), HEX);
+    return true;
 }
 
 uint8_t GxFT5436::scanSingleTouch(uint16_t& x, uint16_t& y)

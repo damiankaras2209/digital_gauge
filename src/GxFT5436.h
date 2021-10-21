@@ -128,7 +128,7 @@ class GxFT5436
   public:
     GxFT5436(int8_t rst);
     GxFT5436(int8_t sda, int8_t scl, int8_t rst);
-    void init(Stream* pDiagnosticOutput = 0);
+    bool init(Stream* pDiagnosticOutput = 0);
     // scans for touch(es) and returns the number (of fingers) and the coordinates of the first touch
     uint8_t scanSingleTouch(uint16_t& x, uint16_t& y);
     // scans for touches and returns the number and the coordinates
