@@ -91,11 +91,6 @@ void Settings::loadDefault() {
 	visual.needleCenterColor = 0x31A6;
 
 	for(int i=0; i<6; i++) {
-        input[i].enable = false;
-        strcpy((char *)(input[i].name), "");
-        strcpy((char *)(input[i].unit), "u");
-        input[i].scaleStart = 0;
-        input[i].scaleEnd = 0;
         input[i].r = 0;
         input[i].type = Logarithmic;
         input[i].beta = 0;
@@ -104,6 +99,26 @@ void Settings::loadDefault() {
         input[i].rmax = 0;
         input[i].maxVal = 0;
 	}
+
+	for(int i=ADS1115_0; i<=ADC_6; i++) {
+	    dataDisplay[i].enable = false;
+	    strcpy((char *)(dataDisplay[i].name), "");
+	    strcpy((char *)(dataDisplay[i].unit), "u");
+	    dataDisplay[i].scaleStart = 0;
+	    dataDisplay[i].scaleEnd = 0;
+	}
+
+	dataDisplay[VOLTAGE].enable = true;
+	strcpy((char *)(dataDisplay[VOLTAGE].name), "Voltage");
+	strcpy((char *)(dataDisplay[VOLTAGE].unit), "V");
+	dataDisplay[VOLTAGE].scaleStart = 6;
+	dataDisplay[VOLTAGE].scaleEnd = 18;
+
+	dataDisplay[CAN_RPM].enable = false;
+	strcpy((char *)(dataDisplay[CAN_RPM].name), "RPM");
+	strcpy((char *)(dataDisplay[CAN_RPM].unit), "1000/min");
+	dataDisplay[CAN_RPM].scaleStart = 0;
+	dataDisplay[CAN_RPM].scaleEnd = 8;
 
 }
 
@@ -129,11 +144,6 @@ void Settings::load() {
         visual.needleTopWidth = doc["needleTopWidth"] | 0;
 
         for(int i=0; i<6; i++) {
-            input[i].enable =       doc["input_" + (String)i + "_en"] | 0;
-            strcpy((char *)settings->input[i].name, doc["input_" + (String)i + "_name"] | "");
-            strcpy((char *)settings->input[i].unit, doc["input_" + (String)i + "_unit"] | "u");
-            input[i].scaleStart =   doc["input_" + (String)i + "_scaleStart"] | 0;
-            input[i].scaleEnd =     doc["input_" + (String)i + "_scaleEnd"] | 0;
             input[i].r =            doc["input_" + (String)i + "_rballance"].as<float>();
             input[i].type =         doc["input_" + (String)i + "_type"] | Linear;
             input[i].beta =         doc["input_" + (String)i + "_beta"].as<float>();
@@ -141,6 +151,14 @@ void Settings::load() {
             input[i].rmin =         doc["input_" + (String)i + "_rmin"].as<float>();
             input[i].rmax =         doc["input_" + (String)i + "_rmax"].as<float>();
             input[i].maxVal =       doc["input_" + (String)i + "_max_val"].as<float>();
+        }
+
+        for(int i=ADS1115_0; i<LAST; i++) {
+            dataDisplay[i].enable =       doc["dataDisplay_" + (String)i + "_en"] | 0;
+            strcpy((char *)settings->dataDisplay[i].name, doc["dataDisplay_" + (String)i + "_name"] | "");
+            strcpy((char *)settings->dataDisplay[i].unit, doc["dataDisplay_" + (String)i + "_unit"] | "u");
+            dataDisplay[i].scaleStart =   doc["dataDisplay_" + (String)i + "_scaleStart"] | 0;
+            dataDisplay[i].scaleEnd =     doc["dataDisplay_" + (String)i + "_scaleEnd"] | 0;
         }
 
         file.close();
@@ -158,11 +176,6 @@ void Settings::load() {
         Serial.println("[needleTopWidth]" + (String)visual.needleTopWidth);
 
         for(int i=0; i<6; i++) {
-            Serial.println("[input_" + (String)i + ".enable]" + (String)input[i].enable);
-            Serial.println("[input_" + (String)i + ".name]" + (String)(char *)input[i].name);
-            Serial.println("[input_" + (String)i + ".unit]" + (String)(char *)input[i].unit);
-            Serial.println("[input_" + (String)i + ".scaleStart]" + (String)input[i].scaleStart);
-            Serial.println("[input_" + (String)i + ".scaleEnd]" + (String)input[i].scaleEnd);
             Serial.println("[input_" + (String)i + ".r]" + (String)input[i].r);
             Serial.println("[input_" + (String)i + ".type]" + (String)input[i].type);
             Serial.println("[input_" + (String)i + ".beta]" + (String)input[i].beta);
@@ -170,6 +183,14 @@ void Settings::load() {
             Serial.println("[input_" + (String)i + ".rmin]" + (String)input[i].rmin);
             Serial.println("[input_" + (String)i + ".rmax]" + (String)input[i].rmax);
             Serial.println("[input_" + (String)i + ".maxVal]" + (String)input[i].maxVal);
+        }
+
+        for(int i=ADS1115_0; i<LAST; i++) {
+            Serial.println("[dataDisplay_" + (String)i + ".enable]" + (String)dataDisplay[i].enable);
+            Serial.println("[dataDisplay_" + (String)i + ".name]" + (String)(char *)dataDisplay[i].name);
+            Serial.println("[dataDisplay_" + (String)i + ".unit]" + (String)(char *)dataDisplay[i].unit);
+            Serial.println("[dataDisplay_" + (String)i + ".scaleStart]" + (String)dataDisplay[i].scaleStart);
+            Serial.println("[dataDisplay_" + (String)i + ".scaleEnd]" + (String)dataDisplay[i].scaleEnd);
         }
         Serial.println("End of read");
     } else {
@@ -195,11 +216,6 @@ void Settings::save() {
     doc["needleBottomWidth"] = visual.needleBottomWidth;
     doc["needleTopWidth"] = visual.needleTopWidth;
     for(int i=0; i<6; i++) {
-        doc["input_" + (String)i + "_en"] = input[i].enable;
-        doc["input_" + (String)i + "_name"] = (String)(char*)input[i].name;
-        doc["input_" + (String)i + "_unit"] = (String)(char*)input[i].unit;
-        doc["input_" + (String)i + "_scaleStart"] = input[i].scaleStart;
-        doc["input_" + (String)i + "_scaleEnd"] = input[i].scaleEnd;
         doc["input_" + (String)i + "_rballance"] = input[i].r;
         doc["input_" + (String)i + "_type"] = input[i].type;
         doc["input_" + (String)i + "_beta"] = input[i].beta;
@@ -208,10 +224,52 @@ void Settings::save() {
         doc["input_" + (String)i + "_rmax"] = input[i].rmax;
         doc["input_" + (String)i + "_max_val"] = input[i].maxVal;
     }
+    for(int i=ADS1115_0; i<LAST; i++) {
+        doc["dataDisplay_" + (String)i + "_en"] = dataDisplay[i].enable;
+        doc["dataDisplay_" + (String)i + "_name"] = (String)(char*)dataDisplay[i].name;
+        doc["dataDisplay_" + (String)i + "_unit"] = (String)(char*)dataDisplay[i].unit;
+        doc["dataDisplay_" + (String)i + "_scaleStart"] = dataDisplay[i].scaleStart;
+        doc["dataDisplay_" + (String)i + "_scaleEnd"] = dataDisplay[i].scaleEnd;
+    }
     if (serializeJson(doc, file) == 0) {
         Serial.println(F("Failed to write to file"));
     }
     Serial.println(F("Settings saved"));
+
+    // Close the file
+    file.close();
+}
+
+void Settings::loadSelected(Settings::DataSource *selected) {
+    Serial.println("Loading selected");
+    if(SPIFFS.exists("/selected.json")) {
+        StaticJsonDocument<128> doc;
+        fs::File file = SPIFFS.open("/selected.json", "r");
+        DeserializationError error = deserializeJson(doc, file);
+        if (error) {
+            Serial.println(F("Failed to read file, using default configuration"));
+        }
+
+        selected[0] = doc["sel_0"] | VOLTAGE;
+        selected[1] = doc["sel_1"] | VOLTAGE;
+        selected[2] = doc["sel_2"] | VOLTAGE;
+    }
+}
+
+void Settings::saveSelected(Settings::DataSource *selected) {
+    if(SPIFFS.exists("/selected.json"))
+        SPIFFS.remove("/selected.json");
+    fs::File file = SPIFFS.open("/selected.json", "w");
+    StaticJsonDocument<128> doc;
+
+    doc["sel_0"] = selected[0];
+    doc["sel_1"] = selected[1];
+    doc["sel_2"] = selected[2];
+
+    if (serializeJson(doc, file) == 0) {
+        Serial.println(F("Failed to write to file"));
+    }
+    Serial.println(F("Selected saved"));
 
     // Close the file
     file.close();

@@ -33,7 +33,7 @@ class Screen {
 		void init(TFT_eSPI*, Data*);
 		void reset();
 		void blank();
-		void updateNeedle(int, Data::DataSource);
+		void updateNeedle(int, Settings::DataSource);
 		void updateText(boolean, int fps);
 		void showPrompt(String text);
 		void addToPrompt(String text);
@@ -43,7 +43,7 @@ class Screen {
 		TFT_eSPI *tft;
         Data *data;
         Settings *settings;
-        volatile VisualSettings *vis;
+        volatile Settings::VisualSettings *vis;
 		double arrR[91], arrX[91], arrY[91];
 		bool promptShown = false;
 		int lines = 0;

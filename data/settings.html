@@ -17,11 +17,6 @@
           data.append('needleTopWidth', document.getElementById('needleTopWidth').value);
 
           for(let i=0; i<6; i++) {
-              data.append('input_' + i + '_en', document.getElementById('input_' + i + '_en').checked ? "1" : "0");
-              data.append('input_' + i + '_name', document.getElementById('input_' + i + '_name').value);
-              data.append('input_' + i + '_unit', document.getElementById('input_' + i + '_unit').value);
-              data.append('input_' + i + '_scaleStart', document.getElementById('input_' + i + '_scaleStart').value);
-              data.append('input_' + i + '_scaleEnd', document.getElementById('input_' + i + '_scaleEnd').value);
               data.append('input_' + i + '_rballance', document.getElementById('input_' + i + '_rballance').value);
               data.append('input_' + i + '_type', document.getElementById('input_' + i + '_type').value);
               data.append('input_' + i + '_beta', document.getElementById('input_' + i + '_beta').value);
@@ -31,11 +26,21 @@
               data.append('input_' + i + '_max_val', document.getElementById('input_' + i + '_max_val').value);
           }
 
+          for(let i=0; i<%dataDisplayLength%; i++) {
+              data.append('data_' + i + '_en', document.getElementById('data_' + i + '_en').checked ? "1" : "0");
+              data.append('data_' + i + '_name', document.getElementById('data_' + i + '_name').value);
+              data.append('data_' + i + '_unit', document.getElementById('data_' + i + '_unit').value);
+              data.append('data_' + i + '_scaleStart', document.getElementById('data_' + i + '_scaleStart').value);
+              data.append('data_' + i + '_scaleEnd', document.getElementById('data_' + i + '_scaleEnd').value);
+
+          }
+
           let xhr = new XMLHttpRequest();
           xhr.open('POST', 'settingsSet');
           xhr.onload = function(){ console.log(this.response); };
           xhr.send(data);
-          return false;}
+          return false;
+        }
 
         function post(s) {
             let xhr = new XMLHttpRequest();
@@ -51,10 +56,10 @@
             switch (preset) {
                 case -1:
                     document.getElementById('input_' + i + '_rballance').value = 0;
-                    document.getElementById('input_' + i + '_name').value = "";
-                    document.getElementById('input_' + i + '_unit').value = "u";
-                    document.getElementById('input_' + i + '_scaleStart').value = 0;
-                    document.getElementById('input_' + i + '_scaleEnd').value = 0;
+                    document.getElementById('data_' + i + '_name').value = "";
+                    document.getElementById('data_' + i + '_unit').value = "u";
+                    document.getElementById('data_' + i + '_scaleStart').value = 0;
+                    document.getElementById('data_' + i + '_scaleEnd').value = 0;
                     document.getElementById('input_' + i + '_type').value = 0;
                     document.getElementById('input_' + i + '_beta').value = 0;
                     document.getElementById('input_' + i + '_r25').value = 0;
@@ -63,11 +68,11 @@
                     document.getElementById('input_' + i + '_max_val').value = 0;
                     break;
                 case 0:
-                    document.getElementById('input_' + i + '_rballance').value = 101.9;
-                    document.getElementById('input_' + i + '_name').value = "Ciśnienie oleju";
-                    document.getElementById('input_' + i + '_unit').value = "bar";
-                    document.getElementById('input_' + i + '_scaleStart').value = 0;
-                    document.getElementById('input_' + i + '_scaleEnd').value = 12;
+                    document.getElementById('input_' + i + '_rballance').value = 92.0;
+                    document.getElementById('data_' + i + '_name').value = "Ciśnienie oleju";
+                    document.getElementById('data_' + i + '_unit').value = "bar";
+                    document.getElementById('data_' + i + '_scaleStart').value = 0;
+                    document.getElementById('data_' + i + '_scaleEnd').value = 12;
                     document.getElementById('input_' + i + '_type').selectedIndex = 0;
                     document.getElementById('input_' + i + '_beta').value = 0;
                     document.getElementById('input_' + i + '_r25').value = 0;
@@ -77,10 +82,10 @@
                     break;
                 case 1:
                     document.getElementById('input_' + i + '_rballance').value = 10110.0;
-                    document.getElementById('input_' + i + '_name').value = "Temperatura oleju";
-                    document.getElementById('input_' + i + '_unit').value = "C";
-                    document.getElementById('input_' + i + '_scaleStart').value = 30;
-                    document.getElementById('input_' + i + '_scaleEnd').value = 150;
+                    document.getElementById('data_' + i + '_name').value = "Temperatura oleju";
+                    document.getElementById('data_' + i + '_unit').value = "C";
+                    document.getElementById('data_' + i + '_scaleStart').value = 30;
+                    document.getElementById('data_' + i + '_scaleEnd').value = 150;
                     document.getElementById('input_' + i + '_type').selectedIndex = 1;
                     document.getElementById('input_' + i + '_beta').value = 3800.0;
                     document.getElementById('input_' + i + '_r25').value = 58000.0;
@@ -111,6 +116,8 @@
             <p>Kolor</p><input type='color' id='color'>
             <h2>Wejścia analogowe</h2>
             %input_table%
+            <h2>Ustawienia danych</h2>
+            %data_list%
             </br><input type='submit'>
         </form>
     </body>

@@ -1,5 +1,7 @@
 #include "Data.h"
 
+#include <cmath>
+
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;
 const int   daylightOffset_sec = 3600;
@@ -13,6 +15,7 @@ Data::Data() {
 void Data::init() {
 
     data = DataStruct();
+//    data.dataDisplaySettings = Settings::getInstance()->dataDisplay;
     data.adsPtr = &ads;
     data.rtcPtr = &rtc;
     data.touchPtr = &touch;
@@ -96,10 +99,10 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
            delay(1);
         params->i2cBusy = true;
 
-        float readings[6][SAMPLES];
+        uint32_t readings[Settings::VOLTAGE+1][SAMPLES];
 
-        for(int i=0; i<6 && params->adsPtr->isConnected(); i++) {
-            if(settings->input[i].enable) {
+        for(int i=0; i<=Settings::VOLTAGE && params->adsPtr->isConnected(); i++) {
+            if(settings->dataDisplay[i].enable) {
 
                 for(int j=SAMPLES-1; j>0; j--)
                     readings[i][j] = readings[i][j - 1];
@@ -107,40 +110,54 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
                 if(i<4)
                     readings[i][0] = params->adsPtr->readADC(i);
                 else if(i==4)
-                    readings[i][0] = analogRead(36);
+                    readings[i][0] = analogReadMilliVolts(36);
                 else if(i==5)
-                    readings[i][0] = analogRead(39);
+                    readings[i][0] = analogReadMilliVolts(39);
+                else if(i==Settings::VOLTAGE)
+                    readings[i][0] = analogReadMilliVolts(34);
 
-                float sum = 0;
-    //            Serial.print(i);
-    //            Serial.print(" ");
+                uint32_t sum = 0;
+//                Serial.print(i);
+//                Serial.print(" ");
                 for(int j=0; j<SAMPLES; j++) {
-    //                Serial.print(params->adc[i][j]);
-    //                Serial.print(", ");
+//                    Serial.print(readings[i][j]);
+//                    Serial.print(", ");
                     sum += readings[i][j];
                 }
-    //            Serial.println("");
+//                Serial.println("");
 
-                float voltage = params->adsPtr->toVoltage(sum / SAMPLES);
-//                float voltage = params->adsPtr->toVoltage(params->adsPtr->readADC(i));
+                double avg = (double)sum/SAMPLES;
 
-//                Serial.printf("Voltage %d: %f", i, voltage);
+                double voltage;
+                if(i<4)
+                    voltage = params->adsPtr->toVoltage((int16_t)lround(avg));
+                else
+                    voltage = avg/1000.0;
 
-                volatile InputSettings *input = &(settings->input[i]);
-                float res = input->r * voltage / (3.3 - voltage);
+//                if(i!=Settings::VOLTAGE) {
+//                    Serial.printf("%s - avg: %f", settings->dataSourceString[i].c_str(), avg);
+//                    Serial.printf(", voltage: %f", voltage);
+//                }
 
-//                Serial.printf(", res: %f", res);
+                if(i<Settings::VOLTAGE) {
 
-                switch(input->type){
-                    case Logarithmic: params->inputValue[i] = input->beta * (25.0 + 273.15) / (input->beta + ((25.0 + 273.15) * log(res / input->r25))) - 273.15; break;
-                    case Linear: params->inputValue[i] = (res - input->rmin) / (input->rmax - input->rmin) * input->maxVal; break;
-                }
+                    volatile Settings::InputSettings *input = &(settings->input[i]);
+                    float res = input->r * voltage / (3.29 - voltage);
 
+//                    Serial.printf(", R: %f\n", res);
+
+                    switch(input->type){
+                        case Settings::Logarithmic: settings->dataDisplay[i].value = input->beta * (25.0 + 273.15) / (input->beta + ((25.0 + 273.15) * log(res / input->r25))) - 273.15; break;
+                        case Settings::Linear: settings->dataDisplay[i].value = (res - input->rmin) / (input->rmax - input->rmin) * input->maxVal; break;
+                        case Settings::Voltage: settings->dataDisplay[i].value = voltage; break;
+                    }
+
+                } else if(i == Settings::VOLTAGE)
+                    settings->dataDisplay[i].value = voltage * 5.7;
 
 //                Serial.printf(", inputValue: %f\n", params->inputValue[i]);
             }
         }
-
 
         Wire.beginTransmission(DS3231_ADDRESS);
         if(Wire.endTransmission() == 0)

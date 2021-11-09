@@ -88,6 +88,9 @@ String processor(const String& var){
     } else if(var == "needleTopWidth") {
         return itoa(settings->visual.needleTopWidth, c, 10);
 
+    } else if(var == "dataDisplayLength") {
+        return itoa(Settings::LAST, c, 10);
+
     } else if(var == "input_table") {
 
         std::stringstream ss;
@@ -99,35 +102,18 @@ String processor(const String& var){
                 ss << "<td>ADC" << i << "</td>";
         }
         ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>Włącz<input type='checkbox' id='input_" << i << "_en' " << (settings->input[i].enable ? "checked" : "") << "></td>";
-        ss << "</tr>\n<tr>";
 
         for(int i=0; i<6; i++)
-            ss << "<td>Preset<select id='input_" << i << "_preset' onchange='preset(" << i <<")' type='checkbox' ><option value='-1'>Puste</option><option value='0'>Ciśń. oleju</option><option value='1'>Temp. oleju</option></section></td>";
+            ss << "<td>Preset<select id='input_" << i << "_preset' onchange='return preset(" << i <<");' type='checkbox' ><option value='-1'>Puste</option><option value='0'>Ciśń. oleju</option><option value='1'>Temp. oleju</option></section></td>";
         ss << "</tr>\n<tr>";
-
-        for(int i=0; i<6; i++)
-            ss << "<td>Nazwa<input value='" << (char *)(settings->input[i].name) << "' type='text' id='input_" << i << "_name'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>Jednostka<input value='" << (char *)(settings->input[i].unit) << "' type='text' id='input_" << i << "_unit'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>Początek skali<input value='" << settings->input[i].scaleStart << "' type='number' step='1' id='input_" << i << "_scaleStart'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>Koniec skali<input value='" << settings->input[i].scaleEnd << "' type='number' step='1' id='input_" << i << "_scaleEnd'></td>";
-        ss << "</tr>\n<tr>";
-
         for(int i=0; i<6; i++)
             ss << "<td>R<input value='" << settings->input[i].r << "' type='number' step='0.1' id='input_" << i << "_rballance'></td>";
         ss << "</tr>\n<tr>";
         for(int i=0; i<6; i++) {
             ss << "<td>Typ<select id='input_" << i << "_type'>";
-            for(int j=0; j != Dummy; j++){
-                InputType type = static_cast<InputType>(j);
-                ss << "<option value='" << j <<"' " << (settings->input[i].type == j ? "selected" : "") << ">" << inputTypeString[j].c_str() << "</option>";
+            for(int j=0; j != Settings::Dummy; j++){
+                Settings::InputType type = static_cast<Settings::InputType>(j);
+                ss << "<option value='" << j <<"' " << (settings->input[i].type == j ? "selected" : "") << ">" << settings->inputTypeString[j].c_str() << "</option>";
             }
             ss << "</select></td>";
         }
@@ -149,7 +135,30 @@ String processor(const String& var){
         ss << "</tr>\n<table>";
         return String(ss.str().c_str());
 
+    } else if(var == "data_list") {
+        std::stringstream ss;
+        ss << "<table>\n<tr>";
+        for(int i=0; i<Settings::LAST; i++)
+            ss << "<td>" << settings->dataSourceString[i].c_str() << "</td>";
+        ss << "</tr>\n<tr>";
+        for(int i=0; i<Settings::LAST; i++)
+            ss <<"<td>Włącz<input type='checkbox' id='data_" << i << "_en' " << (settings->dataDisplay[i].enable ? "checked" : "") << "></td>";
+        ss << "</tr>\n<tr>";
+        for(int i=0; i<Settings::LAST; i++)
+            ss << "<td>Nazwa<input value='" << (char *)(settings->dataDisplay[i].name) << "' type='text' id='data_" << i << "_name'></td>";
+        ss << "</tr>\n<tr>";
+        for(int i=0; i<Settings::LAST; i++)
+            ss << "<td>Jednostka<input value='" << (char *)(settings->dataDisplay[i].unit) << "' type='text' id='data_" << i << "_unit'></td>";
+        ss << "</tr>\n<tr>";
+        for(int i=0; i<Settings::LAST; i++)
+            ss << "<td>Początek skali<input value='" << settings->dataDisplay[i].scaleStart << "' type='number' step='1' id='data_" << i << "_scaleStart'></td>";
+        ss << "</tr>\n<tr>";
+        for(int i=0; i<Settings::LAST; i++)
+            ss << "<td>Koniec skali<input value='" << settings->dataDisplay[i].scaleEnd << "' type='number' step='1' id='data_" << i << "_scaleEnd'></td>";
+        ss << "</tr>\n<table>";
+        return String(ss.str().c_str());
     }
+
     return String("2137");
 }
 
@@ -202,20 +211,10 @@ void Networking::serverSetupTask(void * pvParameters) {
                     int i = str.at(6) - 48;
                     std::string str2 = str.substr(8);
 
-                    if(str2.compare("en") == 0)
-                        settings->input[i].enable = atoi(p->value().c_str());
-                    else if(str2.compare("name") == 0)
-                        strcpy((char *)settings->input[i].name, p->value().c_str());
-                    else if(str2.compare("unit") == 0)
-                        strcpy((char *)settings->input[i].unit, p->value().c_str());
-                    else if(str2.compare("scaleStart") == 0)
-                        settings->input[i].scaleStart = strtof(p->value().c_str(), NULL);
-                    else if(str2.compare("scaleEnd") == 0)
-                        settings->input[i].scaleEnd = strtof(p->value().c_str(), NULL);
-                    else if(str2.compare("rballance") == 0)
+                    if(str2.compare("rballance") == 0)
                         settings->input[i].r = strtof(p->value().c_str(), NULL);
                     else if(str2.compare("type") == 0)
-                        settings->input[i].type = static_cast<InputType>(strtof(p->value().c_str(), NULL));
+                        settings->input[i].type = static_cast<Settings::InputType>(strtof(p->value().c_str(), NULL));
                     else if(str2.compare("beta") == 0)
                         settings->input[i].beta = strtof(p->value().c_str(), NULL);
                     else if(str2.compare("r25") == 0)
@@ -227,6 +226,22 @@ void Networking::serverSetupTask(void * pvParameters) {
                     else if(str2.compare("max_val") == 0)
                         settings->input[i].maxVal = strtof(p->value().c_str(), NULL);
 
+                }
+
+                if(str.find("data") != std::string::npos) {
+                    int i = str.at(5) - 48;
+                    std::string str2 = str.substr(7);
+
+                    if(str2.compare("en") == 0)
+                        settings->dataDisplay[i].enable = atoi(p->value().c_str());
+                    else if(str2.compare("name") == 0)
+                        strcpy((char *)settings->dataDisplay[i].name, p->value().c_str());
+                    else if(str2.compare("unit") == 0)
+                        strcpy((char *)settings->dataDisplay[i].unit, p->value().c_str());
+                    else if(str2.compare("scaleStart") == 0)
+                        settings->dataDisplay[i].scaleStart = strtof(p->value().c_str(), NULL);
+                    else if(str2.compare("scaleEnd") == 0)
+                        settings->dataDisplay[i].scaleEnd = strtof(p->value().c_str(), NULL);
                 }
 
                 if(p->name()=="offsetX")

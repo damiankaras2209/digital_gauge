@@ -31,17 +31,15 @@ class Data {
 
 public:
 
-    enum DataSource {
-        ADS1115_0, ADS1115_1, ADS1115_2, ADS1115_3, ADC_5, ADC_6, VOLTAGE, CAN_RPM
-    };
-
     typedef struct DataStruct {
             RTC_DS3231* rtcPtr;
             MCP2515* mcp2515Ptr;
-            ADS1115* adsPtr;
+            class ADS1115* adsPtr;
             GxFT5436* touchPtr;
             Adafruit_MCP23X08* mcp23X08Ptr;
             RCSwitch* rcPtr;
+
+//            volatile DataDisplaySettings* dataDisplaySettings;
 
             bool GxFT5436Available;
             GxFT5436::TouchInfo touchInfo;

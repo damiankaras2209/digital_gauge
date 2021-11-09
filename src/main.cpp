@@ -13,10 +13,8 @@
 
 #include "TFT_eSPI.h"
 
-
+//PWM
 const int ledPin = 32;
-
-// // setting PWM properties
 const int freq = 5000;
 const int ledChannel = 0;
 const int resolution = 8;
@@ -25,16 +23,18 @@ int brightness = 255;
 bool proceed = true;
 bool updateChecked = false;
 
+enum Side {
+    LEFT, RIGHT, MID, LAST
+};
+
+
+
 TFT_eSPI tft = TFT_eSPI();
-
-int x = 0, fps = 0;
-
-unsigned long total, t;
-
-
 Networking networking;
 UpdaterClass updater;
 Data data;
+
+Settings::DataSource selected[LAST];
 
 volatile bool showMenu = false;
 volatile bool menuShown = false;
@@ -115,26 +115,60 @@ void IRAM_ATTR touchStart() {
                 if(!detected[i] && down[i]) {
                     down[i] = false;
                     Serial.printf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu)", i, startX[i], startY[i], endX[i], endY[i]);
+                    //Single touch
                     if((abs(startX[i]-endX[i]) < SINGLE_POINT_DISTANCE) && (abs(startY[i]-endY[i]) < SINGLE_POINT_DISTANCE)) {
 
+                        //show menu
                         if(!menuShown && endX[i] > settings->visual.width/2 - settings->visual.needleCenterOffset && endX[i] < settings->visual.width/2 + settings->visual.needleCenterOffset && endY[i] < settings->visual.height/2) {
                             showMenu = true;
                         }
 
+                        //dismiss menu
                         if(menuShown) {
                             menuShown = false;
                             Screen::getInstance()->shallWeReset = true;
                         }
 
-                        Serial.printf("Single touch at %d,%d", endX[i], endY[i]);
+                        //change left gauge
+                        if(!menuShown && endX[i] < settings->visual.width/2-settings->visual.needleCenterOffset) {
+                            Serial.printf("Current data: %s", settings->dataSourceString[selected[LEFT]].c_str());
+                            do {
+                                selected[LEFT] = static_cast<Settings::DataSource>(selected[LEFT]+1);
+                                if(selected[LEFT] == Settings::LAST)
+                                    selected[LEFT] = static_cast<Settings::DataSource>(0);
+                            } while (!settings->dataDisplay[selected[LEFT]].enable);
+                            Serial.printf("Changing to: %s\n", settings->dataSourceString[selected[LEFT]].c_str());
+                            settings->saveSelected(selected);
+                        }
 
-                    } else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] > startX[i])) {
+                        //change right gauge
+                        if(!menuShown && endX[i] > settings->visual.width/2+settings->visual.needleCenterOffset) {
+                            Serial.printf("Current data: %s", settings->dataSourceString[selected[RIGHT]].c_str());
+                            do {
+                                selected[RIGHT] = static_cast<Settings::DataSource>(selected[RIGHT]+1);
+                                if(selected[RIGHT] == Settings::LAST)
+                                    selected[RIGHT] = static_cast<Settings::DataSource>(0);
+                            } while (!settings->dataDisplay[selected[RIGHT]].enable);
+                            Serial.printf("Changing to: %s\n", settings->dataSourceString[selected[RIGHT]].c_str());
+                            settings->saveSelected(selected);
+                        }
+
+                        Serial.printf("Single touch at %d,%d", endX[i], endY[i]);
+                    }
+                    //Slide right
+                    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] > startX[i])) {
                         Serial.printf("Slide right from %d,%d", startX[i], endY[i]);
-                    } else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] < startX[i])) {
+                    }
+                    //Slide left
+                    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] < startX[i])) {
                         Serial.printf("Slide left from %d,%d", startX[i], endY[i]);
-                    } else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] > startY[i])) {
+                    }
+                    //Slide down
+                    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] > startY[i])) {
                         Serial.printf("Slide down from %d,%d", startX[i], endY[i]);
-                    } else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] < startY[i])) {
+                    }
+                    //Slide up
+                    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] < startY[i])) {
                         Serial.printf("Slide up from %d,%d", startX[i], endY[i]);
                     }
                 }
@@ -203,6 +237,11 @@ void f(t_httpUpdate_return status) {
 void setup(void) {
   Serial.begin(115200);
 
+
+  selected[LEFT] = Settings::ADS1115_1;
+  selected[RIGHT] = Settings::ADS1115_0;
+  selected[MID]= Settings::VOLTAGE;
+
   tft.init();
   tft.setRotation(3);
   tft.invertDisplay(1);
@@ -212,6 +251,7 @@ void setup(void) {
 
   Settings::getInstance()->loadDefault();
   Settings::getInstance()->load();
+  Settings::getInstance()->loadSelected(selected);
 
   Screen::getInstance()->init(&tft, &data);
   Screen::getInstance()->blank();
@@ -308,9 +348,9 @@ void setup(void) {
   Serial.println("Setup() complete");
 }
 
-Data::DataSource left = Data::ADS1115_1;
-Data::DataSource right = Data::ADS1115_0;
-Data::DataSource mid = Data::VOLTAGE;
+
+int x = 0, fps = 0;
+unsigned long total, t;
 
 void loop() {
 
@@ -371,12 +411,12 @@ void loop() {
 //    Serial.println(oilPress);
 
 //    Screen::getInstance()->updateNeedle(0, sin(x/PI/18)/2+0.5);
-    Screen::getInstance()->updateNeedle(0, left);
+    Screen::getInstance()->updateNeedle(0, selected[LEFT]);
 //    test();
     // Screen::getInstance()->updateNeedle(0, rpmVal/8000.0);
 //    // rpmVal = rpmRead();
 //    Screen::getInstance()->updateNeedle(1, cos(x/PI/18)/2+0.5);
-    Screen::getInstance()->updateNeedle(1, right);
+    Screen::getInstance()->updateNeedle(1, selected[RIGHT]);
     x+=2;
     if(x>=360) {
       x-=360;

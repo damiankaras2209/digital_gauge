@@ -267,7 +267,7 @@ static const uint16_t pallete[] = {
 };
 
 
-void Screen::updateNeedle(int side, Data::DataSource source) {
+void Screen::updateNeedle(int side, Settings::DataSource source) {
     if(isBusy)
         return;
     isBusy = true;
@@ -277,22 +277,26 @@ void Screen::updateNeedle(int side, Data::DataSource source) {
     int start, end;
     float value;
 
-    Serial.print(side ? "right" : "left");
-    Serial.print(": ");
-    Serial.print(source);
+//    Serial.print(side ? "right" : "left");
+//    Serial.print(": ");
+//    Serial.print(source);
 
-    switch (source) {
-        case Data::ADS1115_0: value = data->data.inputValue[0]; start = settings->input[0].scaleStart; end = settings->input[0].scaleEnd; break;
-        case Data::ADS1115_1: value = data->data.inputValue[1]; start = settings->input[1].scaleStart; end = settings->input[1].scaleEnd; break;
-        case Data::ADS1115_2: value = data->data.inputValue[2]; start = settings->input[2].scaleStart; end = settings->input[2].scaleEnd; break;
-        case Data::ADS1115_3: value = data->data.inputValue[3]; start = settings->input[3].scaleStart; end = settings->input[3].scaleEnd; break;
-        case Data::ADC_5:     value = data->data.inputValue[4]; start = settings->input[4].scaleStart; end = settings->input[4].scaleEnd; break;
-        case Data::ADC_6:     value = data->data.inputValue[5]; start = settings->input[5].scaleStart; end = settings->input[5].scaleEnd; break;
-        case Data::VOLTAGE:   value = data->data.internalVoltage; start = 6; end = 18; break;
-        case Data::CAN_RPM:   value = data->data.rpm; start = 0; end = 8; break;
-    }
+//    switch (source) {
+//        case Data::ADS1115_0: value = data->data.inputValue[0]; start = settings->input[0].scaleStart; end = settings->input[0].scaleEnd; break;
+//        case Data::ADS1115_1: value = data->data.inputValue[1]; start = settings->input[1].scaleStart; end = settings->input[1].scaleEnd; break;
+//        case Data::ADS1115_2: value = data->data.inputValue[2]; start = settings->input[2].scaleStart; end = settings->input[2].scaleEnd; break;
+//        case Data::ADS1115_3: value = data->data.inputValue[3]; start = settings->input[3].scaleStart; end = settings->input[3].scaleEnd; break;
+//        case Data::ADC_5:     value = data->data.inputValue[4]; start = settings->input[4].scaleStart; end = settings->input[4].scaleEnd; break;
+//        case Data::ADC_6:     value = data->data.inputValue[5]; start = settings->input[5].scaleStart; end = settings->input[5].scaleEnd; break;
+//        case Data::VOLTAGE:   value = data->data.internalVoltage; start = 6; end = 18; break;
+//        case Data::CAN_RPM:   value = data->data.rpm; start = 0; end = 8; break;
+//    }
 
-    Serial.printf("value: %f, start: %d, end: %d\n", value, start, end);
+    value = settings->dataDisplay[source].value;
+    start = settings->dataDisplay[source].scaleStart;
+    end = settings->dataDisplay[source].scaleEnd;
+
+//    Serial.printf("value: %f, start: %d, end: %d\n", value, start, end);
 
 
     float val = (value-start)/end;
