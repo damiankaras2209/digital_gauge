@@ -400,12 +400,12 @@ void loop() {
 //    Serial.println(oilPress);
 
 //    Screen::getInstance()->updateNeedle(0, sin(x/PI/18)/2+0.5);
-//    Screen::getInstance()->updateNeedle(0, selected[LEFT]);
+    Screen::getInstance()->updateNeedle(0, selected[LEFT]);
 //    test();
     // Screen::getInstance()->updateNeedle(0, rpmVal/8000.0);
 //    // rpmVal = rpmRead();
 //    Screen::getInstance()->updateNeedle(1, cos(x/PI/18)/2+0.5);
-//    Screen::getInstance()->updateNeedle(1, selected[RIGHT]);
+    Screen::getInstance()->updateNeedle(1, selected[RIGHT]);
     x+=2;
     if(x>=360) {
       x-=360;
