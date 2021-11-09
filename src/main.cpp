@@ -360,7 +360,7 @@ void loop() {
     }
 
     if(showMenu) {
-        Screen::getInstance()->showPrompt("SSID: " + String(ssid) + "\npass: " + String(password));
+        Screen::getInstance()->showPrompt("SSID: " + String(ssid) + "\npass: " + String(password) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
         menuShown = true;
         showMenu = false;
     }
