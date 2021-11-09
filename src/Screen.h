@@ -18,7 +18,9 @@ float calcX(int16_t, int16_t, int16_t);
 float calcY(int16_t, int16_t, int16_t);
 double rad(int16_t);
 
-
+enum Side {
+    LEFT, RIGHT, MID, LAST
+};
 
 class Screen {
 
@@ -30,9 +32,10 @@ class Screen {
 		boolean shallWeReset;
 		volatile boolean isBusy;
 		static Screen *getInstance();
-		void init(TFT_eSPI*, Data*);
+		void init(TFT_eSPI*, Data*, Settings::DataSource*);
 		void reset();
 		void blank();
+		void redrawScaleSprite(Side side);
 		void updateNeedle(int, Settings::DataSource);
 		void updateText(boolean, int fps);
 		void showPrompt(String text);
@@ -43,6 +46,7 @@ class Screen {
 		TFT_eSPI *tft;
         Data *data;
         Settings *settings;
+        Settings::DataSource *selected;
         volatile Settings::VisualSettings *vis;
 		double arrR[91], arrX[91], arrY[91];
 		bool promptShown = false;

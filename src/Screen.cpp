@@ -209,9 +209,10 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
 	// Serial.print("\n");
 }
 
-void Screen::init(TFT_eSPI *t, Data *d) {
+void Screen::init(TFT_eSPI *t, Data *d, Settings::DataSource *s) {
 	tft = t;
 	data = d;
+	selected = s;
 }
 
 void Screen::blank() {
@@ -224,8 +225,8 @@ void Screen::reset() {
     isBusy = true;
 	tft->fillScreen(TFT_BLACK);
 	fillTables();
-	drawScale(tft, false, 0, 0, 0, 0, 0, 0);	//left
-	drawScale(tft, false, 1, 0, 0, 0, 0, 0);	//right
+	drawScale(tft, false, 0, vis->offsetX, vis->offsetY, 0, settings->dataDisplay[selected[0]].scaleStart, settings->dataDisplay[selected[0]].scaleEnd);	//left
+	drawScale(tft, false, 1, vis->offsetX, vis->offsetY, 0, settings->dataDisplay[selected[1]].scaleStart, settings->dataDisplay[selected[1]].scaleEnd);	//right
     updateText(true, 0);
 
 //	tft->setTextColor(vis->fontColor, vis->backgroundColor);
@@ -254,6 +255,30 @@ void Screen::reset() {
 	shallWeReset = false;
 	isBusy = false;
 }
+
+void Screen::redrawScaleSprite(Side side) {
+    TFT_eSprite update = TFT_eSprite(tft);
+
+    update.setColorDepth(8);
+    update.createSprite(
+            vis->ellipseA - vis->needleCenterOffset + vis->scaleLargeWidth,
+            vis->ellipseB*2);
+
+
+    int x = vis->offsetX + vis->width/2 + (side ? vis->needleCenterOffset : -vis->ellipseA + 1);
+    int y = vis->offsetY + vis->height/2 - vis->ellipseB;
+
+    drawScale(&update, true, side, x, y,0, settings->dataDisplay[selected[side]].scaleStart, settings->dataDisplay[selected[side]].scaleEnd);
+    update.pushSprite(x, y);
+
+//    tft->drawRect(x,
+//                  y,
+//                  vis->ellipseA - vis->needleCenterOffset + vis->scaleLargeWidth,
+//                  vis->ellipseB*2,
+//                  TFT_VIOLET);
+
+}
+
 
 
 int pX1[2], pY1[2], pW[2], pH[2], pDeg[2];
@@ -423,7 +448,9 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 		// 	pY1[side]+pH[side] > y1+h ? pY1[side]+pH[side]-min(y1, pY1[side]) : h+abs(y1-pY1[side]),
 		// 	TFT_VIOLET);
 	} else {
-	    drawScale(&update, true, side, vis->width/2 - abs(vis->width/2 - x1) - max(w, pW[side]), min(y1, pY1[side]), max(w, pW[side]), start, end);
+
+	    update.pushSprite(vis->width/2 - abs(vis->width/2 - x1) - max(w, pW[side])  + vis->offsetX, min(y1, pY1[side]) + vis->offsetY);
+	    drawScale(&update, true, side, vis->width/2 - abs(vis->width/2 - x1) - max(w, pW[side])  + vis->offsetX, min(y1, pY1[side]) + vis->offsetY, max(w, pW[side]), start, end);
 		if(deg >= 0) {
 			update.drawWedgeLine(
             max(w, pW[side])-vis->needleCenterRadius,
@@ -581,3 +608,4 @@ void Screen::addToPrompt(String text) {
         str = str.substr(nextLine+1);
     }
 }
+

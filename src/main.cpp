@@ -23,12 +23,6 @@ int brightness = 255;
 bool proceed = true;
 bool updateChecked = false;
 
-enum Side {
-    LEFT, RIGHT, MID, LAST
-};
-
-
-
 TFT_eSPI tft = TFT_eSPI();
 Networking networking;
 UpdaterClass updater;
@@ -138,6 +132,7 @@ void IRAM_ATTR touchStart() {
                                     selected[LEFT] = static_cast<Settings::DataSource>(0);
                             } while (!settings->dataDisplay[selected[LEFT]].enable);
                             Serial.printf("Changing to: %s\n", settings->dataSourceString[selected[LEFT]].c_str());
+                            Screen::getInstance()->redrawScaleSprite(LEFT);
                             settings->saveSelected(selected);
                         }
 
@@ -150,6 +145,7 @@ void IRAM_ATTR touchStart() {
                                     selected[RIGHT] = static_cast<Settings::DataSource>(0);
                             } while (!settings->dataDisplay[selected[RIGHT]].enable);
                             Serial.printf("Changing to: %s\n", settings->dataSourceString[selected[RIGHT]].c_str());
+                            Screen::getInstance()->redrawScaleSprite(RIGHT);
                             settings->saveSelected(selected);
                         }
 
@@ -253,15 +249,12 @@ void setup(void) {
   Settings::getInstance()->load();
   Settings::getInstance()->loadSelected(selected);
 
-  Screen::getInstance()->init(&tft, &data);
+  Screen::getInstance()->init(&tft, &data, selected);
   Screen::getInstance()->blank();
 
-  //configure LED PWM functionalitites
   ledcSetup(ledChannel, freq, resolution);
-
-  //attach the channel to the GPIO to be controlled
   ledcAttachPin(ledPin, ledChannel);
-  ledcWrite(0, 255);
+  ledcWrite(0, 0);
 
   Serial.print("Firmware version: ");
   Serial.println(getCurrentFirmwareVersionString());
@@ -270,6 +263,7 @@ void setup(void) {
   Serial.print("Filesystem target version: ");
   Serial.println(getTargetFilesystemVersionString());
   if(getCurrentFilesystemVersion() != getTargetFilesystemVersion()) {
+      ledcWrite(0, 255);
       proceed = false;
       Serial.println("Filesystem version does not match target version. Trying to update");
 
@@ -338,11 +332,6 @@ void setup(void) {
     //  networking.connectWiFi(false);
     //  networking.serverSetup();
 
-      //configure LED PWM functionalitites
-      ledcSetup(ledChannel, freq, resolution);
-
-      //attach the channel to the GPIO to be controlled
-      ledcAttachPin(ledPin, ledChannel);
       ledcWrite(0, 255);
   }
   Serial.println("Setup() complete");
@@ -411,12 +400,12 @@ void loop() {
 //    Serial.println(oilPress);
 
 //    Screen::getInstance()->updateNeedle(0, sin(x/PI/18)/2+0.5);
-    Screen::getInstance()->updateNeedle(0, selected[LEFT]);
+//    Screen::getInstance()->updateNeedle(0, selected[LEFT]);
 //    test();
     // Screen::getInstance()->updateNeedle(0, rpmVal/8000.0);
 //    // rpmVal = rpmRead();
 //    Screen::getInstance()->updateNeedle(1, cos(x/PI/18)/2+0.5);
-    Screen::getInstance()->updateNeedle(1, selected[RIGHT]);
+//    Screen::getInstance()->updateNeedle(1, selected[RIGHT]);
     x+=2;
     if(x>=360) {
       x-=360;

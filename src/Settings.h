@@ -23,8 +23,8 @@ class Settings {
            int16_t height;
            int16_t offsetX;
            int16_t offsetY;
-           int16_t ellipseA;
-           int16_t ellipseB;
+           int16_t ellipseA; //half of ellipse width (x-axis)
+           int16_t ellipseB; //half of ellipse height (y-axis)
            int16_t promptWidth;
            int16_t promptHeight;
 
