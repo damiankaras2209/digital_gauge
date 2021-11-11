@@ -132,7 +132,6 @@ void IRAM_ATTR touchStart() {
                                     selected[LEFT] = static_cast<Settings::DataSource>(0);
                             } while (!settings->dataDisplay[selected[LEFT]].enable);
                             Serial.printf("Changing to: %s\n", settings->dataSourceString[selected[LEFT]].c_str());
-                            Screen::getInstance()->redrawScaleSprite(LEFT);
                             settings->saveSelected(selected);
                         }
 
@@ -145,7 +144,6 @@ void IRAM_ATTR touchStart() {
                                     selected[RIGHT] = static_cast<Settings::DataSource>(0);
                             } while (!settings->dataDisplay[selected[RIGHT]].enable);
                             Serial.printf("Changing to: %s\n", settings->dataSourceString[selected[RIGHT]].c_str());
-                            Screen::getInstance()->redrawScaleSprite(RIGHT);
                             settings->saveSelected(selected);
                         }
 

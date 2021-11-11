@@ -35,7 +35,6 @@ class Screen {
 		void init(TFT_eSPI*, Data*, Settings::DataSource*);
 		void reset();
 		void blank();
-		void redrawScaleSprite(Side side);
 		void updateNeedle(int, Settings::DataSource);
 		void updateText(boolean, int fps);
 		void showPrompt(String text);

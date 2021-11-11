@@ -44,10 +44,6 @@ class Settings {
            int16_t dateSize;
            int16_t scaleSize;
 
-           int16_t scaleXLeft[5];
-           int16_t scaleXRight[5];
-           int16_t scaleY[5];
-
            int16_t scaleMainWidth;
            int16_t scaleLargeWidth;
            int16_t scaleSmallWidth;
@@ -57,6 +53,7 @@ class Settings {
            int16_t scaleSmallSteps;
            int16_t scaleAccColorEvery;
            int16_t scaleTextSteps;
+           int16_t scaleTextOffset;
            int16_t scaleAntialiasing;
            int16_t internalEllipseDistance;
 

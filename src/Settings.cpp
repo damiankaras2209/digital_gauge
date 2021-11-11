@@ -27,7 +27,6 @@ void Settings::loadDefault() {
 	visual.offsetX = -2; //17
 	visual.offsetY = -4; //29
 
-
 	visual.ellipseA = 216;
 	visual.ellipseB = 116;
 
@@ -46,22 +45,6 @@ void Settings::loadDefault() {
 	visual.dateSize = 16;
 	visual.scaleSize = 12;
 
-
-//	int16_t sscaleLeft[] = 	{30, 60, 90, 120, 150};
-//	int16_t sscaleLeft[] = 	{0, 2000, 4000, 6000, 8000};
-//	int16_t sscaleRight[] = 	{6, 9, 12, 15, 18};
-	int16_t sscaleXLeft[] = 	{-0, 	-75, 	-100, 	-75, 	-0};
-	int16_t sscaleXRight[] = 	{0, 	75, 	100, 	75, 	0};
-	int16_t sscaleY[] = 		{75, 	45, 	0,		-45, 	-75};
-
-	for(int i=0; i<5; i++){
-//		visual.scaleLeft[i] = sscaleLeft[i];
-//		visual.scaleRight[i] = sscaleRight[i];
-		visual.scaleXLeft[i] = sscaleXLeft[i];
-		visual.scaleXRight[i] = sscaleXRight[i];
-		visual.scaleY[i] = sscaleY[i];
-	}
-
 	visual.scaleMainWidth = 7;
 	visual.scaleLargeWidth = 4;
 	visual.scaleSmallWidth = 2;
@@ -71,6 +54,7 @@ void Settings::loadDefault() {
 	visual.scaleSmallSteps = 4;
 	visual.scaleAccColorEvery = 8;
 	visual.scaleTextSteps = 4;
+	visual.scaleTextOffset = 35;
 	visual.scaleAntialiasing = 4;
 	visual.internalEllipseDistance = 10;
 
