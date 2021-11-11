@@ -11,7 +11,7 @@
 #include "Data.h"
 
 #include "RTClib.h"
-#include <../lib/TFT_eSPI-2.4.0-Beta/TFT_eSPI.h>
+#include "TFT_eSPI.h"
 #include "ADS1X15.h"
 
 float calcX(int16_t, int16_t, int16_t);
