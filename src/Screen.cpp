@@ -134,7 +134,8 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
 		(i%vis->scaleAccColorEvery==0) ? vis->scaleAccColor : vis->scaleColor);
 	}
 
-	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextColor(vis->fontColor, vis->backgroundColor);
+	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextColor(vis->fontColor);
+//	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setAttribute(SFBG_ENABLE, true);
 //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextDatum(side ? CL_DATUM : CR_DATUM);
 //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextDatum(CC_DATUM);
 	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextPadding(20);
@@ -351,7 +352,7 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	ss.precision(1);
 	ss << std::fixed << value;
 	update.setTextDatum(CC_DATUM);
-	update.setTextColor(vis->fontColor, TFT_TRANSPARENT);
+	update.setTextColor(vis->fontColor);
 	update.drawString(
 	        ss.str().c_str(),
 	        side ? vis->needleCenterRadius : spriteW-vis->needleCenterRadius,
@@ -384,14 +385,18 @@ void Screen::updateText(boolean force, int fps) {
 	if(	now.month() > 3 && now.month() < 10 ||
 		now.month() == 3 && now.day() > 28)
 
-	tft->setTextColor(vis->fontColor, vis->backgroundColor);
+	tft->setTextColor(vis->fontColor, TFT_RED);
+	tft->setAttribute(SFBG_ENABLE, true);
 	tft->setTextDatum(CC_DATUM);
-	tft->setTextPadding(24);
+//	tft->setTextPadding(24);
 
 	if(now.minute() != pMinute || force) {
 		int min = now.minute();
 //		tft->loadFont("GaugeHeavy"+(String)vis->timeSize);
 		tft->loadFont("GaugeHeavy36");
+		tft->setTextColor(vis->fontColor, vis->backgroundColor);
+		tft->setAttribute(SFBG_ENABLE, true);
+		tft->setTextDatum(CC_DATUM);
 		std::stringstream ss;
 		ss << std::setfill('0') << std::setw(2) << ((String)now.hour()).c_str() << ":" << std::setw(2) << ((String)min).c_str();
 		tft->drawString(
@@ -405,6 +410,9 @@ void Screen::updateText(boolean force, int fps) {
 		ss2 << std::setfill('0') << std::setw(2) << ((String)now.day()).c_str() << "." << std::setw(2) << ((String)now.month()).c_str()  << "." << std::setw(2) << ((String)now.year()).substring(2).c_str();
 //		tft->loadFont("GaugeHeavy"+(String)vis->dateSize);
 		tft->loadFont("GaugeHeavy16");
+		tft->setTextColor(vis->fontColor, vis->backgroundColor);
+		tft->setAttribute(SFBG_ENABLE, true);
+		tft->setTextDatum(CC_DATUM);
 		tft->drawString(
 			ss2.str().c_str(),
 			vis->width/2+vis->offsetX,
