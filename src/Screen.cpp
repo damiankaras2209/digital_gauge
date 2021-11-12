@@ -334,12 +334,12 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
             vis->needleColor
             );
 
-    update.drawRect(
-        0,
-        0,
-        spriteW,
-        spriteH,
-        TFT_VIOLET);
+//    update.drawRect(
+//        0,
+//        0,
+//        spriteW,
+//        spriteH,
+//        TFT_VIOLET);
 
 	update.fillCircle(
 	        needleX,
