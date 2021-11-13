@@ -17,7 +17,13 @@
 
 #include <numeric>
 
-#define SAMPLES 16
+#include <sstream>
+#include <iomanip>
+
+#define SAMPLES_ADC 16
+#define SAMPLES_CAN 4
+
+#define CAN_ID_RPM 0x201
 
 //typedef struct Event {
 //    uint16_t event;
@@ -39,16 +45,11 @@ public:
             Adafruit_MCP23X08* mcp23X08Ptr;
             RCSwitch* rcPtr;
 
-//            volatile DataDisplaySettings* dataDisplaySettings;
-
             bool GxFT5436Available;
+            bool RTCAvailable;
             GxFT5436::TouchInfo touchInfo;
-            float internalVoltage;
-            float inputValue[6];
             DateTime now;
             int brightness = 255;
-            struct can_frame canMsgg;
-            int rpm;
             volatile bool i2cBusy = false;
         } DataStruct;
 
@@ -68,7 +69,6 @@ private:
 //        static void IRAM_ATTR touchStart();
 
 //        [[noreturn]] static void test(void *);
-//        static boolean RTCAvailable;
         static void adjustRTCTask(void *);
         _Noreturn  static void adcLoop(void *);
         _Noreturn  static void canLoop(void *);

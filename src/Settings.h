@@ -103,13 +103,13 @@ class Settings {
 
 
         typedef struct DataDisplaySettings {
-            boolean enable;
-            char name[30];
-            char unit[10];
-            int16_t scaleStart;
-            int16_t scaleEnd;
+            boolean enable = false;
+            char name[30] = "";
+            char unit[10] = "";
+            int16_t scaleStart = 0;
+            int16_t scaleEnd = 100;
 //            DataSource source;
-            float value;
+            float value = 0;
         } DataDisplaySettings;
 
 

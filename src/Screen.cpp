@@ -231,7 +231,7 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
     start = settings->dataDisplay[source].scaleStart;
     end = settings->dataDisplay[source].scaleEnd;
 
-    value = (sin(xx/PI/18)/2+0.5)*(end-start)+start;
+//    value = (sin(xx/PI/18)/2+0.5)*(end-start)+start;
 
     float val = (value-start)/(end-start);
 

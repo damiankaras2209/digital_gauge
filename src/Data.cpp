@@ -23,13 +23,15 @@ void Data::init() {
     data.mcp2515Ptr = &mcp;
     data.rcPtr = &rc;
 
-    if (!rtc.begin())
+    if (!rtc.begin()) {
         Serial.println("Couldn't find RTC");
-    else {
+        data.RTCAvailable = false;
+    } else {
         Serial.println("RTC good");
+        data.RTCAvailable = true;
         if(rtc.lostPower()) {
             Serial.println("RTC lost power");
-            rtc.adjust(DateTime(1, 1, 1, 22, 22, 22));
+            rtc.adjust(DateTime(22, 2, 22, 22, 22, 22));
         }
     }
 
@@ -74,11 +76,12 @@ void Data::init() {
 
     TaskHandle_t canHandle;
     Serial.print( xTaskCreatePinnedToCore(canLoop,
-                                            "can",
-                                            32*1024,
+                                            "canLoop",
+                                            4*1024,
                                             &data,
                                             1,
-                                            &canHandle, 0) ? "" : "Failed to start can task\n");
+                                            &canHandle,
+                                            0) ? "" : "Failed to start canLoop task\n");
 
     rc.enableReceive(3);
 
@@ -99,12 +102,12 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
            delay(1);
         params->i2cBusy = true;
 
-        uint32_t readings[Settings::VOLTAGE+1][SAMPLES];
+        uint32_t readings[Settings::VOLTAGE+1][SAMPLES_ADC];
 
         for(int i=0; i<=Settings::VOLTAGE && params->adsPtr->isConnected(); i++) {
             if(settings->dataDisplay[i].enable) {
 
-                for(int j=SAMPLES-1; j>0; j--)
+                for(int j= SAMPLES_ADC - 1; j > 0; j--)
                     readings[i][j] = readings[i][j - 1];
 
                 if(i<4)
@@ -119,14 +122,14 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
                 uint32_t sum = 0;
 //                Serial.print(i);
 //                Serial.print(" ");
-                for(int j=0; j<SAMPLES; j++) {
+                for(int j=0; j < SAMPLES_ADC; j++) {
 //                    Serial.print(readings[i][j]);
 //                    Serial.print(", ");
                     sum += readings[i][j];
                 }
 //                Serial.println("");
 
-                double avg = (double)sum/SAMPLES;
+                double avg = (double)sum / SAMPLES_ADC;
 
                 double voltage;
                 if(i<4)
@@ -134,7 +137,7 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
                 else
                     voltage = avg/1000.0;
 
-//                if(i!=Settings::VOLTAGE) {
+//                if(i==Settings::ADS1115_1) {
 //                    Serial.printf("%s - avg: %f", settings->dataSourceString[i].c_str(), avg);
 //                    Serial.printf(", voltage: %f", voltage);
 //                }
@@ -142,7 +145,10 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
                 if(i<Settings::VOLTAGE) {
 
                     volatile Settings::InputSettings *input = &(settings->input[i]);
-                    float res = input->r * voltage / (3.29 - voltage);
+                    float res = input->r * voltage / (3.3 - voltage);
+
+//                    Serial.printf("%s - voltage: %f", settings->dataSourceString[i].c_str(), voltage);
+//                    Serial.printf(", R: %f", res);
 
 //                    Serial.printf(", R: %f\n", res);
 
@@ -152,6 +158,10 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
                         case Settings::Voltage: settings->dataDisplay[i].value = voltage; break;
                     }
 
+//                    if(i==Settings::ADS1115_1) {
+//                        Serial.printf(", value: %f\n", settings->dataDisplay[i].value);
+//                    }
+
                 } else if(i == Settings::VOLTAGE)
                     settings->dataDisplay[i].value = voltage * 5.7;
 
@@ -159,9 +169,12 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
             }
         }
 
-        Wire.beginTransmission(DS3231_ADDRESS);
-        if(Wire.endTransmission() == 0)
+        if(params->RTCAvailable) {
             params->now = params->rtcPtr->now();
+//            std::stringstream s;
+//            s << std::setfill('0') << std::setw(2) << ((String)params->now.hour()).c_str() << ":" << std::setw(2) << ((String)params->now.minute()).c_str();
+//            Serial.printf("RTC: %sln", s.str().c_str());
+        }
 
         if (params->rcPtr->available()) {
 
@@ -182,54 +195,35 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
 }
 
 _Noreturn void Data::canLoop(void * pvParameters) {
+    Serial.print(pcTaskGetTaskName(NULL));
+    Serial.print(" started on core ");
+    Serial.println(xPortGetCoreID());
 
-
-    struct can_frame canMsg;
+    struct can_frame canMsg{};
     DataStruct *params = (DataStruct*)pvParameters;
+    Settings *settings = Settings::getInstance();
 
     int rpm[3];
 
     for(;;) {
-//        struct can_frame frame;
-//        frame.can_id = 0x213;
-//        frame.can_dlc = 4;
-//        frame.data[0] = 0xFF;
-//        frame.data[1] = 0xFF;
-//        frame.data[2] = 0xFF;
-//        frame.data[3] = 0xF0;
-    //  mcp2515.sendMessage(&frame);
 
-    MCP2515::ERROR err = ((DataStruct*)pvParameters)->mcp2515Ptr->readMessage(&canMsg);
+        MCP2515::ERROR err = params->mcp2515Ptr->readMessage(&canMsg);
 
-        if (err == MCP2515::ERROR_OK && canMsg.can_id == 0x201) {
-//            Serial.print(canMsg.can_id, HEX); // print ID
-//            Serial.print(" ");
-//            Serial.print(canMsg.can_dlc, HEX); // print DLC
-//            Serial.print(" ");
-
-//            for (int i = 0; i<canMsg.can_dlc; i++)  {  // print the data
-//                Serial.print(canMsg.data[i],HEX);
-//                Serial.print(" ");
-//            }
-
-
-            rpm[2] = rpm[1];
-            rpm[1] = rpm[0];
-            rpm[0] = (canMsg.data[0]*256 + canMsg.data[1])/4;
-
-
-//            Serial.print("RPM: ");
-//            Serial.print((rpm[0]+rpm[1]+rpm[2])/3);
-//
-//            Serial.println();
-            ((DataStruct*)pvParameters)->rpm = (rpm[0]+rpm[1]+rpm[2])/3;
+        if (err == MCP2515::ERROR_OK) {
+            switch (canMsg.can_id ) {
+                case CAN_ID_RPM:
+                    rpm[2] = rpm[1];
+                    rpm[1] = rpm[0];
+                    rpm[0] = (canMsg.data[0]*256 + canMsg.data[1])/4;
+                    settings->dataDisplay[Settings::CAN_RPM].value = (rpm[0]+rpm[1]+rpm[2])/3;
+                    break;
+            }
         } else {
-            // return rpmVal;
-            //    if( err != MCP2515::ERROR_NOMSG) {
-            //     Serial.print("Error: ");
-            //     Serial.print(err);
-            //     Serial.print("\n");
-            //    }
+//                if( err != MCP2515::ERROR_NOMSG) {
+//                     Serial.print("Error: ");
+//                     Serial.print(err);
+//                     Serial.print("\n");
+//                }
         }
         delay(10);
     }
