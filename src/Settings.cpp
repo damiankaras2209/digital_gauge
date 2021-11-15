@@ -17,6 +17,9 @@ Settings* Settings::getInstance()
 
 void Settings::loadDefault() {
 
+    strcpy((char *)(general.ssid), "ESP32");
+    strcpy((char *)(general.pass), "12345678");
+
     visual.antialiasing = true;
 	visual.dark = true;
 	visual.drawMainScaleLine = false;
@@ -117,6 +120,8 @@ void Settings::load() {
             loadDefault();
         }
 
+        strcpy((char *)settings->general.ssid, doc["ssid"] | "");
+        strcpy((char *)settings->general.pass, doc["pass"] | "");
         visual.offsetX = doc["offsetX"] | 0;
         visual.offsetY = doc["offsetY"] | 0;
         visual.ellipseA = doc["ellipseA"] | 0;
@@ -190,6 +195,9 @@ void Settings::save() {
     fs::File file = SPIFFS.open("/settings.json", "w");
     StaticJsonDocument<4*1024> doc;
 
+
+    doc["ssid"] = (String)(char*)general.ssid;
+    doc["pass"] = (String)(char*)general.pass;
     doc["offsetX"] = visual.offsetX;
     doc["offsetY"] = visual.offsetY;
     doc["ellipseA"] = visual.ellipseA;

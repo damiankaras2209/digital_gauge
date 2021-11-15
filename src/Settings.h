@@ -18,6 +18,11 @@ class Settings {
 
     public:
 
+        typedef struct GeneralSettings {
+            char ssid[32] = "";
+            char pass[32] = "";
+        } GeneralSettings;
+
         typedef struct VisualSettings {
            int16_t width;
            int16_t height;
@@ -124,6 +129,7 @@ class Settings {
 
 	 public:
 
+        volatile GeneralSettings general;
 		volatile InputSettings input[6];
 		volatile DataDisplaySettings dataDisplay[LAST];
 		volatile VisualSettings visual;

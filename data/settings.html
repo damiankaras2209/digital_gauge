@@ -6,6 +6,8 @@
         <script>
         function send(){
           let data = new FormData();
+          data.append('ssid', document.getElementById('ssid').value);
+          data.append('pass', document.getElementById('pass').value);
           data.append('offsetX', document.getElementById('offsetX').value);
           data.append('offsetY', document.getElementById('offsetY').value);
           data.append('ellipseA', document.getElementById('ellipseA').value);
@@ -101,6 +103,9 @@
     <body>
         <form onsubmit='return send()'>
             <h1>Ustawienia</h1>
+            <h2>Ustawienia ogólne</h2>
+            <p>SSID</p><input value='%ssid%' type='text' id='ssid'>
+            <p>Hasło</p><input value='%pass%' type='text' id='pass'>
             <h2>Ustawienia wyświetlania</h2>
             <button onclick='return post("reset");window.location.reload(true); '>Przywróć domyślne</button>
             <button onclick='return reset();window.location.reload(true); '>Przywróć domyślne</button>

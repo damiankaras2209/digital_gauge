@@ -9,8 +9,6 @@
 
 #include <WiFi.h>
 #include "time.h"
-#include "WiFiPass.h"
-
 
 #include "TFT_eSPI.h"
 
@@ -271,13 +269,13 @@ void setup(void) {
       "\tTarget: " +
       getTargetFilesystemVersionString() +
       "\nCreate an AP with following credentials:\nSSID: \"" +
-      ssid +
+      (char *)Settings::getInstance()->general.ssid +
       "\", pass: \"" +
-      password +
+      (char *)Settings::getInstance()->general.pass +
       "\""
       );
 
-      networking.connectWiFi(TIME_INFINITY, ssid, password);
+      networking.connectWiFi(TIME_INFINITY, (char *)Settings::getInstance()->general.ssid, (char *)Settings::getInstance()->general.pass);
       while(WiFi.status() != WL_CONNECTED){
           delay(50);
       }
@@ -287,7 +285,7 @@ void setup(void) {
 
   if(proceed) {
 
-      networking.connectWiFi(CONNECTING_TIME, ssid, password);
+      networking.connectWiFi(CONNECTING_TIME, (char *)Settings::getInstance()->general.ssid, (char *)Settings::getInstance()->general.pass);
 
       data.init();
 
@@ -348,7 +346,7 @@ void loop() {
     }
 
     if(showMenu) {
-        Screen::getInstance()->showPrompt("SSID: " + String(ssid) + "\npass: " + String(password) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
+        Screen::getInstance()->showPrompt("SSID: " + String((char *)Settings::getInstance()->general.ssid) + "\npass: " + String((char *)Settings::getInstance()->general.pass) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
         menuShown = true;
         showMenu = false;
     }

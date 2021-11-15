@@ -69,7 +69,11 @@ boolean Networking::isWiFiConnected() {
 String processor(const String& var){
 //    Serial.println(var);
     char c[10];
-    if(var == "offsetX"){
+    if(var == "ssid"){
+        return String((char *)settings->general.ssid);
+    } else if(var == "pass") {
+        return String((char *)settings->general.pass);
+    } else if(var == "offsetX") {
         return itoa(settings->visual.offsetX, c, 10);
     } else if(var == "offsetY") {
         return itoa(settings->visual.offsetY, c, 10);
@@ -244,7 +248,11 @@ void Networking::serverSetupTask(void * pvParameters) {
                         settings->dataDisplay[i].scaleEnd = strtof(p->value().c_str(), NULL);
                 }
 
-                if(p->name()=="offsetX")
+                if(p->name()=="ssid")
+                    strcpy((char *)settings->general.ssid, p->value().c_str());
+                else if(p->name()=="pass")
+                    strcpy((char *)settings->general.pass, p->value().c_str());
+                else if(p->name()=="offsetX")
                     settings->visual.offsetX = atoi(p->value().c_str());
                 else if(p->name()=="offsetY")
                     settings->visual.offsetY = atoi(p->value().c_str());
