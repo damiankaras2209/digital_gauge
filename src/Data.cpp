@@ -29,23 +29,13 @@ void Data::init() {
     } else {
         Serial.println("RTC good");
         data.RTCAvailable = true;
+        data.now = rtc.now();
+        data.lastRTC = millis();
         if(rtc.lostPower()) {
             Serial.println("RTC lost power");
             rtc.adjust(DateTime(22, 2, 22, 22, 22, 22));
         }
     }
-
-
-    TaskHandle_t rtcAdjustHandle;
-    Serial.print(xTaskCreatePinnedToCore(adjustRTCTask,
-                                    "adjustRTC",
-                                    4*1024,
-                                    &data,
-                                    3,
-                                    &rtcAdjustHandle,
-                                    0) ? "" : "Failed to start rtc adjust task\n");
-
-
 
     mcp.reset();
     mcp.setBitrate(CAN_500KBPS, MCP_8MHZ);
@@ -60,9 +50,20 @@ void Data::init() {
         ads.setDataRate(7);
     }
 
-
-
     data.GxFT5436Available = touch.init(&Serial);
+
+    rc.enableReceive(3);
+
+    if(data.RTCAvailable) {
+        TaskHandle_t rtcAdjustHandle;
+        Serial.print(xTaskCreatePinnedToCore(adjustRTCTask,
+                                             "adjustRTC",
+                                             4*1024,
+                                             &data,
+                                             3,
+                                             &rtcAdjustHandle,
+                                             0) ? "" : "Failed to start rtc adjust task\n");
+    }
 
     TaskHandle_t adcHandle;
     Serial.print(xTaskCreatePinnedToCore(adcLoop,
@@ -73,7 +74,6 @@ void Data::init() {
                                     &adcHandle,
                                     0) ? "" : "Failed to start adcLoop task\n");
 
-
     TaskHandle_t canHandle;
     Serial.print( xTaskCreatePinnedToCore(canLoop,
                                             "canLoop",
@@ -83,11 +83,8 @@ void Data::init() {
                                             &canHandle,
                                             0) ? "" : "Failed to start canLoop task\n");
 
-    rc.enableReceive(3);
 
 }
-
-
 
 _Noreturn void Data::adcLoop(void * pvParameters) {
     Serial.print(pcTaskGetTaskName(NULL));
@@ -169,11 +166,12 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
             }
         }
 
-        if(params->RTCAvailable) {
+        if(params->RTCAvailable && millis()-params->lastRTC > 1000) {
             params->now = params->rtcPtr->now();
 //            std::stringstream s;
-//            s << std::setfill('0') << std::setw(2) << ((String)params->now.hour()).c_str() << ":" << std::setw(2) << ((String)params->now.minute()).c_str();
-//            Serial.printf("RTC: %sln", s.str().c_str());
+//            s << std::setfill('0') << std::setw(2) << ((String)params->now.hour()).c_str() << ":" << std::setw(2) << ((String)params->now.minute()).c_str()  << ":" << std::setw(2) << ((String)params->now.second()).c_str();
+//            Serial.printf("RTC: %s\n", s.str().c_str());
+            params->lastRTC = millis();
         }
 
         if (params->rcPtr->available()) {
@@ -238,9 +236,16 @@ void Data::adjustRTCTask(void * pvParameters) {
     Serial.print(pcTaskGetTaskName(NULL));
     Serial.print(" started on core ");
     Serial.println(xPortGetCoreID());
+
     while(WiFi.status() != WL_CONNECTED) {
         delay(100);
     }
+
+    auto params = (DataStruct*)pvParameters;
+    while(params->i2cBusy)
+        delay(1);
+    params->i2cBusy = true;
+
     Serial.println("Getting time from server");
     struct tm timeinfo;
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -250,12 +255,11 @@ void Data::adjustRTCTask(void * pvParameters) {
         Serial.print("Success ");
         Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
         ((DataStruct*)pvParameters)->rtcPtr->adjust(DateTime(timeinfo.tm_year, timeinfo.tm_mon+1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec));
-//        Serial.println("halo: ");
-        DateTime now  = ((DataStruct*)pvParameters)->rtcPtr->now();
-//        Serial.println("min: ");
-//        Serial.println(now.minute());
-//        Serial.println(now.year());
+//        DateTime now  = ((DataStruct*)pvParameters)->rtcPtr->now();
+//        Serial.printf("Adjusted to: %d:%d\n", now.hour(), now.minute());
     }
+
+    params->i2cBusy = false;
     vTaskDelete(NULL);
 }
 

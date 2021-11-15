@@ -50,6 +50,7 @@ public:
             GxFT5436::TouchInfo touchInfo;
             DateTime now;
             int brightness = 255;
+            ulong lastRTC = 0;
             volatile bool i2cBusy = false;
         } DataStruct;
 
