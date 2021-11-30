@@ -27,10 +27,8 @@ Networking networking;
 UpdaterClass updater;
 Data data;
 
-Settings::DataSource selected[LAST];
+Settings::DataSource selected[SIDE_LAST];
 
-volatile bool showMenu = false;
-volatile bool menuShown = false;
 volatile ulong touchDetectedTime = 0;
 
 void IRAM_ATTR touchStart() {
@@ -107,23 +105,24 @@ void IRAM_ATTR touchStart() {
             for (uint8_t i = 0; i < 5; i++) {
                 if(!detected[i] && down[i]) {
                     down[i] = false;
-                    Serial.printf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu)", i, startX[i], startY[i], endX[i], endY[i]);
+                    Serial.printf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu) ", i, startX[i], startY[i], endX[i], endY[i]);
                     //Single touch
                     if((abs(startX[i]-endX[i]) < SINGLE_POINT_DISTANCE) && (abs(startY[i]-endY[i]) < SINGLE_POINT_DISTANCE)) {
 
+                        Serial.printf("Single touch at %d,%d", endX[i], endY[i]);
+
                         //show menu
-                        if(!menuShown && endX[i] > settings->visual.width/2 - settings->visual.needleCenterOffset && endX[i] < settings->visual.width/2 + settings->visual.needleCenterOffset && endY[i] < settings->visual.height/2) {
-                            showMenu = true;
+                        if(Screen::getInstance()->getView() != PROMPT && endX[i] > settings->visual.width/2 - settings->visual.needleCenterOffset && endX[i] < settings->visual.width/2 + settings->visual.needleCenterOffset && endY[i] < settings->visual.height/2) {
+                            Screen::getInstance()->showPrompt("SSID: " + String((char *)Settings::getInstance()->general.ssid) + "\npass: " + String((char *)Settings::getInstance()->general.pass) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
                         }
 
                         //dismiss menu
-                        if(menuShown) {
-                            menuShown = false;
-                            Screen::getInstance()->shallWeReset = true;
-                        }
+                        else if(Screen::getInstance()->getView() == PROMPT)
+                            Screen::getInstance()->setGaugeMode();
+
 
                         //change left gauge
-                        if(!menuShown && endX[i] < settings->visual.width/2-settings->visual.needleCenterOffset) {
+                        else if(Screen::getInstance()->getView() == GAUGES && endX[i] < settings->visual.width/2-settings->visual.needleCenterOffset) {
                             Serial.printf("Current data: %s", settings->dataSourceString[selected[LEFT]].c_str());
                             do {
                                 selected[LEFT] = static_cast<Settings::DataSource>(selected[LEFT]+1);
@@ -135,7 +134,7 @@ void IRAM_ATTR touchStart() {
                         }
 
                         //change right gauge
-                        if(!menuShown && endX[i] > settings->visual.width/2+settings->visual.needleCenterOffset) {
+                        else if(Screen::getInstance()->getView() == GAUGES && endX[i] > settings->visual.width/2+settings->visual.needleCenterOffset) {
                             Serial.printf("Current data: %s", settings->dataSourceString[selected[RIGHT]].c_str());
                             do {
                                 selected[RIGHT] = static_cast<Settings::DataSource>(selected[RIGHT]+1);
@@ -146,7 +145,6 @@ void IRAM_ATTR touchStart() {
                             settings->saveSelected(selected);
                         }
 
-                        Serial.printf("Single touch at %d,%d", endX[i], endY[i]);
                     }
                     //Slide right
                     else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] > startX[i])) {
@@ -208,7 +206,8 @@ void f(t_httpUpdate_return status) {
     switch (status) {
         case HTTP_UPDATE_FAILED:
             Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
-            Screen::getInstance()->addToPrompt("Update failed " + (String)httpUpdate.getLastError() + ": " + httpUpdate.getLastErrorString().c_str() + "\nReboot to try again");
+            Screen::getInstance()->appendToPrompt("Update failed " + (String) httpUpdate.getLastError() + ": " +
+                                                  httpUpdate.getLastErrorString().c_str() + "\nReboot to try again");
             break;
 
         case HTTP_UPDATE_NO_UPDATES:
@@ -218,7 +217,7 @@ void f(t_httpUpdate_return status) {
         case HTTP_UPDATE_OK:
             Serial.println("HTTP_UPDATE_OK");
             Settings::getInstance()->save();
-            Screen::getInstance()->addToPrompt("Update successful\n Restarting in 3 seconds");
+            Screen::getInstance()->appendToPrompt("Update successful\n Restarting in 3 seconds");
             delay(3000);
             esp_restart();
     }
@@ -247,7 +246,6 @@ void setup(void) {
   Settings::getInstance()->loadSelected(selected);
 
   Screen::getInstance()->init(&tft, &data, selected);
-  Screen::getInstance()->blank();
 
   ledcSetup(ledChannel, freq, resolution);
   ledcAttachPin(ledPin, ledChannel);
@@ -279,7 +277,7 @@ void setup(void) {
       while(WiFi.status() != WL_CONNECTED){
           delay(50);
       }
-      Screen::getInstance()->addToPrompt("WiFi connected, updating... this may take a few minutes");
+      Screen::getInstance()->appendToPrompt("WiFi connected, updating... this may take a few minutes");
       updater.updateFS(getTargetFilesystemVersionString(), f);
   }
 
@@ -319,12 +317,7 @@ void setup(void) {
 
 
       Screen::getInstance()->reset();
-
-
-
-    //  Screen::getInstance()->updateNeedle(0, cos(90/PI/18)/2+0.5);
-    //  Screen::getInstance()->updateNeedle(1, cos(52/PI/18)/2+0.5);
-
+      Screen::getInstance()->setGaugeMode();
 
     //  networking.connectWiFi(false);
     //  networking.serverSetup();
@@ -334,10 +327,6 @@ void setup(void) {
   Serial.println("Setup() complete");
 }
 
-
-int x = 0, fps = 0;
-unsigned long total, t;
-
 void loop() {
 
     if(!updateChecked && WiFi.status() == WL_CONNECTED) {
@@ -345,79 +334,8 @@ void loop() {
         updateChecked = true;
     }
 
-    if(showMenu) {
-        Screen::getInstance()->showPrompt("SSID: " + String((char *)Settings::getInstance()->general.ssid) + "\npass: " + String((char *)Settings::getInstance()->general.pass) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
-        menuShown = true;
-        showMenu = false;
-    }
-
-    if(Screen::getInstance()->shallWeReset) {
-        Screen::getInstance()->reset();
-        Screen::getInstance()->updateText(true, fps);
-    }
-
-    if(proceed && !menuShown) {
-//    Serial.print(pcTaskGetTaskName(NULL));
-//    Serial.print(" started on core ");
-//    Serial.println(xPortGetCoreID());
-
-    total = millis();
-    t = millis();
-
-
-
-//
-//    // Serial.print("Touch time: ");
-//    // Serial.println(millis()-t);
-//    t = millis();
-//
-//    // Serial.print("Server time: ");
-//    // Serial.println(millis()-t);
-//    t = millis();
-//
-    Screen::getInstance()->updateText(false, fps);
-//     Serial.print("Text update time: ");
-//     Serial.println(millis()-t);
-// rpmVal = rpmRead();
-
-//    float oilTemp = (oilBeta*roomOilTemp/(oilBeta+(roomOilTemp*math.log(oilRes/s/roomOilResist)))) - 273.15
-//    float oilTRes = 10110.0 * data.data.adsVoltage[1] / (3.3 - data.data.adsVoltage[1]);
-//    float oilPRes = 101.9 * data.data.adsVoltage[0] / (3.3 - data.data.adsVoltage[0]);
-//    float oilTemp = 3800.0*(21.8 + 273.15)/(3800.0+((21.8 + 273.15)*log(oilTRes/58000.0))) - 273.15;
-//    float oilPress = (oilPRes-3.0)/(160.0-3.0)*10.0;
-
-
-//    Serial.print("resistance 1: ");
-//    Serial.print(oilTRes);
-//    Serial.print(", resistance 2: ");
-//    Serial.print(oilPRes);
-//    Serial.print(", Temp: ");
-//    Serial.print(oilTemp);
-//    Serial.print(", press: ");
-//    Serial.println(oilPress);
-
-//    Screen::getInstance()->updateNeedle(0, sin(x/PI/18)/2+0.5);
-    Screen::getInstance()->updateNeedle(0, selected[LEFT]);
-//    test();
-    // Screen::getInstance()->updateNeedle(0, rpmVal/8000.0);
-//    // rpmVal = rpmRead();
-//    Screen::getInstance()->updateNeedle(1, cos(x/PI/18)/2+0.5);
-    Screen::getInstance()->updateNeedle(1, selected[RIGHT]);
-    x+=2;
-    if(x>=360) {
-      x-=360;
-    }
-
-//
-
-//    Serial.print("Frametime: ");
-////    fps = millis()-t;
-////    delay(10);
-//    Serial.print(millis()-t);
-//    Serial.print(", loop time: ");
-//    Serial.println(millis()-total);
-
-
+    if(proceed) {
+        Screen::getInstance()->tick();
     } else
         delay(1);
 }

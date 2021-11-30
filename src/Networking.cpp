@@ -276,7 +276,7 @@ void Networking::serverSetupTask(void * pvParameters) {
 
         settings->save();
 //        screen->reset();
-        screen->shallWeReset = true;
+        screen->reset();
 //        request->send(SPIFFS, "/settings.html", String(), false, processor);
     });
 

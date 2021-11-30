@@ -19,7 +19,11 @@ float calcY(int16_t, int16_t, int16_t);
 double rad(int16_t);
 
 enum Side {
-    LEFT, RIGHT, MID, LAST
+    LEFT, RIGHT, MID, SIDE_LAST
+};
+
+enum View {
+    GAUGES, CLOCK, PROMPT
 };
 
 class Screen {
@@ -29,17 +33,16 @@ class Screen {
 
 	public:
 		Screen();
-		boolean shallWeReset;
 		volatile boolean isBusy;
 		static Screen *getInstance();
 		void init(TFT_eSPI*, Data*, Settings::DataSource*);
 		void reset();
-		void blank();
-		void updateNeedle(int, Settings::DataSource);
-		void updateText(boolean, int fps);
 		void showPrompt(String text);
-		void addToPrompt(String text);
-		uint16_t c24to16(int);
+		void appendToPrompt(String text);
+		void setClockMode();
+		void setGaugeMode();
+        View getView();
+		void tick();
 
 	private:
 		TFT_eSPI *tft;
@@ -48,13 +51,19 @@ class Screen {
         Settings::DataSource *selected;
         volatile Settings::VisualSettings *vis;
 		double arrR[91], arrX[91], arrY[91];
-		bool promptShown = false;
 		int lines = 0;
+		volatile View currentView;
+		uint16_t c24to16(int);
 		void drawScalePiece(void*, boolean, int, int, int, int, int, int, int, int, int, uint16_t);
 		void drawScale(void*, boolean, int, int, int, int, int, int);
+		void updateNeedle(int, Settings::DataSource);
+		void updateText(boolean, int fps);
 		void fillTables();
-		void setPromptFont();
-		void drawNeedle();
+		void switchView(View);
+		void lock();
+		void release();
+
+
 
 	//void readSettings();
 
