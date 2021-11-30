@@ -92,8 +92,8 @@ void Screen::reset() {
     lock();
     tft->fillScreen(settings->visual.backgroundColor);
 	fillTables();
-	drawScale(tft, false, 0, 0, 0, 0, settings->dataDisplay[selected[0]].scaleStart, settings->dataDisplay[selected[0]].scaleEnd);	//left
-	drawScale(tft, false, 1, 0, 0, 0, settings->dataDisplay[selected[1]].scaleStart, settings->dataDisplay[selected[1]].scaleEnd);	//right
+	drawWhole[0] = true;
+	drawWhole[1] = true;
     updateText(true, 0);
 	release();
 }
@@ -116,8 +116,8 @@ void Screen::switchView(View view) {
     switch(view) {
         case GAUGES:  {
             tft->fillScreen(settings->visual.backgroundColor);
-            drawScale(tft, false, 0, 0, 0, 0, settings->dataDisplay[selected[0]].scaleStart, settings->dataDisplay[selected[0]].scaleEnd);	//left
-            drawScale(tft, false, 1, 0, 0, 0, settings->dataDisplay[selected[1]].scaleStart, settings->dataDisplay[selected[1]].scaleEnd);	//right
+            drawWhole[0] = true;
+            drawWhole[1] = true;
             updateText(true, 0);
             break;
         }
@@ -163,7 +163,7 @@ void Screen::tick() {
     delay(1);
 }
 
-void Screen::drawScalePiece(void* c, boolean isSprite, int a, int b, int offset, int deg, int side, int originX, int originY, int length, int width, uint16_t color) {
+void Screen::drawScalePiece(TFT_eSprite* c, int deg, int side, int spriteX, int spriteY, int length, int width, uint16_t color) {
 
     if(!side)
         side = -1;
@@ -197,11 +197,11 @@ void Screen::drawScalePiece(void* c, boolean isSprite, int a, int b, int offset,
     // Serial.print(" ");
     // Serial.println(y2);
 
-    (isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->drawWideLine(
-            (isSprite ? 0 : vis->offsetX) + vis->width/2+side*(vis->needleCenterOffset+x1)-originX,
-            (isSprite ? 0 : vis->offsetY) + vis->height/2+m*(y1)-originY,
-            (isSprite ? 0 : vis->offsetX) + vis->width/2+side*(vis->needleCenterOffset+x2)-originX,
-            (isSprite ? 0 : vis->offsetY) + vis->height/2+m*(y2)-originY,
+    c->drawWideLine(
+            vis->width/2 +side*(vis->needleCenterOffset+x1) - spriteX,
+            vis->height/2 +m*(y1) - spriteY,
+            vis->width/2 +side*(vis->needleCenterOffset+x2) - spriteX,
+            vis->height/2 +m*(y2) - spriteY,
             width,
             color,
             vis->backgroundColor);
@@ -210,7 +210,7 @@ void Screen::drawScalePiece(void* c, boolean isSprite, int a, int b, int offset,
 
 unsigned long t3;
 
-void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int w, int start, int end) {
+void Screen::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w, int start, int end) {
 
     t3 = millis();
 
@@ -218,7 +218,7 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
     int steps = vis->scaleLargeSteps*vis->scaleSmallSteps+1;
     for(uint8_t i=0; i<steps; i++) {
         int16_t deg = stepSmall*i;
-        drawScalePiece((isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c), isSprite, vis->ellipseA, vis->ellipseB, vis->needleCenterOffset, deg, side, x1, y1,
+        drawScalePiece(c, deg, side, spriteX, spriteY,
                        (i%(steps/vis->scaleLargeSteps)==0) ? vis->scaleLargeLength : vis->scaleSmallLength,
                        (i%(steps/vis->scaleLargeSteps)==0) ? vis->scaleLargeWidth : vis->scaleSmallWidth,
                        (i%vis->scaleAccColorEvery==0) ? vis->scaleAccColor : vis->scaleColor);
@@ -227,13 +227,13 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
 //    Serial.printf(" draw scale pieces: %lu", millis()-t3);
 //    t3 = millis();
 
-    (isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextColor(vis->fontColor);
+    c->setTextColor(vis->fontColor);
     //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setAttribute(SFBG_ENABLE, true);
     //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextDatum(side ? CL_DATUM : CR_DATUM);
     //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextDatum(CC_DATUM);
-    (isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextPadding(20);
+    c->setTextPadding(20);
     //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->loadFont("GaugeHeavyNumbers"+(String)vis->scaleSize);
-    (isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->loadFont("GaugeHeavyNumbers12");
+    c->loadFont("GaugeHeavyNumbers12");
 
 //    Serial.printf(" load font: %lu", millis()-t3);
 //    t3 = millis();
@@ -250,9 +250,9 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
         }
 
         if(deg==0)
-            (isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextDatum(side ? CR_DATUM : CL_DATUM);
+            c->setTextDatum(side ? CR_DATUM : CL_DATUM);
         else
-            (isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextDatum(CC_DATUM);
+            c->setTextDatum(CC_DATUM);
 
 
         int top = i>2 ? -1 : 1;
@@ -260,10 +260,10 @@ void Screen::drawScale(void* c, boolean isSprite, int side, int x1, int y1, int 
         if(!side)
             side = -1;
 
-        (isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->drawString(
+        c->drawString(
                 ((String)(start + i*(end-start)/vis->scaleTextSteps)).c_str(),
-                (isSprite ? 0 : vis->offsetX) + vis->width/2 + side*(vis->needleCenterOffset + calcX(0, deg, arrR[deg] - vis->scaleTextOffset))-x1,
-                (isSprite ? 0 : vis->offsetY) + vis->height/2+ top*(calcY(0, deg, arrR[deg] - vis->scaleTextOffset))-y1
+                vis->width/2 + side*(vis->needleCenterOffset + calcX(0, deg, arrR[deg] - vis->scaleTextOffset)) - spriteX,
+                vis->height/2 + top*(calcY(0, deg, arrR[deg] - vis->scaleTextOffset)) - spriteY
                 );
 
     }
@@ -284,7 +284,6 @@ int xx = 0;
 
 int pX1[2], pY1[2], pW[2], pH[2], pDeg[2];
 Settings::DataSource pSource[2];
-boolean firstRun[2] = {true, true};
 
 unsigned long t2;
 
@@ -374,7 +373,7 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	int spriteW;
 	int spriteH;
 
-    if(pSource[side] != source && !firstRun[side]) {
+    if(pSource[side] != source || drawWhole[side]) {
         spriteX = vis->width/2 + (side ? (vis->needleCenterOffset -vis->needleCenterRadius) : (-vis->ellipseA + 1));
         spriteY = vis->height/2 - vis->ellipseB;
         spriteW = vis->ellipseA - vis->needleCenterOffset + vis->needleCenterRadius;
@@ -391,7 +390,7 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 
     update.createSprite(spriteW, spriteH);
 
-    drawScale(&update, true, side, spriteX, spriteY, 0, start, end);
+    drawScale(&update, side, spriteX, spriteY, 0, start, end);
 
 //    Serial.printf(" draw scale: %lu", millis()-t2);
 //    t2 = millis();
@@ -449,7 +448,7 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	pH[side] = h;
 	pDeg[side] = deg;
 	pSource[side] = source;
-	firstRun[side] = false;
+    drawWhole[side] = false;
 	xx+=2;
 	if(xx>=360) {
 	    xx-=360;

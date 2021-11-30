@@ -53,9 +53,10 @@ class Screen {
 		double arrR[91], arrX[91], arrY[91];
 		int lines = 0;
 		volatile View currentView;
+		boolean drawWhole[2];
 		uint16_t c24to16(int);
-		void drawScalePiece(void*, boolean, int, int, int, int, int, int, int, int, int, uint16_t);
-		void drawScale(void*, boolean, int, int, int, int, int, int);
+		void drawScalePiece(TFT_eSprite*, int, int, int, int, int, int, uint16_t);
+		void drawScale(TFT_eSprite*, int, int, int, int, int, int);
 		void updateNeedle(int, Settings::DataSource);
 		void updateText(boolean, int fps);
 		void fillTables();
