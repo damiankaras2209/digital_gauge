@@ -49,7 +49,7 @@ void IRAM_ATTR touchStart() {
     Settings *settings = Settings::getInstance();
 
     unsigned long last[5];
-    bool down[5];
+    bool down[5] = {false, false, false, false, false};
     uint16_t startX[5], startY[5];
     uint16_t endX[5], endY[5];
 
