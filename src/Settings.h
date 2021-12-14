@@ -1,6 +1,8 @@
 #ifndef _SETTINGS_H_
 #define _SETTINGS_H_
 
+#include "Log.h"
+
 #include <stdint.h>
 #include <fstream>
 #include <cstring>

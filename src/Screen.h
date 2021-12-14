@@ -1,6 +1,8 @@
 #ifndef _SCREEN_H_
 #define _SCREEN_H_
 
+#include "Log.h"
+
 #include <SPI.h>
 #include <cmath>
 #include <string>

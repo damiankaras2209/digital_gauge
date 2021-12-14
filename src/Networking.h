@@ -1,6 +1,8 @@
 #ifndef _NETWORKING_H_
 #define _NETWORKING_H_
 
+#include "Log.h"
+
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include "ESPAsyncWebServer.h"
@@ -16,12 +18,16 @@
 #define TIME_NO_WAIT 0
 #define TIME_INFINITY -1
 
+
 class Networking {
+
     public:
         int connectWiFi(int = CONNECTING_TIME, const char* ssid = "", const char* pass = "");
         static void serverSetup();
         static boolean isWiFiConnected();
+        void sendEvent(const char *, std::string);
     private:
+        static void f(std::string);
         [[noreturn]] static void WiFiStationConnected(WiFiEvent_t, WiFiEventInfo_t);
         [[noreturn]] static void WiFiGotIP(WiFiEvent_t, WiFiEventInfo_t);
         static void connectWiFiTask(void *);

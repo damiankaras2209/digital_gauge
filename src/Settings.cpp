@@ -19,6 +19,8 @@ void Settings::loadDefault() {
 
     strcpy((char *)(general.ssid), "ESP32");
     strcpy((char *)(general.pass), "12345678");
+    strcpy((char *)(general.ssid), "dlink-74A1");
+    strcpy((char *)(general.pass), "fdpqg49953");
 
     visual.antialiasing = true;
 	visual.dark = true;
@@ -110,13 +112,13 @@ void Settings::loadDefault() {
 }
 
 void Settings::load() {
-    Serial.println("Loading settings");
+    Log.log("Loading settings");
     if(SPIFFS.exists("/settings.json")) {
         StaticJsonDocument<4*1024> doc;
         fs::File file = SPIFFS.open("/settings.json", "r");
         DeserializationError error = deserializeJson(doc, file);
         if (error) {
-            Serial.println(F("Failed to read file, using default configuration"));
+            Log.log("Failed to read file, using default configuration");
             loadDefault();
         }
 
@@ -152,38 +154,43 @@ void Settings::load() {
 
         file.close();
 
-        Serial.println("Read from JSON: ");
+#ifdef LOG_LOADED_SETTINGS
 
-        Serial.println("[offsetX]" + (String)visual.offsetX);
-        Serial.println("[offsetY]" + (String)visual.offsetY);
-        Serial.println("[ellipseA]" + (String)visual.ellipseA);
-        Serial.println("[ellipseB]" + (String)visual.ellipseB);
-        Serial.println("[needleCenterRadius]" + (String)visual.needleCenterRadius);
-        Serial.println("[needleCenterOffset]" + (String)visual.needleCenterOffset);
-        Serial.println("[needleLength]" + (String)visual.needleLength);
-        Serial.println("[needleBottomWidth]" + (String)visual.needleBottomWidth);
-        Serial.println("[needleTopWidth]" + (String)visual.needleTopWidth);
+        Log.log("Read from JSON: ");
+
+        Log.log("[offsetX]" + (String)visual.offsetX);
+        Log.log("[offsetY]" + (String)visual.offsetY);
+        Log.log("[ellipseA]" + (String)visual.ellipseA);
+        Log.log("[ellipseB]" + (String)visual.ellipseB);
+        Log.log("[needleCenterRadius]" + (String)visual.needleCenterRadius);
+        Log.log("[needleCenterOffset]" + (String)visual.needleCenterOffset);
+        Log.log("[needleLength]" + (String)visual.needleLength);
+        Log.log("[needleBottomWidth]" + (String)visual.needleBottomWidth);
+        Log.log("[needleTopWidth]" + (String)visual.needleTopWidth);
 
         for(int i=0; i<6; i++) {
-            Serial.println("[input_" + (String)i + ".r]" + (String)input[i].r);
-            Serial.println("[input_" + (String)i + ".type]" + (String)input[i].type);
-            Serial.println("[input_" + (String)i + ".beta]" + (String)input[i].beta);
-            Serial.println("[input_" + (String)i + ".r25]" + (String)input[i].r25);
-            Serial.println("[input_" + (String)i + ".rmin]" + (String)input[i].rmin);
-            Serial.println("[input_" + (String)i + ".rmax]" + (String)input[i].rmax);
-            Serial.println("[input_" + (String)i + ".maxVal]" + (String)input[i].maxVal);
+            Log.log("[input_" + (String)i + ".r]" + (String)input[i].r);
+            Log.log("[input_" + (String)i + ".type]" + (String)input[i].type);
+            Log.log("[input_" + (String)i + ".beta]" + (String)input[i].beta);
+            Log.log("[input_" + (String)i + ".r25]" + (String)input[i].r25);
+            Log.log("[input_" + (String)i + ".rmin]" + (String)input[i].rmin);
+            Log.log("[input_" + (String)i + ".rmax]" + (String)input[i].rmax);
+            Log.log("[input_" + (String)i + ".maxVal]" + (String)input[i].maxVal);
         }
 
         for(int i=ADS1115_0; i<LAST; i++) {
-            Serial.println("[dataDisplay_" + (String)i + ".enable]" + (String)dataDisplay[i].enable);
-            Serial.println("[dataDisplay_" + (String)i + ".name]" + (String)(char *)dataDisplay[i].name);
-            Serial.println("[dataDisplay_" + (String)i + ".unit]" + (String)(char *)dataDisplay[i].unit);
-            Serial.println("[dataDisplay_" + (String)i + ".scaleStart]" + (String)dataDisplay[i].scaleStart);
-            Serial.println("[dataDisplay_" + (String)i + ".scaleEnd]" + (String)dataDisplay[i].scaleEnd);
+            Log.log("[dataDisplay_" + (String)i + ".enable]" + (String)dataDisplay[i].enable);
+            Log.log("[dataDisplay_" + (String)i + ".name]" + (String)(char *)dataDisplay[i].name);
+            Log.log("[dataDisplay_" + (String)i + ".unit]" + (String)(char *)dataDisplay[i].unit);
+            Log.log("[dataDisplay_" + (String)i + ".scaleStart]" + (String)dataDisplay[i].scaleStart);
+            Log.log("[dataDisplay_" + (String)i + ".scaleEnd]" + (String)dataDisplay[i].scaleEnd);
         }
-        Serial.println("End of read");
+        Log.log("End of read");
+
+#endif
+
     } else {
-        Serial.println("File not found. Loading defaults");
+        Log.log("File not found. Loading defaults");
         loadDefault();
     }
 
@@ -224,22 +231,22 @@ void Settings::save() {
         doc["dataDisplay_" + (String)i + "_scaleEnd"] = dataDisplay[i].scaleEnd;
     }
     if (serializeJson(doc, file) == 0) {
-        Serial.println(F("Failed to write to file"));
+        Log.log("Failed to write to file");
     }
-    Serial.println(F("Settings saved"));
+    Log.log("Settings saved");
 
     // Close the file
     file.close();
 }
 
 void Settings::loadSelected(Settings::DataSource *selected) {
-    Serial.println("Loading selected");
+    Log.log("Loading selected");
     if(SPIFFS.exists("/selected.json")) {
         StaticJsonDocument<128> doc;
         fs::File file = SPIFFS.open("/selected.json", "r");
         DeserializationError error = deserializeJson(doc, file);
         if (error) {
-            Serial.println(F("Failed to read file, using default configuration"));
+            Log.log("Failed to read file, using default configuration");
         }
 
         selected[0] = doc["sel_0"] | VOLTAGE;
@@ -259,9 +266,9 @@ void Settings::saveSelected(Settings::DataSource *selected) {
     doc["sel_2"] = selected[2];
 
     if (serializeJson(doc, file) == 0) {
-        Serial.println(F("Failed to write to file"));
+        Log.log("Failed to write to file");
     }
-    Serial.println(F("Selected saved"));
+    Log.log("Selected saved");
 
     // Close the file
     file.close();

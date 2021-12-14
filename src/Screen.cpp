@@ -137,7 +137,7 @@ void Screen::switchView(View view) {
         }
     }
     currentView = view;
-    Serial.printf("Current view: %d", currentView);
+    Log.logf("Current view: %d", currentView);
 }
 
 unsigned long t;
@@ -149,7 +149,7 @@ void Screen::tick() {
             Screen::getInstance()->updateText(false, 0);
             Screen::getInstance()->updateNeedle(0, selected[LEFT]);
             Screen::getInstance()->updateNeedle(1, selected[RIGHT]);
-//            Serial.printf("Frametime: %lu\n", millis()-t);
+//            Log.log("f");
             break;
         }
         case CLOCK:  {
@@ -176,7 +176,7 @@ void Screen::drawScalePiece(TFT_eSprite* c, int deg, int side, int spriteX, int 
         m = -1;
     }
 
-    //Serial.println(deg);
+    //Log.log(deg);
 
     double x1 = arrX[deg];
     double y1 = arrY[deg];
@@ -189,13 +189,13 @@ void Screen::drawScalePiece(TFT_eSprite* c, int deg, int side, int spriteX, int 
     //tft->drawPixel(vis->width/2+vis->needleCenterOffset+x2,vis->height/2+y2, TFT_BLUE);
 
 
-    // Serial.print(x1);
-    // Serial.print(" ");
-    // Serial.print(y1);
-    // Serial.print(" ");
-    // Serial.print(x2);
-    // Serial.print(" ");
-    // Serial.println(y2);
+    // Log.log(x1);
+    // Log.log(" ");
+    // Log.log(y1);
+    // Log.log(" ");
+    // Log.log(x2);
+    // Log.log(" ");
+    // Log.log(y2);
 
     c->drawWideLine(
             vis->width/2 +side*(vis->needleCenterOffset+x1) - spriteX,
@@ -224,7 +224,7 @@ void Screen::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w
                        (i%vis->scaleAccColorEvery==0) ? vis->scaleAccColor : vis->scaleColor);
     }
 
-//    Serial.printf(" draw scale pieces: %lu", millis()-t3);
+//    Log.logf(" draw scale pieces: %lu", millis()-t3);
 //    t3 = millis();
 
     c->setTextColor(vis->fontColor);
@@ -235,7 +235,7 @@ void Screen::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w
     //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->loadFont("GaugeHeavyNumbers"+(String)vis->scaleSize);
     c->loadFont("GaugeHeavyNumbers12");
 
-//    Serial.printf(" load font: %lu", millis()-t3);
+//    Log.logf(" load font: %lu", millis()-t3);
 //    t3 = millis();
 
     for(int i=0; i<5; i++) {
@@ -268,7 +268,7 @@ void Screen::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w
 
     }
 
-//    Serial.printf(" draw numbers: %lu", millis()-t3);
+//    Log.logf(" draw numbers: %lu", millis()-t3);
 //    t3 = millis();
 }
 
@@ -308,16 +308,16 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	    val = 1.0;
 
 	double deg = (1.0-val)*180;
-	// Serial.print(pos);
-	// Serial.print(" ");
-	// Serial.print(deg);
+	// Log.log(pos);
+	// Log.log(" ");
+	// Log.log(deg);
 	deg-=90.0;
-	// Serial.print(" ");
-	// Serial.println(deg);
+	// Log.log(" ");
+	// Log.log(deg);
 
-	//Serial.println(deg);
-	// Serial.print(" ");
-	// Serial.println(length);
+	//Log.log(deg);
+	// Log.log(" ");
+	// Log.log(length);
 
 	double length;
 	int x, y, x1, y1, w, h;
@@ -344,22 +344,22 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	w = max(x+vis->needleCenterRadius, vis->needleCenterRadius*2)+off;
 	w = vis->ellipseA-vis->needleCenterOffset+vis->needleCenterRadius;
 
-	// Serial.print("x1:");
-	// Serial.print(x1);
-	// Serial.print(" pX1:");
-	// Serial.print(pX1[side]);
-	// Serial.print(" y1:");
-	// Serial.print(y1);
-	// Serial.print(" pY1:");
-	// Serial.print(pY1[side]);
-	// Serial.print(" w:");
-	// Serial.print(w);
-	// Serial.print(" pW:");
-	// Serial.print(pW[side]);
-	// Serial.print(" pH:");
-	// Serial.print(pH[side]);
-	// Serial.print(" h:");
-	// Serial.println(h);
+	// Log.log("x1:");
+	// Log.log(x1);
+	// Log.log(" pX1:");
+	// Log.log(pX1[side]);
+	// Log.log(" y1:");
+	// Log.log(y1);
+	// Log.log(" pY1:");
+	// Log.log(pY1[side]);
+	// Log.log(" w:");
+	// Log.log(w);
+	// Log.log(" pW:");
+	// Log.log(pW[side]);
+	// Log.log(" pH:");
+	// Log.log(pH[side]);
+	// Log.log(" h:");
+	// Log.log(h);
 
 
 
@@ -385,14 +385,14 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
         spriteH = pY1[side]+pH[side] > y1+h ? pY1[side]+pH[side]-spriteY : h+abs(y1-pY1[side]);
     }
 
-//    Serial.printf("first calc: %lu", millis()-t2);
+//    Log.logf("first calc: %lu", millis()-t2);
 //    t2 = millis();
 
     update.createSprite(spriteW, spriteH);
 
     drawScale(&update, side, spriteX, spriteY, 0, start, end);
 
-//    Serial.printf(" draw scale: %lu", millis()-t2);
+//    Log.logf(" draw scale: %lu", millis()-t2);
 //    t2 = millis();
 
     int needleX = side ? vis->needleCenterRadius : (spriteW-vis->needleCenterRadius);
@@ -421,7 +421,7 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	        vis->needleCenterRadius,
 	        vis->needleCenterColor);
 
-//	Serial.printf(" draw needle: %lu", millis()-t2);
+//	Log.logf(" draw needle: %lu", millis()-t2);
 //	t2 = millis();
 
 	std::stringstream ss;
@@ -434,12 +434,12 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	        side ? vis->needleCenterRadius : spriteW-vis->needleCenterRadius,
 	        vis->height/2 - spriteY);
 
-//	Serial.printf(" draw value: %lu", millis()-t2);
+//	Log.logf(" draw value: %lu", millis()-t2);
 //	t2 = millis();
 
 	update.pushSprite(spriteX + vis->offsetX, spriteY + vis->offsetY);
 
-//	Serial.printf(" push sprite: %lu\n", millis()-t2);
+//	Log.logf(" push sprite: %lu\n", millis()-t2);
 //	t2 = millis();
 
 	pX1[side] = x1;
@@ -526,15 +526,15 @@ void Screen::showPrompt(String text) {
     switchView(PROMPT);
 
     std::string str = text.c_str();
-//    Serial.println(str.c_str());
+//    Log.log(str.c_str());
 
     std::size_t nextLine = 0;
     lines = 0;
 
     while(nextLine != std::string::npos) {
 
-//        Serial.println(str.c_str());
-//        Serial.println(nextLine);
+//        Log.log(str.c_str());
+//        Log.log(nextLine);
 
         nextLine = str.find_first_of('\n');
         tft->drawString(str.substr(0, nextLine).c_str(), vis->width/2, vis->height/2-40+(lines++)*(tft->fontHeight()+3+8));
@@ -546,7 +546,7 @@ void Screen::showPrompt(String text) {
 void Screen::appendToPrompt(String text) {
     lock();
     if(currentView != PROMPT) {
-        Serial.print("appendToPrompt() called without showPrompt()");
+        Log.log("appendToPrompt() called without showPrompt()");
         return;
     }
     std::string str = text.c_str();

@@ -36,16 +36,16 @@ uint32_t getCurrentFilesystemVersion() {
         for(int i=0; i<20; i++) {
             if(buf[i] != 13/*CR*/) {
                 line[i] = (char)buf[i];
-//                Serial.print(" ");
-//                Serial.print(buf[i]);
+//                Log.log(" ");
+//                Log.log(buf[i]);
             } else {
                 line[i] = '\0';
                 break;
             }
         }
-//        Serial.println("");
-//        Serial.print("Line: ");
-//        Serial.println(line);
+//        Log.log("");
+//        Log.log("Line: ");
+//        Log.log(line);
 
         uint8_t fs_current[] = {0, 0, 0};
 
@@ -70,20 +70,20 @@ String getCurrentFilesystemVersionString() {
 void UpdaterClass::updateFW(String url) {
     WiFiClientSecure client;
     client.setCACert(rootCACertificate);
-    Serial.println(url);
+    Log.log(url);
     t_httpUpdate_return ret = httpUpdate.update(client, url);
 
     switch (ret) {
         case HTTP_UPDATE_FAILED:
-            Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+            Log.logf("HTTP_UPDATE_FAILD Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
             break;
 
             case HTTP_UPDATE_NO_UPDATES:
-                Serial.println("HTTP_UPDATE_NO_UPDATES");
+                Log.log("HTTP_UPDATE_NO_UPDATES");
                 break;
 
                 case HTTP_UPDATE_OK:
-                    Serial.println("HTTP_UPDATE_OK");
+                    Log.log("HTTP_UPDATE_OK");
                     break;
     }
 
@@ -103,7 +103,7 @@ void UpdaterClass::updateFS(String version, Callback onFinish) {
     ss << ".bin?alt=media";
 
 
-    Serial.println(ss.str().c_str());
+    Log.log(ss.str().c_str());
 
     t_httpUpdate_return ret = httpUpdate.updateSpiffs(client, ss.str().c_str());
 
@@ -115,7 +115,7 @@ void UpdaterClass::checkForUpdate() {
 
     while (WiFi.status() != WL_CONNECTED) {
         delay(50);
-//        Serial.print(".");
+//        Log.log(".");
     }
 
 
@@ -129,8 +129,7 @@ void UpdaterClass::checkForUpdate() {
     int httpResponseCode = http.GET();
 
     if (httpResponseCode>0) {
-        Serial.print("HTTP Response code: ");
-        Serial.println(httpResponseCode);
+        Log.logf("HTTP Response code: %d", httpResponseCode);
         String payload = http.getString();
 
         DynamicJsonDocument doc(8*1024);
@@ -138,7 +137,7 @@ void UpdaterClass::checkForUpdate() {
 //
 //        String s = doc[0]["name"];
 //        int size = doc.size();
-//        Serial.println(s.c_str());
+//        Log.log(s.c_str());
 
         JsonArray arr = doc["items"].as<JsonArray>();
         for (JsonVariant value : arr) {
@@ -157,24 +156,26 @@ void UpdaterClass::checkForUpdate() {
             ver[1] = std::strtol(p+1, &p, 10);
             ver[2] = std::strtol(p+1, &p, 10);
 
-            Serial.print(filename.c_str());
-            Serial.print(" ");
-            Serial.print(name.c_str());
-            for(uint8_t i=0; i<3; i++) {
-                Serial.print(" ");
-                Serial.print(ver[i]);
-            }
-            Serial.println("");
+            Log.logf("%s %s %d.%d.%d", filename.c_str(), name.c_str(), ver[0], ver[1], ver[2]);
+
+//            Log.log(filename.c_str());
+//            Log.log(" ");
+//            Log.log(name.c_str());
+//            for(uint8_t i=0; i<3; i++) {
+//                Log.log(" ");
+//                Log.log(ver[i]);
+//            }
+//            Log.log("");
 
 
             uint32_t found = ver[0] << 16 | ver[1] << 8 | ver[2];
             if(name == FIRMWARE) {
-                Serial.print("Firmware current version: ");
-                Serial.print(fw_current);
-                Serial.print(", found: ");
-                Serial.println(found);
+                Log.logf("Firmware current version: %d, found: %d", fw_current, found);
+//                Log.log(fw_current);
+//                Log.log(", found: ");
+//                Log.log(found);
                 if(found > fw_current) {
-                    Serial.println("New firmware version found!");
+                    Log.log("New firmware version found!");
 
                     std::stringstream ss;
 
@@ -186,21 +187,21 @@ void UpdaterClass::checkForUpdate() {
 //                     updateFW(value["download_url"]);
                     break;
                 } else {
-                    Serial.println("Firmware is up to date!");
+                    Log.log("Firmware is up to date!");
                 }
 //            } else if(name == FILESYSTEM) {
-//                Serial.print("Filesystem current version: ");
-//                Serial.print(fs_current);
-//                Serial.print(", target: ");
-//                Serial.print(fs_target);
-//                Serial.print(", found: ");
-//                Serial.println(found);
+//                Log.log("Filesystem current version: ");
+//                Log.log(fs_current);
+//                Log.log(", target: ");
+//                Log.log(fs_target);
+//                Log.log(", found: ");
+//                Log.log(found);
 //                if(found == fs_target) {
-//                    Serial.println("New filesystem  found!");
+//                    Log.log("New filesystem  found!");
 ////                    updateFS(value["download_url"]);
 //                    break;
 //                } else {
-//                    Serial.println("Found filesystem does not match target");
+//                    Log.log("Found filesystem does not match target");
 //                }
             }
 
@@ -208,17 +209,17 @@ void UpdaterClass::checkForUpdate() {
 //            uint8_t major = version.at(0) - 48;
 //            uint8_t minor = version.at(2) - 48;
 //            uint8_t patch = version.at(4) - 48;
-//            Serial.println(str.c_str());
-//            Serial.print(name.c_str());
-//            Serial.print(" ");
+//            Log.log(str.c_str());
+//            Log.log(name.c_str());
+//            Log.log(" ");
         }
 
 
-//        Serial.println(size);
-//        Serial.println(str);
+//        Log.log(size);
+//        Log.log(str);
     } else {
-        Serial.print("Error code: ");
-        Serial.println(httpResponseCode);
+        Log.logf("Error code: %d", httpResponseCode);
+//        Log.log(httpResponseCode);
     }
     http.end();
 

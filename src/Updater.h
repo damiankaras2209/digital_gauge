@@ -1,6 +1,8 @@
 #ifndef _UPDATER_H
 #define _UPDATER_H
 
+#include "Log.h"
+
 #include <stdlib.h>
 #include <WiFi.h>
 #include <HTTPClient.h>

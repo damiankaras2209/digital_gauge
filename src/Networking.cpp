@@ -8,17 +8,26 @@ const char* host = "esp32";
 AsyncWebServer server(80);
 
 //AsyncWebSocket ws("/ws");
-//AsyncEventSource events("/events");
+AsyncEventSource events("/events");
 Settings* settings = Settings::getInstance();
 Screen* screen = Screen::getInstance();
 
+void Networking::sendEvent(const char * event, std::string str) {
+    events.send(str.c_str(), event, millis());
+}
+
+void Networking::f(std::string str) {
+    events.send(str.c_str(), "myevent", millis());
+}
+
+
 [[noreturn]] void Networking::WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info)
 {
-    Serial.print("Connected to ");
-    Serial.println(WiFi.SSID());
-//    Serial.print("IP address: ");
-//    Serial.println(IPAddress(info.ap_staipassigned.ip.addr));
-//    Serial.println(WiFi.localIP());
+    Log.logf("Connected to %s", WiFi.SSID().c_str());
+//    Log.log(WiFi.SSID());
+//    Log.log("IP address: ");
+//    Log.log(IPAddress(info.ap_staipassigned.ip.addr));
+//    Log.log(WiFi.localIP());
 
 //  UpdaterClass updater;
 //  updater.checkForUpdate();
@@ -28,22 +37,20 @@ Screen* screen = Screen::getInstance();
 
 [[noreturn]] void Networking::WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 {
-
-    Serial.print("IP address: ");
-    Serial.println(IPAddress(info.ap_staipassigned.ip.addr));
+    Log.logf("IP address: %s", IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
+//    Log.log(IPAddress(info.ap_staipassigned.ip.addr).toString());
 
     if (!MDNS.begin(host)) { //http://esp32.local
-        Serial.println("Error setting up MDNS responder!");
+        Log.log("Error setting up MDNS responder!");
         while (1) {
             delay(100);
         }
     }
 
-    Serial.print("mDNS responder started, hostname: ");
-    Serial.println("http://esp32.local");
+    Log.logf("mDNS responder started, hostname: http://%s.local", host);
+//    Log.log("http://esp32.local");
 
     serverSetup();
-
 }
 
 int Networking::connectWiFi(int wait, const char* ssid, const char* pass) {
@@ -54,9 +61,20 @@ int Networking::connectWiFi(int wait, const char* ssid, const char* pass) {
     WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
     WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
 
-    Serial.print("Connecting to WiFi network: \"");
-    Serial.print(ssid);
-    Serial.println("\"");
+    events.onConnect([](AsyncEventSourceClient *client){
+        if(client->lastId()){
+            Log.logf("Client reconnected! Last message ID that it gat is: %u\n", client->lastId());
+        }
+        client->send("hello!",NULL,millis(),1000);
+        Log.enable();
+    });
+
+    server.addHandler(&events);
+    Log.setEvent(f);
+
+    Log.logf("Connecting to WiFi network: \"%s\"", ssid);
+//    Log.logf(ssid);
+//    Log.log("\"");
 
     WiFi.begin(ssid, pass);
 }
@@ -67,7 +85,7 @@ boolean Networking::isWiFiConnected() {
 
 
 String processor(const String& var){
-//    Serial.println(var);
+//    Log.log(var);
     char c[10];
     if(var == "ssid"){
         return String((char *)settings->general.ssid);
@@ -168,15 +186,13 @@ String processor(const String& var){
 
 void Networking::serverSetup() {
     TaskHandle_t handle;
-    Serial.print("server setup task: ");
-    Serial.println(
-            xTaskCreatePinnedToCore(serverSetupTask,
+    if(!xTaskCreatePinnedToCore(serverSetupTask,
                 "setupServer",
                 16*1024,
                 NULL,
                 1,
                 &handle,
-                1) ? "started" : "failed");
+                1)) Log.log("Failed to start setupServer task");
 }
 
 
@@ -186,7 +202,7 @@ void Networking::serverSetupTask(void * pvParameters) {
 
     while (WiFi.status() != WL_CONNECTED) {
         delay(50);
-        Serial.print(".");
+        Log.log(".");
     }
 
 
@@ -207,7 +223,7 @@ void Networking::serverSetupTask(void * pvParameters) {
         for(int i=0;i<params;i++){
             AsyncWebParameter* p = request->getParam(i);
             if(p->isPost()){
-                Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+                Log.logf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
 
                 std::string str = p->name().c_str();
 
@@ -292,7 +308,7 @@ void Networking::serverSetupTask(void * pvParameters) {
 
   server.begin();
 
-  Serial.println("Server started");
+  Log.log("Server started");
 
   vTaskDelete(NULL);
 }

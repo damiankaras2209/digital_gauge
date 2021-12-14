@@ -98,11 +98,37 @@
             }
         }
 
+        if (!!window.EventSource) {
+            var source = new EventSource('/events');
+
+            source.addEventListener('open', function(e) {
+                console.log("Events Connected");
+            }, false);
+
+            source.addEventListener('error', function(e) {
+                if (e.target.readyState != EventSource.OPEN) {
+                    console.log("Events Disconnected");
+                }
+            }, false);
+
+            source.addEventListener('message', function(e) {
+                console.log("message", e.data);
+            }, false);
+
+            source.addEventListener('myevent', function(e) {
+                console.log("myevent", e.data);
+            }, false);
+
+            source.addEventListener('frametime', function(e) {
+                document.getElementById("frametime").innerText = "frametime: " + e.data;
+            }, false);
+        }
+
         </script>
     </head>
     <body>
         <form onsubmit='return send()'>
-            <h1>Ustawienia</h1>
+            <h1>Ustawienia</h1><p id='frametime'>frametime: </p>
             <h2>Ustawienia ogólne</h2>
             <p>SSID</p><input value='%ssid%' type='text' id='ssid'>
             <p>Hasło</p><input value='%pass%' type='text' id='pass'>

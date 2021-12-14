@@ -48,8 +48,6 @@ GxFT5436::GxFT5436(int8_t rst) : I2C(0), _sda(SDA), _scl(SCL), _rst(rst)
 
 GxFT5436::GxFT5436(int8_t sda, int8_t scl, int8_t rst) : I2C(0), _sda(sda), _scl(scl), _rst(rst)
 {
-
-    Serial.print("reeee");
   _prev_idx = 0;
   _act_idx = 1;
   _info[0].clear();
