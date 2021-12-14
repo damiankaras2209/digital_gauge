@@ -103,11 +103,42 @@ void Settings::loadDefault() {
 	dataDisplay[VOLTAGE].scaleStart = 6;
 	dataDisplay[VOLTAGE].scaleEnd = 18;
 
+	dataDisplay[CAN_STEERING_ANGLE].enable = false;
+	strcpy((char *)(dataDisplay[CAN_STEERING_ANGLE].name), "SW");
+	strcpy((char *)(dataDisplay[CAN_STEERING_ANGLE].unit), "deg");
+	dataDisplay[CAN_STEERING_ANGLE].scaleStart = -550;
+	dataDisplay[CAN_STEERING_ANGLE].scaleEnd = 550; //?
+
+	dataDisplay[CAN_SPEED].enable = false;
+	strcpy((char *)(dataDisplay[CAN_SPEED].name), "Speed");
+	strcpy((char *)(dataDisplay[CAN_SPEED].unit), "km/h");
+	dataDisplay[CAN_SPEED].scaleStart = 0;
+	dataDisplay[CAN_SPEED].scaleEnd = 280;
+
 	dataDisplay[CAN_RPM].enable = false;
 	strcpy((char *)(dataDisplay[CAN_RPM].name), "RPM");
 	strcpy((char *)(dataDisplay[CAN_RPM].unit), "1000/min");
 	dataDisplay[CAN_RPM].scaleStart = 0;
 	dataDisplay[CAN_RPM].scaleEnd = 8;
+
+	dataDisplay[CAN_GAS].enable = false;
+	strcpy((char *)(dataDisplay[CAN_GAS].name), "Throttle");
+	strcpy((char *)(dataDisplay[CAN_GAS].unit), "%");
+	dataDisplay[CAN_GAS].scaleStart = 0;
+	dataDisplay[CAN_GAS].scaleEnd = 100;
+
+	dataDisplay[CAN_AC].enable = false;
+	strcpy((char *)(dataDisplay[CAN_AC].name), "AC");
+	strcpy((char *)(dataDisplay[CAN_AC].unit), "");
+	dataDisplay[CAN_AC].scaleStart = 0;
+	dataDisplay[CAN_AC].scaleEnd = 1;
+
+	dataDisplay[CAN_HB].enable = false;
+	strcpy((char *)(dataDisplay[CAN_HB].name), "HB");
+	strcpy((char *)(dataDisplay[CAN_HB].unit), "");
+	dataDisplay[CAN_HB].scaleStart = 0;
+	dataDisplay[CAN_HB].scaleEnd = 1;
+
 
 }
 
@@ -145,7 +176,8 @@ void Settings::load() {
         }
 
         for(int i=ADS1115_0; i<LAST; i++) {
-            dataDisplay[i].enable =       doc["dataDisplay_" + (String)i + "_en"] | 0;
+            dataDisplay[i].enable =       doc["dataDisplay_" + (String)i + "_en"] | 1; //<------
+            dataDisplay[i].enable = true; //<------
             strcpy((char *)settings->dataDisplay[i].name, doc["dataDisplay_" + (String)i + "_name"] | "");
             strcpy((char *)settings->dataDisplay[i].unit, doc["dataDisplay_" + (String)i + "_unit"] | "u");
             dataDisplay[i].scaleStart =   doc["dataDisplay_" + (String)i + "_scaleStart"] | 0;

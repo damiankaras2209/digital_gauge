@@ -22,10 +22,13 @@
 #include <sstream>
 #include <iomanip>
 
-#define SAMPLES_ADC 16
+#define SAMPLES_ADC 32
 #define SAMPLES_CAN 4
 
-#define CAN_ID_RPM 0x201
+#define CAN_ID_STEERING_ANGLE 0x80
+#define CAN_ID_RPM_SPEED_GAS 0x201
+#define CAN_ID_AC 0x440
+#define CAN_ID_HB 0x430
 
 //typedef struct Event {
 //    uint16_t event;

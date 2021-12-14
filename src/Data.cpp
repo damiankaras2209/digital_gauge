@@ -39,7 +39,7 @@ void Data::init() {
 
     mcp.reset();
     mcp.setBitrate(CAN_500KBPS, MCP_8MHZ);
-    mcp.setListenOnlyMode();
+    mcp.setNormalMode();
 
 
     if(!ads.begin())
@@ -196,10 +196,12 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
         }
 
         params->i2cBusy = false;
-        delay(10);
+        delay(1);
     }
 }
 
+
+ulong canLoopTime = 0;
 _Noreturn void Data::canLoop(void * pvParameters) {
     Log.logf("%s started on core %d", pcTaskGetTaskName(NULL), xPortGetCoreID());
 //    Log.log(" started on core ");
@@ -209,6 +211,16 @@ _Noreturn void Data::canLoop(void * pvParameters) {
     DataStruct *params = (DataStruct*)pvParameters;
     Settings *settings = Settings::getInstance();
 
+//    uint32_t readings[Settings::LAST-Settings::VOLTAGE-1][SAMPLES_CAN];
+
+    uint32_t samplesSW[SAMPLES_CAN];
+    uint32_t samplesRPM[SAMPLES_CAN];
+    uint32_t samplesGas[SAMPLES_CAN];
+    uint32_t samplesSpeed[SAMPLES_CAN];
+
+    Settings::DataSource i;
+    uint32_t newReading;
+
     int rpm[3];
 
     for(;;) {
@@ -216,14 +228,114 @@ _Noreturn void Data::canLoop(void * pvParameters) {
         MCP2515::ERROR err = params->mcp2515Ptr->readMessage(&canMsg);
 
         if (err == MCP2515::ERROR_OK) {
+
+//            Serial.print("EXT: ");
+//            bool ext = canMsg.can_id & CAN_EFF_FLAG;
+//            Serial.print(ext);
+//            Serial.print(" RTR: ");
+//            bool rtr = canMsg.can_id & CAN_RTR_FLAG;
+//            Serial.print(rtr);
+//            Serial.print(" ID BIN: ");
+//            Serial.print(canMsg.can_id & (ext ? CAN_EFF_MASK : CAN_SFF_MASK), BIN); // print ID
+//            Serial.print(" HEX: ");
+//            Serial.print(canMsg.can_id & (ext ? CAN_EFF_MASK : CAN_SFF_MASK), HEX); // print ID
+//            Serial.print(" Data: ");
+//            for(int i=0; i<canMsg.can_dlc; i++) {
+//                Serial.print(canMsg.data[i], HEX); // print DLC
+//                Serial.print(" ");
+//            }
+//            Serial.print("\n");
+
+
             switch (canMsg.can_id ) {
-                case CAN_ID_RPM:
-                    rpm[2] = rpm[1];
-                    rpm[1] = rpm[0];
-                    rpm[0] = (canMsg.data[0]*256 + canMsg.data[1])/4;
-                    settings->dataDisplay[Settings::CAN_RPM].value = (rpm[0]+rpm[1]+rpm[2])/3;
+                case CAN_ID_STEERING_ANGLE: {
+
+//                    Serial.print("SW data: ");
+//                    for(int i=0; i<canMsg.can_dlc; i++) {
+//                        Serial.print(canMsg.data[i], HEX); // print DLC
+//                        Serial.print(" ");
+//                    }
+//                    Serial.print("\n");
+
+                    for (int j = SAMPLES_CAN - 1; j > 0; j--)
+                        samplesSW[j] = samplesSW[j - 1];
+
+                    samplesSW[0] = canMsg.data[1] << 8 | canMsg.data[0];
+
+                    uint32_t sum = 0;
+                    for (int j = 0; j < SAMPLES_CAN; j++)
+                        sum += samplesSW[j];
+
+                    int raw = sum / SAMPLES_CAN;
+
+                    int sign = raw > 0x8888 ? 1 : -1;
+                    int val = sign==1 ? 0xffff - raw : raw;
+
+                    settings->dataDisplay[Settings::CAN_STEERING_ANGLE].value = (float) sign * val / 10; //checked
+//                    Serial.println(settings->dataDisplay[Settings::CAN_STEERING_ANGLE].value);
                     break;
+                }
+                case CAN_ID_RPM_SPEED_GAS: {
+
+//                    Serial.print("RPM_SPEED_GAS data: ");
+//                    for(int i=0; i<canMsg.can_dlc; i++) {
+//                        Serial.print(canMsg.data[i], HEX); // print DLC
+//                        Serial.print(" ");
+//                    }
+//                    Serial.print("\n");
+
+                    for (int j = SAMPLES_CAN - 1; j > 0; j--) {
+                        samplesRPM[j] = samplesRPM[j - 1];
+                        samplesGas[j] = samplesGas[j - 1];
+                        samplesSpeed[j] = samplesSpeed[j - 1];
+                    }
+
+                    samplesRPM[0] = canMsg.data[0] * 256 + canMsg.data[1];
+                    samplesGas[0] = canMsg.data[6] * 256 + canMsg.data[7];
+                    samplesSpeed[0] = canMsg.data[4];
+
+                    uint32_t sumRPM = 0;
+                    uint32_t sumGas = 0;
+                    uint32_t sumSpeed = 0;
+                    for (int j = 0; j < SAMPLES_CAN; j++){
+                        sumRPM += samplesRPM[j];
+                        sumGas += samplesGas[j];
+                        sumSpeed += samplesSpeed[j];
+                    }
+
+                    settings->dataDisplay[Settings::CAN_RPM].value = (float) sumRPM / SAMPLES_CAN / 4; //checked
+                    settings->dataDisplay[Settings::CAN_SPEED].value = (float)  sumSpeed / SAMPLES_CAN * 2; //checked
+                    settings->dataDisplay[Settings::CAN_GAS].value = (float) sumGas / SAMPLES_CAN / 51200 * 100; //checked
+//                    Serial.printf("rpm: %f", settings->dataDisplay[Settings::CAN_RPM].value);
+//                    Serial.printf("speed: %f", settings->dataDisplay[Settings::CAN_SPEED].value);
+//                    Serial.printf("gas: %f", settings->dataDisplay[Settings::CAN_GAS].value);
+
+                    break;
+                }
+                case CAN_ID_AC: {
+                    Serial.print("AC data: ");
+                    for(int i=0; i<canMsg.can_dlc; i++) {
+                        Serial.print(canMsg.data[i], HEX); // print DLC
+                        Serial.print(" ");
+                    }
+                    Serial.print("\n");
+                    settings->dataDisplay[Settings::CAN_AC].value = canMsg.data[0] >> 7;
+                    Serial.printf("AC: %f\n", settings->dataDisplay[Settings::CAN_AC].value);
+                }
+                case CAN_ID_HB: {
+                    Serial.print("HB data: ");
+                    for(int i=0; i<canMsg.can_dlc; i++) {
+                        Serial.print(canMsg.data[i], HEX); // print DLC
+                        Serial.print(" ");
+                    }
+                    Serial.print("\n");
+                    settings->dataDisplay[Settings::CAN_HB].value = ((canMsg.data[6] & 0x20) >> 5) == 1 && canMsg.data[0] != 0;
+                    Serial.printf("HB: %f\n", settings->dataDisplay[Settings::CAN_HB].value);
+                }
             }
+//                    Serial.printf("RPM: %f, time: %ld\n", settings->dataDisplay[Settings::CAN_RPM].value, millis()-canLoopTime);
+//                    canLoopTime = millis();
+
         } else {
 //                if( err != MCP2515::ERROR_NOMSG) {
 //                     Log.log("Error: ");
@@ -231,7 +343,7 @@ _Noreturn void Data::canLoop(void * pvParameters) {
 //                     Log.log("\n");
 //                }
         }
-        delay(10);
+        delay(1);
     }
 }
 
