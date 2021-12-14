@@ -223,7 +223,7 @@ void Networking::serverSetupTask(void * pvParameters) {
         for(int i=0;i<params;i++){
             AsyncWebParameter* p = request->getParam(i);
             if(p->isPost()){
-                Log.logf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+                Log.logf("POST[%s]: %s", p->name().c_str(), p->value().c_str());
 
                 std::string str = p->name().c_str();
 
@@ -249,8 +249,16 @@ void Networking::serverSetupTask(void * pvParameters) {
                 }
 
                 if(str.find("data") != std::string::npos) {
-                    int i = str.at(5) - 48;
-                    std::string str2 = str.substr(7);
+
+                    int pos = str.find('_');
+                    int pos2 = str.find('_', pos + 1);
+
+//                    Log.logf("pos: %d, n: %d", pos, pos2-pos-1);
+//                    Log.logf("sub: %s", str.substr(pos+1,pos2-pos-1).c_str());
+//                    Log.logf("d: %d", strtol(str.substr(pos+1,pos2-pos-1).c_str(), NULL, DEC));
+
+                    int i = strtol(str.substr(pos+1,pos2-pos-1).c_str(), NULL, DEC);
+                    std::string str2 = str.substr(pos2+1);
 
                     if(str2.compare("en") == 0)
                         settings->dataDisplay[i].enable = atoi(p->value().c_str());
