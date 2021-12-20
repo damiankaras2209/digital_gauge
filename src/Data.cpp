@@ -18,7 +18,6 @@ void Data::init() {
 //    data.dataDisplaySettings = Settings::getInstance()->dataDisplay;
     data.adsPtr = &ads;
     data.rtcPtr = &rtc;
-    data.touchPtr = &touch;
     data.mcp23X08Ptr = &mcp23008;
     data.mcp2515Ptr = &mcp;
     data.rcPtr = &rc;
@@ -50,12 +49,7 @@ void Data::init() {
         ads.setDataRate(7);
     }
 
-    if(!touch.init())
-        Log.log("GxFT5436 not found");
-    else {
-        Log.log("GxFT5436 found");
-        data.GxFT5436Available = true;
-    }
+
 
     rc.enableReceive(3);
 

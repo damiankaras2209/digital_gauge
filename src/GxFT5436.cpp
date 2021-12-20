@@ -14,69 +14,23 @@
 
 #include "GxFT5436.h"
 
-#if defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_STM32F1)
+#include <utility>
 
 #define DiagOut if(_pDiagnosticOutput) (*_pDiagnosticOutput)
 
-#if (defined(ARDUINO_ARCH_STM32F1) && defined(ARDUINO_GENERIC_STM32F103V)) // "STM32 Boards (STM32Duino.com)"
-
-GxFT5436::GxFT5436(int8_t rst) : I2C(1), _sda(PB7), _scl(PB6), _rst(rst)
-{
-  _prev_idx = 0;
-  _act_idx = 1;
-  _info[0].clear();
-  _info[1].clear();
-}
-
-GxFT5436::GxFT5436(int8_t sda, int8_t scl, int8_t rst) : I2C(sda == PB11 ? 2 : 1), _sda(sda), _scl(scl), _rst(rst)
-{
-  _prev_idx = 0;
-  _act_idx = 1;
-  _info[0].clear();
-  _info[1].clear();
-}
-
-#elif defined(ESP32)
-
-GxFT5436::GxFT5436(int8_t rst) : I2C(0), _sda(SDA), _scl(SCL), _rst(rst)
-{
-  _prev_idx = 0;
-  _act_idx = 1;
-  _info[0].clear();
-  _info[1].clear();
-}
-
 GxFT5436::GxFT5436(int8_t sda, int8_t scl, int8_t rst) : I2C(0), _sda(sda), _scl(scl), _rst(rst)
 {
+    _loopData.touch = this;
   _prev_idx = 0;
   _act_idx = 1;
   _info[0].clear();
   _info[1].clear();
 }
-
-#else
-
-GxFT5436::GxFT5436(int8_t rst) : _sda(SDA), _scl(SCL), _rst(rst)
-{
-  _prev_idx = 0;
-  _act_idx = 1;
-  _info[0].clear();
-  _info[1].clear();
-}
-
-GxFT5436::GxFT5436(int8_t sda, int8_t scl, int8_t rst) : _sda(sda), _scl(scl), _rst(rst)
-{
-  _prev_idx = 0;
-  _act_idx = 1;
-  _info[0].clear();
-  _info[1].clear();
-}
-
-#endif
 
 bool GxFT5436::init(Stream* pDiagnosticOutput)
 {
   _pDiagnosticOutput = pDiagnosticOutput;
+  _loopData.diagOut = _pDiagnosticOutput;
   _info[0].clear();
   _info[1].clear();
   if (_rst >= 0)
@@ -87,14 +41,7 @@ bool GxFT5436::init(Stream* pDiagnosticOutput)
     digitalWrite(_rst, HIGH);
     delay(100);
   }
-//#if (defined(ARDUINO_ARCH_STM32) && defined(ARDUINO_GENERIC_F103VE)) // "STM32 Boards (select from submenu)"
-//  //I2C.begin(uint8_t(_sda), uint8_t(_scl)); // doesn't work, reason unknown, should match void begin(uint8_t, uint8_t);
-//  I2C.begin((uint8_t)_sda, (uint8_t)_scl); // this works
-//#elif (defined(ARDUINO_ARCH_STM32F1) && defined(ARDUINO_GENERIC_STM32F103V)) // "STM32 Boards (STM32Duino.com)"
-//  I2C.begin();
-//#else
   I2C.begin(_sda, _scl);
-//#endif
   I2C.beginTransmission(FT5436_I2C_ADDR);
   uint8_t error = I2C.endTransmission();
   if (error != 0)
@@ -117,56 +64,7 @@ bool GxFT5436::init(Stream* pDiagnosticOutput)
     return true;
 }
 
-uint8_t GxFT5436::scanSingleTouch(uint16_t& x, uint16_t& y)
-{
-  scan();
-  x = _info[_act_idx].x[0];
-  y = _info[_act_idx].y[0];
-  return _info[_act_idx].touch_count;
-}
-
-GxFT5436::TouchInfo GxFT5436::scanMultipleTouch()
-{
-  scan();
-  return _info[_act_idx];
-}
-
-uint8_t GxFT5436::newSingleTouch(uint16_t& x, uint16_t& y)
-{
-  scan();
-  if (_info[_act_idx] == _info[_prev_idx])
-  {
-    x = 0;
-    y = 0;
-    return 0;
-  }
-  x = _info[_act_idx].x[0];
-  y = _info[_act_idx].y[0];
-  return _info[_act_idx].touch_count;
-}
-
-GxFT5436::TouchInfo GxFT5436::newMultipleTouch()
-{
-  scan();
-  if (_info[_act_idx] == _info[_prev_idx]) return TouchInfo();
-  //check("prev", _info[_prev_idx]);
-  //check("act ", _info[_act_idx]);
-  return _info[_act_idx];
-}
-
-uint8_t GxFT5436::lastSingleTouch(uint16_t& x, uint16_t& y)
-{
-  x = _info[_act_idx].x[0];
-  y = _info[_act_idx].y[0];
-  return _info[_act_idx].touch_count;
-}
-
-GxFT5436::TouchInfo GxFT5436::lastMultipleTouch()
-{
-  return _info[_act_idx];
-}
-
-void GxFT5436::scan()
+GxFT5436::TouchInfo GxFT5436::scan()
 {
   uint32_t start = micros();
   I2C_Read(FT5436_I2C_ADDR, FT_REG_DEV_MODE, _registers, POINT_READ_BUF);
@@ -203,6 +101,126 @@ void GxFT5436::scan()
   }
   (void) elapsed1;
   (void) elapsed2;
+  return _info[_act_idx];
+}
+
+volatile ulong touchDetectedTime = 0;
+
+void GxFT5436::touchStart() {
+    touchDetectedTime = millis();
+}
+
+bool GxFT5436::enableInterrupt(int8_t interrupt, volatile bool* i2cBusy, int8_t priority, int8_t core) {
+    _loopData.i2cBusy = i2cBusy;
+    pinMode(interrupt, INPUT_PULLDOWN);
+    attachInterrupt(digitalPinToInterrupt(interrupt), touchStart, RISING);
+
+    TaskHandle_t touchHandle;
+    return xTaskCreatePinnedToCore(touch,
+                                "touch",
+                                4*1024,
+                                &(_loopData),
+                                priority,
+                                &touchHandle, core);
+}
+
+void GxFT5436::onEvent(GxFT5436::Callback callback) {
+    _loopData.action = callback;
+}
+
+#define SINGLE_POINT_DISTANCE 10
+#define SLIDE_ALONG_DISTANCE 40
+#define SLIDE_ACROSS_DISTANCE 15
+
+
+
+[[noreturn]] void GxFT5436::touch(void * pvParameters) {
+    auto data = (LoopData*)pvParameters;
+
+    data->diagOut->printf("%s started on core %d", pcTaskGetTaskName(NULL), xPortGetCoreID());
+
+    unsigned long last[5];
+    bool down[5] = {false, false, false, false, false};
+    uint16_t startX[5], startY[5];
+    uint16_t endX[5], endY[5];
+
+
+    while(1) {
+//        data->diagOut->print("millis() - touchDetectedTime: ");
+//        data->diagOut->print (millis() - touchDetectedTime);
+        if(millis() - touchDetectedTime < 10) {
+            while(*(data->i2cBusy)) {
+                delay(1);
+            }
+            *(data->i2cBusy) = true;
+
+
+            GxFT5436::TouchInfo touchInfo = data->touch->scan();
+
+            bool detected[5] = {false, false, false, false, false};
+
+            for (uint8_t i = 0; i < touchInfo.touch_count; i++) {
+
+                uint16_t x1 = touchInfo.x[i];
+                touchInfo.x[i] = touchInfo.y[i];
+                touchInfo.y[i] = 319-x1;
+
+
+                uint8_t id = touchInfo.id[i];
+                if(!down[id]) {
+                    down[id] = true;
+                    data->diagOut->printf("Touch down (%d)", id);
+                    startX[id] = touchInfo.x[i];
+                    startY[id] = touchInfo.y[i];
+                }
+                detected[id] = true;
+                endX[id] = touchInfo.x[i];
+                endY[id] = touchInfo.y[i];
+
+                data->diagOut->printf("touch id: %d, last: %lu (%d,%d)", touchInfo.id[i], millis() - last[id], touchInfo.x[i], touchInfo.y[i]);
+            }
+
+            for (uint8_t i = 0; i < 5; i++) {
+                if(!detected[i] && down[i]) {
+                    down[i] = false;
+                    data->diagOut->printf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu) ", i, startX[i], startY[i], endX[i], endY[i]);
+
+                    Event event;
+                    event.startX = startX[i];
+                    event.startY = startY[i];
+                    event.endX = endX[i];
+                    event.endY = endY[i];
+
+                    //Single touch
+                    if((abs(startX[i]-endX[i]) < SINGLE_POINT_DISTANCE) && (abs(startY[i]-endY[i]) < SINGLE_POINT_DISTANCE)) {
+                        data->diagOut->printf("Single touch at %d,%d", endX[i], endY[i]);
+                        event.type = SINGLE_CLICK;
+                    }
+                    //Slide right
+                    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] > startX[i])) {
+                        data->diagOut->printf("Slide right from %d,%d", startX[i], endY[i]);
+                        event.type = SLIDE_LEFT;
+                    }
+                    //Slide left
+                    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] < startX[i])) {
+                        data->diagOut->printf("Slide left from %d,%d", startX[i], endY[i]);
+                    }
+                    //Slide down
+                    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] > startY[i])) {
+                        data->diagOut->printf("Slide down from %d,%d", startX[i], endY[i]);
+                    }
+                    //Slide up
+                    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] < startY[i])) {
+                        data->diagOut->printf("Slide up from %d,%d", startX[i], endY[i]);
+                    }
+                    data->action(event);
+                }
+            }
+
+            *(data->i2cBusy) = false;
+        }
+        delay(7);
+    }
 }
 
 void GxFT5436::check(const char text[], TouchInfo& touchinfo)
@@ -252,6 +270,7 @@ void GxFT5436::I2C_Read(uint8_t dev_addr, uint8_t reg_addr, uint8_t* data, uint8
   //DiagOut.print("I2C_Read "); DiagOut.println(i);
 }
 
+
 GxFT5436::TouchInfo::TouchInfo()
 {
   clear();
@@ -276,5 +295,3 @@ bool GxFT5436::TouchInfo::operator==(TouchInfo to)
           (x[3] == to.x[3]) && (y[3] == to.y[3]) &&
           (x[4] == to.x[4]) && (y[4] == to.y[4]));
 }
-
-#endif

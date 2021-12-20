@@ -17,6 +17,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include <functional>
 
 // defines taken from ft5x06.c of https://github.com/focaltech-systems/drivers-input-touchscreen-FTS_driver
 /*
@@ -36,6 +37,10 @@
    GNU General Public License for more details.
 
 */
+
+
+#define FT5436_I2C_ADDR 0x38
+
 #define FT_META_REGS    3
 #define FT_ONE_TCH_LEN    6
 #define FT_TCH_LEN(x)   (FT_META_REGS + FT_ONE_TCH_LEN * x)
@@ -109,8 +114,6 @@
 #define FT_FW_MAX_SIZE    (54 * 1024)
 // end of defines taken from ft5x06.c of https://github.com/focaltech-systems/drivers-input-touchscreen-FTS_driver
 
-#define FT5436_I2C_ADDR 0x38
-
 class GxFT5436
 {
   public:
@@ -125,31 +128,41 @@ class GxFT5436
       void clear();
       bool operator==(TouchInfo);
     };
+
+    enum EventType {
+        SINGLE_CLICK, SLIDE_LEFT
+    };
+    typedef struct Event {
+        EventType type;
+        uint16_t startX, endX;
+        uint16_t startY, endY;
+    } Event;
+    typedef std::function<void(Event event)> Callback;
+    Callback action;
+    void onEvent(Callback);
+
   public:
-    GxFT5436(int8_t rst);
-    GxFT5436(int8_t sda, int8_t scl, int8_t rst);
+    GxFT5436(int8_t rst, int8_t sda = SDA, int8_t scl = SCL);
     bool init(Stream* pDiagnosticOutput = 0);
-    // scans for touch(es) and returns the number (of fingers) and the coordinates of the first touch
-    uint8_t scanSingleTouch(uint16_t& x, uint16_t& y);
-    // scans for touches and returns the number and the coordinates
-    TouchInfo scanMultipleTouch();
-    // scans for touch(es) and returns the number (of fingers) and the coordinates of the first touch
-    // returns zero if there is no change
-    uint8_t newSingleTouch(uint16_t& x, uint16_t& y);
-    // scans for touches and returns the number and the coordinates
-    // returns zero if there is no change
-    TouchInfo newMultipleTouch();
-    // returns the touch(es) of the last scan (not useful)
-    uint8_t lastSingleTouch(uint16_t& x, uint16_t& y);
-    // returns the touches of the last scan; useful if scanSingleTouch() returned > 1
-    TouchInfo lastMultipleTouch();
-  protected:
-    void scan();
+    bool enableInterrupt(int8_t interrupt, volatile bool* i2cBusy, int8_t priority = 1, int8_t core = 0); //33
+    GxFT5436::TouchInfo scan();
+
+  private:
+    typedef struct LoopData {
+        Stream* diagOut;
+        GxFT5436* touch;
+        volatile bool* i2cBusy;
+        Callback action;
+    } LoopData;
+    LoopData _loopData;
+
     void check(const char text[], TouchInfo& touchinfo);
     void I2C_Write(uint8_t dev_addr, uint8_t reg_addr, uint8_t data);
     uint8_t I2C_Read(uint8_t dev_addr, uint8_t reg_addr);
     void I2C_Read(uint8_t dev_addr, uint8_t reg_addr, uint8_t* data, uint8_t n);
-  private:
+    static void IRAM_ATTR touchStart();
+    [[noreturn]] static void touch(void * pvParameters);
+
     TwoWire I2C;
     int8_t _sda, _scl, _rst;
     uint8_t _registers[POINT_READ_BUF];

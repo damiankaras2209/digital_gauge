@@ -26,142 +26,9 @@ TFT_eSPI tft = TFT_eSPI();
 Networking networking;
 UpdaterClass updater;
 Data data;
+GxFT5436 touch = GxFT5436(/*SDA=*/21, /*SCL=*/22,/*RST=*/-1);
 
 Settings::DataSource selected[SIDE_LAST];
-
-volatile ulong touchDetectedTime = 0;
-
-void IRAM_ATTR touchStart() {
-    touchDetectedTime = millis();
-}
-
-#define SINGLE_POINT_DISTANCE 10
-#define SLIDE_ALONG_DISTANCE 40
-#define SLIDE_ACROSS_DISTANCE 15
-
-[[noreturn]] void touch(void * pvParameters) {
-    Log.logf("%s started on core %d", pcTaskGetTaskName(NULL), xPortGetCoreID());
-//    Log.log(" started on core ");
-//    Log.log(xPortGetCoreID());
-
-
-    Data::DataStruct *params = (Data::DataStruct*)pvParameters;
-    Settings *settings = Settings::getInstance();
-
-    unsigned long last[5];
-    bool down[5] = {false, false, false, false, false};
-    uint16_t startX[5], startY[5];
-    uint16_t endX[5], endY[5];
-
-
-    while(1) {
-        //        Log.log("millis() - touchDetectedTime: ");
-        //        Log.log (millis() - touchDetectedTime);
-        if(millis() - touchDetectedTime < 10) {
-            while(params->i2cBusy)
-                delay(1);
-            params->i2cBusy = true;
-
-
-            GxFT5436* touch = params->touchPtr;
-            params->touchInfo = touch->scanMultipleTouch();
-
-            bool detected[5] = {false, false, false, false, false};
-
-            for (uint8_t i = 0; i < params->touchInfo.touch_count; i++) {
-
-                uint16_t x1 = params->touchInfo.x[i];
-                params->touchInfo.x[i] = params->touchInfo.y[i];
-                params->touchInfo.y[i] = 319-x1;
-
-
-                uint8_t id = params->touchInfo.id[i];
-                if(!down[id]) {
-                    down[id] = true;
-                    Log.logf("Touch down (%d)", id);
-                    startX[id] = params->touchInfo.x[i];
-                    startY[id] = params->touchInfo.y[i];
-                }
-                detected[id] = true;
-                endX[id] = params->touchInfo.x[i];
-                endY[id] = params->touchInfo.y[i];
-
-                Log.logf("touch id: %d, last: %lu (%d,%d)", params->touchInfo.id[i], millis() - last[id], params->touchInfo.x[i], params->touchInfo.y[i]);
-            }
-
-            for (uint8_t i = 0; i < 5; i++) {
-                if(!detected[i] && down[i]) {
-                    down[i] = false;
-                    Log.logf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu) ", i, startX[i], startY[i], endX[i], endY[i]);
-                    //Single touch
-                    if((abs(startX[i]-endX[i]) < SINGLE_POINT_DISTANCE) && (abs(startY[i]-endY[i]) < SINGLE_POINT_DISTANCE)) {
-
-                        Log.logf("Single touch at %d,%d", endX[i], endY[i]);
-
-                        //show menu
-                        if(Screen::getInstance()->getView() != PROMPT && endX[i] > settings->visual.width/2 - settings->visual.needleCenterOffset && endX[i] < settings->visual.width/2 + settings->visual.needleCenterOffset && endY[i] < settings->visual.height/2) {
-                            Screen::getInstance()->showPrompt("SSID: " + String((char *)Settings::getInstance()->general.ssid) + "\npass: " + String((char *)Settings::getInstance()->general.pass) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
-                        }
-
-                        //dismiss menu
-                        else if(Screen::getInstance()->getView() == PROMPT)
-                            Screen::getInstance()->setGaugeMode();
-
-
-                        //change left gauge
-                        else if(Screen::getInstance()->getView() == GAUGES && endX[i] < settings->visual.width/2-settings->visual.needleCenterOffset) {
-                            Log.logf("Current data: %s", settings->dataSourceString[selected[LEFT]].c_str());
-                            do {
-                                selected[LEFT] = static_cast<Settings::DataSource>(selected[LEFT]+1);
-                                if(selected[LEFT] == Settings::LAST)
-                                    selected[LEFT] = static_cast<Settings::DataSource>(0);
-                            } while (!settings->dataDisplay[selected[LEFT]].enable);
-                            Log.logf("Changing to: %s\n", settings->dataSourceString[selected[LEFT]].c_str());
-                            settings->saveSelected(selected);
-                        }
-
-                        //change right gauge
-                        else if(Screen::getInstance()->getView() == GAUGES && endX[i] > settings->visual.width/2+settings->visual.needleCenterOffset) {
-                            Log.logf("Current data: %s", settings->dataSourceString[selected[RIGHT]].c_str());
-                            do {
-                                selected[RIGHT] = static_cast<Settings::DataSource>(selected[RIGHT]+1);
-                                if(selected[RIGHT] == Settings::LAST)
-                                    selected[RIGHT] = static_cast<Settings::DataSource>(0);
-                            } while (!settings->dataDisplay[selected[RIGHT]].enable);
-                            Log.logf("Changing to: %s\n", settings->dataSourceString[selected[RIGHT]].c_str());
-                            settings->saveSelected(selected);
-                        }
-
-                    }
-                    //Slide right
-                    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] > startX[i])) {
-                        Log.logf("Slide right from %d,%d", startX[i], endY[i]);
-                    }
-                    //Slide left
-                    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] < startX[i])) {
-                        Log.logf("Slide left from %d,%d", startX[i], endY[i]);
-                    }
-                    //Slide down
-                    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] > startY[i])) {
-                        Log.logf("Slide down from %d,%d", startX[i], endY[i]);
-                    }
-                    //Slide up
-                    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] < startY[i])) {
-                        Log.logf("Slide up from %d,%d", startX[i], endY[i]);
-                    }
-                }
-            }
-
-            params->i2cBusy = false;
-        }
-        delay(7);
-    }
-}
-
-
-
-
-
 
 void loadFonts() {
   if (!SPIFFS.begin()) {
@@ -209,6 +76,69 @@ void f(t_httpUpdate_return status) {
             esp_restart();
     }
 
+
+}
+
+static void action(GxFT5436::Event event) {
+
+    if(event.type == GxFT5436::SINGLE_CLICK) {
+        
+        int16_t x = event.startX;
+        int16_t y = event.startY;
+
+        Log.logf("Single touch at %d,%d", x, y);
+
+        //show menu
+        if(Screen::getInstance()->getView() != PROMPT && x > Settings::getInstance()->visual.width/2 - Settings::getInstance()->visual.needleCenterOffset && x < Settings::getInstance()->visual.width/2 + Settings::getInstance()->visual.needleCenterOffset && y < Settings::getInstance()->visual.height/2) {
+            Screen::getInstance()->showPrompt("SSID: " + String((char *)Settings::getInstance()->general.ssid) + "\npass: " + String((char *)Settings::getInstance()->general.pass) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
+        }
+
+        //dismiss menu
+        else if(Screen::getInstance()->getView() == PROMPT)
+            Screen::getInstance()->setGaugeMode();
+
+
+        //change left gauge
+        else if(Screen::getInstance()->getView() == GAUGES && x < Settings::getInstance()->visual.width/2-Settings::getInstance()->visual.needleCenterOffset) {
+            Log.logf("Current data: %s", Settings::getInstance()->dataSourceString[selected[LEFT]].c_str());
+            do {
+                selected[LEFT] = static_cast<Settings::DataSource>(selected[LEFT]+1);
+                if(selected[LEFT] == Settings::LAST)
+                    selected[LEFT] = static_cast<Settings::DataSource>(0);
+            } while (!Settings::getInstance()->dataDisplay[selected[LEFT]].enable);
+            Log.logf("Changing to: %s\n", Settings::getInstance()->dataSourceString[selected[LEFT]].c_str());
+            Settings::getInstance()->saveSelected(selected);
+        }
+
+        //change right gauge
+        else if(Screen::getInstance()->getView() == GAUGES && x > Settings::getInstance()->visual.width/2+Settings::getInstance()->visual.needleCenterOffset) {
+            Log.logf("Current data: %s", Settings::getInstance()->dataSourceString[selected[RIGHT]].c_str());
+            do {
+                selected[RIGHT] = static_cast<Settings::DataSource>(selected[RIGHT]+1);
+                if(selected[RIGHT] == Settings::LAST)
+                    selected[RIGHT] = static_cast<Settings::DataSource>(0);
+            } while (!Settings::getInstance()->dataDisplay[selected[RIGHT]].enable);
+            Log.logf("Changing to: %s\n", Settings::getInstance()->dataSourceString[selected[RIGHT]].c_str());
+            Settings::getInstance()->saveSelected(selected);
+        }
+
+    }
+//    //Slide right
+//    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] > startX[i])) {
+//        Log.logf("Slide right from %d,%d", startX[i], endY[i]);
+//    }
+//    //Slide left
+//    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] < startX[i])) {
+//        Log.logf("Slide left from %d,%d", startX[i], endY[i]);
+//    }
+//    //Slide down
+//    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] > startY[i])) {
+//        Log.logf("Slide down from %d,%d", startX[i], endY[i]);
+//    }
+//    //Slide up
+//    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] < startY[i])) {
+//        Log.logf("Slide up from %d,%d", startX[i], endY[i]);
+//    }
 
 }
 
@@ -271,19 +201,14 @@ void setup(void) {
 
       data.init();
 
-      if(data.data.GxFT5436Available) {
-          pinMode(33, INPUT_PULLDOWN);
-          attachInterrupt(digitalPinToInterrupt(33), touchStart, RISING);
-
-          TaskHandle_t touchHandle;
-          if(!xTaskCreatePinnedToCore(touch,
-              "touch",
-              4*1024,
-              &(data.data),
-              1,
-              &touchHandle, 0))
-                    Log.log("Failed to start touch task");
+      if(!touch.init(&Serial))
+          Log.log("GxFT5436 not found");
+      else {
+          Log.log("GxFT5436 found");
+          touch.onEvent(action);
+          touch.enableInterrupt(33, &(data.data.i2cBusy), 1, 0);
       }
+
     //  tft.fillScreen(TFT_BLUE);
 
     //  TwoWire twoWire(1);
