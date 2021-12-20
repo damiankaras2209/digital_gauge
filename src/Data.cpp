@@ -89,7 +89,7 @@ void Data::init() {
 }
 
 _Noreturn void Data::adcLoop(void * pvParameters) {
-    Log.logf("%s started on core %d", pcTaskGetTaskName(NULL), xPortGetCoreID());
+    Log.logf("%s started on core %d\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
 //    Log.log(" started on core ");
 //    Log.log(xPortGetCoreID());
 
@@ -195,7 +195,7 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
 }
 
 _Noreturn void Data::canLoop(void * pvParameters) {
-    Log.logf("%s started on core %d", pcTaskGetTaskName(NULL), xPortGetCoreID());
+    Log.logf("%s started on core %\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
 //    Log.log(" started on core ");
 //    Log.log(xPortGetCoreID());
 
@@ -235,7 +235,7 @@ DateTime Data::getTime() {
 }
 
 void Data::adjustRTCTask(void * pvParameters) {
-    Log.logf("%s started on core %d", pcTaskGetTaskName(NULL), xPortGetCoreID());
+    Log.logf("%s started on core %d\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
 //    Log.log(" started on core ");
 //    Log.log(xPortGetCoreID());
 

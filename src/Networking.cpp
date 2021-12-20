@@ -23,7 +23,7 @@ void Networking::f(std::string str) {
 
 [[noreturn]] void Networking::WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info)
 {
-    Log.logf("Connected to %s", WiFi.SSID().c_str());
+    Log.logf("Connected to %s\n", WiFi.SSID().c_str());
 //    Log.log(WiFi.SSID());
 //    Log.log("IP address: ");
 //    Log.log(IPAddress(info.ap_staipassigned.ip.addr));
@@ -37,7 +37,7 @@ void Networking::f(std::string str) {
 
 [[noreturn]] void Networking::WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 {
-    Log.logf("IP address: %s", IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
+    Log.logf("IP address: %s\n", IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
 //    Log.log(IPAddress(info.ap_staipassigned.ip.addr).toString());
 
     if (!MDNS.begin(host)) { //http://esp32.local
@@ -47,7 +47,7 @@ void Networking::f(std::string str) {
         }
     }
 
-    Log.logf("mDNS responder started, hostname: http://%s.local", host);
+    Log.logf("mDNS responder started, hostname: http://%s.local\n", host);
 //    Log.log("http://esp32.local");
 
     serverSetup();
@@ -72,9 +72,7 @@ int Networking::connectWiFi(int wait, const char* ssid, const char* pass) {
     server.addHandler(&events);
     Log.setEvent(f);
 
-    Log.logf("Connecting to WiFi network: \"%s\"", ssid);
-//    Log.logf(ssid);
-//    Log.log("\"");
+    Log.logf("Connecting to WiFi network: \"%s\"\n", ssid);
 
     WiFi.begin(ssid, pass);
 }
@@ -223,7 +221,7 @@ void Networking::serverSetupTask(void * pvParameters) {
         for(int i=0;i<params;i++){
             AsyncWebParameter* p = request->getParam(i);
             if(p->isPost()){
-                Log.logf("POST[%s]: %s", p->name().c_str(), p->value().c_str());
+                Log.logf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
 
                 std::string str = p->name().c_str();
 

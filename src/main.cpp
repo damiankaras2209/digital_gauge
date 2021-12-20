@@ -86,7 +86,7 @@ static void action(GxFT5436::Event event) {
         int16_t x = event.startX;
         int16_t y = event.startY;
 
-        Log.logf("Single touch at %d,%d", x, y);
+        Log.logf("Single touch at %d,%d\n", x, y);
 
         //show menu
         if(Screen::getInstance()->getView() != PROMPT && x > Settings::getInstance()->visual.width/2 - Settings::getInstance()->visual.needleCenterOffset && x < Settings::getInstance()->visual.width/2 + Settings::getInstance()->visual.needleCenterOffset && y < Settings::getInstance()->visual.height/2) {
@@ -100,7 +100,7 @@ static void action(GxFT5436::Event event) {
 
         //change left gauge
         else if(Screen::getInstance()->getView() == GAUGES && x < Settings::getInstance()->visual.width/2-Settings::getInstance()->visual.needleCenterOffset) {
-            Log.logf("Current data: %s", Settings::getInstance()->dataSourceString[selected[LEFT]].c_str());
+            Log.logf("Current data: %s\n", Settings::getInstance()->dataSourceString[selected[LEFT]].c_str());
             do {
                 selected[LEFT] = static_cast<Settings::DataSource>(selected[LEFT]+1);
                 if(selected[LEFT] == Settings::LAST)
@@ -112,7 +112,7 @@ static void action(GxFT5436::Event event) {
 
         //change right gauge
         else if(Screen::getInstance()->getView() == GAUGES && x > Settings::getInstance()->visual.width/2+Settings::getInstance()->visual.needleCenterOffset) {
-            Log.logf("Current data: %s", Settings::getInstance()->dataSourceString[selected[RIGHT]].c_str());
+            Log.logf("Current data: %s\n", Settings::getInstance()->dataSourceString[selected[RIGHT]].c_str());
             do {
                 selected[RIGHT] = static_cast<Settings::DataSource>(selected[RIGHT]+1);
                 if(selected[RIGHT] == Settings::LAST)
@@ -168,9 +168,9 @@ void setup(void) {
   ledcAttachPin(ledPin, ledChannel);
   ledcWrite(0, 0);
 
-  Log.logf("Firmware version: %s", getCurrentFirmwareVersionString().c_str());
-  Log.logf("Filesystem current version: %s", getCurrentFilesystemVersionString().c_str());
-  Log.logf("Filesystem target version: %s", getTargetFilesystemVersionString().c_str());
+  Log.logf("Firmware version: %s\n", getCurrentFirmwareVersionString().c_str());
+  Log.logf("Filesystem current version: %s\n", getCurrentFilesystemVersionString().c_str());
+  Log.logf("Filesystem target version: %s\n", getTargetFilesystemVersionString().c_str());
   if(getCurrentFilesystemVersion() != getTargetFilesystemVersion()) {
       ledcWrite(0, 255);
       proceed = false;
@@ -250,7 +250,7 @@ void loop() {
         Screen::getInstance()->tick();
 //        delay(1);
 #ifdef LOG_FRAMETIME
-        Log.logf("Frametime: %lu", millis()-t15);
+        Log.logf("Frametime: %lu\n", millis()-t15);
 #endif
         std::stringstream ss;
         ss << millis()-t15;

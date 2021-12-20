@@ -129,7 +129,7 @@ void UpdaterClass::checkForUpdate() {
     int httpResponseCode = http.GET();
 
     if (httpResponseCode>0) {
-        Log.logf("HTTP Response code: %d", httpResponseCode);
+        Log.logf("HTTP Response code: %d\n", httpResponseCode);
         String payload = http.getString();
 
         DynamicJsonDocument doc(8*1024);
@@ -156,7 +156,7 @@ void UpdaterClass::checkForUpdate() {
             ver[1] = std::strtol(p+1, &p, 10);
             ver[2] = std::strtol(p+1, &p, 10);
 
-            Log.logf("%s %s %d.%d.%d", filename.c_str(), name.c_str(), ver[0], ver[1], ver[2]);
+            Log.logf("%s %s %d.%d.%d\n", filename.c_str(), name.c_str(), ver[0], ver[1], ver[2]);
 
 //            Log.log(filename.c_str());
 //            Log.log(" ");
@@ -170,7 +170,7 @@ void UpdaterClass::checkForUpdate() {
 
             uint32_t found = ver[0] << 16 | ver[1] << 8 | ver[2];
             if(name == FIRMWARE) {
-                Log.logf("Firmware current version: %d, found: %d", fw_current, found);
+                Log.logf("Firmware current version: %d, found: %\n", fw_current, found);
 //                Log.log(fw_current);
 //                Log.log(", found: ");
 //                Log.log(found);
@@ -218,7 +218,7 @@ void UpdaterClass::checkForUpdate() {
 //        Log.log(size);
 //        Log.log(str);
     } else {
-        Log.logf("Error code: %d", httpResponseCode);
+        Log.logf("Error code: %d\n", httpResponseCode);
 //        Log.log(httpResponseCode);
     }
     http.end();

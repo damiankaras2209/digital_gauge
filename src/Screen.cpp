@@ -385,15 +385,19 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
         spriteH = pY1[side]+pH[side] > y1+h ? pY1[side]+pH[side]-spriteY : h+abs(y1-pY1[side]);
     }
 
-//    Log.logf("first calc: %lu", millis()-t2);
-//    t2 = millis();
+#ifdef LOG_DETAILED_FRAMETIME
+    Log.logf("first calc: %lu", millis()-t2);
+    t2 = millis();
+#endif
 
     update.createSprite(spriteW, spriteH);
 
     drawScale(&update, side, spriteX, spriteY, 0, start, end);
 
-//    Log.logf(" draw scale: %lu", millis()-t2);
-//    t2 = millis();
+#ifdef LOG_DETAILED_FRAMETIME
+    Log.logf(" draw scale: %lu", millis()-t2);
+    t2 = millis();
+#endif
 
     int needleX = side ? vis->needleCenterRadius : (spriteW-vis->needleCenterRadius);
     int needleY = deg >= 0 ? y1-spriteY+vis->needleCenterRadius : vis->height/2 - spriteY;
@@ -421,8 +425,10 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	        vis->needleCenterRadius,
 	        vis->needleCenterColor);
 
-//	Log.logf(" draw needle: %lu", millis()-t2);
-//	t2 = millis();
+#ifdef LOG_DETAILED_FRAMETIME
+	Log.logf(" draw needle: %lu", millis()-t2);
+	t2 = millis();
+#endif
 
 	std::stringstream ss;
 	ss.precision(1);
@@ -434,13 +440,17 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	        side ? vis->needleCenterRadius : spriteW-vis->needleCenterRadius,
 	        vis->height/2 - spriteY);
 
-//	Log.logf(" draw value: %lu", millis()-t2);
-//	t2 = millis();
+#ifdef LOG_DETAILED_FRAMETIME
+	Log.logf(" draw value: %lu", millis()-t2);
+	t2 = millis();
+#endif
 
 	update.pushSprite(spriteX + vis->offsetX, spriteY + vis->offsetY);
 
-//	Log.logf(" push sprite: %lu\n", millis()-t2);
-//	t2 = millis();
+#ifdef LOG_DETAILED_FRAMETIME
+	Log.logf(" push sprite: %lu\n", millis()-t2);
+	t2 = millis();
+#endif
 
 	pX1[side] = x1;
 	pY1[side] = y1;

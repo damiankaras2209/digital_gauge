@@ -10,7 +10,7 @@ void LogClass::_log(std::string str) {
         _data.messages.push_back(str);
     release();
 #else
-    Serial.println(str.c_str());
+    Serial.print(str.c_str());
 #endif
 }
 
@@ -63,37 +63,40 @@ void LogClass::enable() {
 }
 
 void LogClass::log(const char* str) {
-    _log(str);
+    std::string s = std::string(str);
+    s.append("\n");
+    _log(s);
 }
 
 void LogClass::log(int i) {
     std::stringstream ss;
-    ss << i;
-    _log(ss.str().c_str());
+    ss << i << "\n";
+    _log(ss.str());
 }
 
 void LogClass::log(uint32_t i) {
     std::stringstream ss;
-    ss << i;
-    _log(ss.str().c_str());
+    ss << i << "\n";
+    _log(ss.str());
 }
 
 void LogClass::log(long unsigned int i) {
     std::stringstream ss;
-    ss << i;
-    _log(ss.str().c_str());
+    ss << i << "\n";
+    _log(ss.str());
 }
 
 void LogClass::log(float f) {
     std::stringstream ss;
-    ss << f;
-    _log(ss.str().c_str());
+    ss << f << "\n";
+    _log(ss.str());
 }
 
 void LogClass::log(String str) {
+    str = str + "\n";
     _log(str.c_str());
 }
 
 void LogClass::log(StringSumHelper& stringSumHelper) {
-    _log(stringSumHelper.c_str());
+    _log((stringSumHelper + "\n").c_str());
 }
