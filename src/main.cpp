@@ -28,7 +28,7 @@ UpdaterClass updater;
 Data data;
 GxFT5436 touch = GxFT5436(/*SDA=*/21, /*SCL=*/22,/*RST=*/-1);
 
-Settings::DataSource selected[SIDE_LAST];
+
 
 void loadFonts() {
   if (!SPIFFS.begin()) {
@@ -88,39 +88,50 @@ static void action(GxFT5436::Event event) {
 
         Log.logf("Single touch at %d,%d\n", x, y);
 
-        //show menu
-        if(Screen::getInstance()->getView() != PROMPT && x > Settings::getInstance()->visual.width/2 - Settings::getInstance()->visual.needleCenterOffset && x < Settings::getInstance()->visual.width/2 + Settings::getInstance()->visual.needleCenterOffset && y < Settings::getInstance()->visual.height/2) {
-            Screen::getInstance()->showPrompt("SSID: " + String((char *)Settings::getInstance()->general.ssid) + "\npass: " + String((char *)Settings::getInstance()->general.pass) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
+        View view = Screen::getInstance()->getView();
+
+        switch (view) {
+            case PROMPT: {
+                //dismiss menu
+                Screen::getInstance()->setGaugeMode();
+                break;
+            }
+            case GAUGES: {
+                //show menu
+                if(Screen::getInstance()->getView() != PROMPT && x > Settings::getInstance()->visual.width/2 - Settings::getInstance()->visual.needleCenterOffset && x < Settings::getInstance()->visual.width/2 + Settings::getInstance()->visual.needleCenterOffset && y < Settings::getInstance()->visual.height/2) {
+                    Screen::getInstance()->showPrompt("SSID: " + String((char *)Settings::getInstance()->general.ssid) + "\npass: " + String((char *)Settings::getInstance()->general.pass) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
+                }
+
+                //change gauge
+
+                Side side = SIDE_LAST;
+                if(x < Settings::getInstance()->visual.width/2-Settings::getInstance()->visual.needleCenterOffset)
+                    side = LEFT;
+                else if(x > Settings::getInstance()->visual.width/2+Settings::getInstance()->visual.needleCenterOffset)
+                    side = RIGHT;
+                
+                if(side != SIDE_LAST) {
+                    Settings::DataSource selected[3];
+                    Screen::getInstance()->getSelected(selected);
+
+                    Log.logf("Current data: %s\n", Settings::getInstance()->dataSourceString[selected[side]].c_str());
+                    do {
+                        selected[side] = static_cast<Settings::DataSource>(selected[side]+1);
+                        if(selected[side] == Settings::LAST)
+                            selected[side] = static_cast<Settings::DataSource>(0);
+                    } while (!Settings::getInstance()->dataDisplay[selected[side]].enable);
+                    Log.logf("Changing to: %s\n", Settings::getInstance()->dataSourceString[selected[side]].c_str());
+                    Screen::getInstance()->setSelected(side, selected[side]);
+                    Settings::getInstance()->saveSelected(selected);
+                }
+
+            }
         }
 
-        //dismiss menu
-        else if(Screen::getInstance()->getView() == PROMPT)
-            Screen::getInstance()->setGaugeMode();
 
 
-        //change left gauge
-        else if(Screen::getInstance()->getView() == GAUGES && x < Settings::getInstance()->visual.width/2-Settings::getInstance()->visual.needleCenterOffset) {
-            Log.logf("Current data: %s\n", Settings::getInstance()->dataSourceString[selected[LEFT]].c_str());
-            do {
-                selected[LEFT] = static_cast<Settings::DataSource>(selected[LEFT]+1);
-                if(selected[LEFT] == Settings::LAST)
-                    selected[LEFT] = static_cast<Settings::DataSource>(0);
-            } while (!Settings::getInstance()->dataDisplay[selected[LEFT]].enable);
-            Log.logf("Changing to: %s\n", Settings::getInstance()->dataSourceString[selected[LEFT]].c_str());
-            Settings::getInstance()->saveSelected(selected);
-        }
 
-        //change right gauge
-        else if(Screen::getInstance()->getView() == GAUGES && x > Settings::getInstance()->visual.width/2+Settings::getInstance()->visual.needleCenterOffset) {
-            Log.logf("Current data: %s\n", Settings::getInstance()->dataSourceString[selected[RIGHT]].c_str());
-            do {
-                selected[RIGHT] = static_cast<Settings::DataSource>(selected[RIGHT]+1);
-                if(selected[RIGHT] == Settings::LAST)
-                    selected[RIGHT] = static_cast<Settings::DataSource>(0);
-            } while (!Settings::getInstance()->dataDisplay[selected[RIGHT]].enable);
-            Log.logf("Changing to: %s\n", Settings::getInstance()->dataSourceString[selected[RIGHT]].c_str());
-            Settings::getInstance()->saveSelected(selected);
-        }
+
 
     }
 //    //Slide right
@@ -146,23 +157,19 @@ static void action(GxFT5436::Event event) {
 void setup(void) {
   Serial.begin(115200);
 
-
-  selected[LEFT] = Settings::ADS1115_1;
-  selected[RIGHT] = Settings::ADS1115_0;
-  selected[MID]= Settings::VOLTAGE;
-
   tft.init();
   tft.setRotation(3);
   tft.invertDisplay(1);
-
 
   loadFonts();
 
   Settings::getInstance()->loadDefault();
   Settings::getInstance()->load();
+  Settings::DataSource selected[SIDE_LAST];
   Settings::getInstance()->loadSelected(selected);
 
-  Screen::getInstance()->init(&tft, &data, selected);
+  Screen::getInstance()->init(&tft, &data);
+  Screen::getInstance()->setSelected(selected);
 
   ledcSetup(ledChannel, freq, resolution);
   ledcAttachPin(ledPin, ledChannel);
@@ -249,9 +256,7 @@ void loop() {
         t15 = millis();
         Screen::getInstance()->tick();
 //        delay(1);
-#ifdef LOG_FRAMETIME
-        Log.logf("Frametime: %lu\n", millis()-t15);
-#endif
+
         std::stringstream ss;
         ss << millis()-t15;
         networking.sendEvent("frametime", ss.str());

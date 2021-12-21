@@ -252,6 +252,10 @@ void Settings::loadSelected(Settings::DataSource *selected) {
         selected[0] = doc["sel_0"] | VOLTAGE;
         selected[1] = doc["sel_1"] | VOLTAGE;
         selected[2] = doc["sel_2"] | VOLTAGE;
+    } else {
+        selected[0] = VOLTAGE;
+        selected[1] = VOLTAGE;
+        selected[2] = VOLTAGE;
     }
 }
 

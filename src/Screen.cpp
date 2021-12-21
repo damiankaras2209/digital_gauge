@@ -1,5 +1,7 @@
 #include "Screen.h"
 
+#define SCALE_SPRITE_Y_OFFSET 2
+
 double rad(int16_t deg) {
     return 1.0*deg * PI / 180;
 }
@@ -42,7 +44,6 @@ uint16_t Screen::c24to16(int i) {
 }
 
 void Screen::fillTables() {
-	Settings* settings = Settings::getInstance();
 	int density = 1;
 	int a = vis->ellipseA;
 	int b = vis->ellipseB;
@@ -80,18 +81,74 @@ void Screen::fillTables() {
 			}
 		}
 	}
+
 }
 
-void Screen::init(TFT_eSPI *t, Data *d, Settings::DataSource *s) {
+//ulong t4;
+void Screen::createScaleSprites(Side side) {
+//    t4 = millis();
+    if(side != MID) {
+        for(int j=0; j<5; j++) {
+            int start = settings->dataDisplay[selected[side]].scaleStart;
+            int end = settings->dataDisplay[selected[side]].scaleEnd;
+
+            String string = (String)(start + j*(end-start)/vis->scaleTextSteps);
+
+            int w,h;
+            scaleSprite[side][j]->deleteSprite();
+            scaleSprite[side][j]->setColorDepth(8);
+            scaleSprite[side][j]->loadFont("GaugeHeavyNumbers12");
+            w = scaleSprite[side][j]->textWidth(string);
+            h = scaleSprite[side][j]->fontHeight();
+            scaleSprite[side][j]->createSprite(w, h + SCALE_SPRITE_Y_OFFSET, 1);
+            scaleSprite[side][j]->setTextColor(settings->visual.fontColor);
+            scaleSprite[side][j]->setTextDatum(TL_DATUM);
+            scaleSprite[side][j]->drawString(string, 0, SCALE_SPRITE_Y_OFFSET);
+            scaleSprite[side][j]->unloadFont();
+            delay(1);
+        }
+    }
+//    Log.logf("Sprites creation time: %lu", millis()-t4);
+}
+
+void Screen::init(TFT_eSPI *t, Data *d) {
 	tft = t;
 	data = d;
-	selected = s;
+	for(int i=0; i<2; i++) {
+	    for(int j=0; j<5; j++) {
+	        scaleSprite[i][j] = new TFT_eSprite(tft);
+	    }
+	}
+	needleUpdate = new TFT_eSprite(tft);
+}
+
+void Screen::setSelected(Settings::DataSource *s) {
+   for(int i=LEFT; i<SIDE_LAST; i++) {
+       selected[i] = s[i];
+   }
+}
+
+void Screen::setSelected(Side side, Settings::DataSource s) {
+    if(selected[side] != s) {
+        lock();
+        selected[side] = s;
+        createScaleSprites(side);
+        drawWhole[side] = true;
+        release();
+    }
+}
+
+void Screen::getSelected(Settings::DataSource* s) {
+    for(int i=LEFT; i<SIDE_LAST; i++)
+        s[i] = selected[i];
 }
 
 void Screen::reset() {
     lock();
     tft->fillScreen(settings->visual.backgroundColor);
-	fillTables();
+    fillTables();
+    createScaleSprites(LEFT);
+    createScaleSprites(RIGHT);
 	drawWhole[0] = true;
 	drawWhole[1] = true;
     updateText(true, 0);
@@ -113,8 +170,11 @@ View Screen::getView() {
 }
 
 void Screen::switchView(View view) {
+//    if(currentView == GAUGES && view != GAUGES)
+//        needleUpdate->unloadFont();
     switch(view) {
         case GAUGES:  {
+            needleUpdate->loadFont("GaugeHeavyNumbers12");
             tft->fillScreen(settings->visual.backgroundColor);
             drawWhole[0] = true;
             drawWhole[1] = true;
@@ -140,16 +200,23 @@ void Screen::switchView(View view) {
     Log.logf("Current view: %d", currentView);
 }
 
-unsigned long t;
+unsigned long t, t1;
 void Screen::tick() {
     lock();
+    t = millis();
     switch(currentView) {
         case GAUGES:  {
-            t = millis();
             Screen::getInstance()->updateText(false, 0);
-            Screen::getInstance()->updateNeedle(0, selected[LEFT]);
-            Screen::getInstance()->updateNeedle(1, selected[RIGHT]);
-//            Log.log("f");
+            t1 = millis();
+            Screen::getInstance()->updateNeedle(LEFT);
+#ifdef LOG_DETAILED_FRAMETIME
+            Log.logf(" total: %lu\n", millis()-t1);
+            t1 = millis();
+#endif
+            Screen::getInstance()->updateNeedle(RIGHT);
+#ifdef LOG_DETAILED_FRAMETIME
+            Log.logf(" total: %lu ", millis()-t1);
+#endif
             break;
         }
         case CLOCK:  {
@@ -159,6 +226,9 @@ void Screen::tick() {
             break;
         }
     }
+#if defined(LOG_FRAMETIME) || defined(LOG_DETAILED_FRAMETIME)
+    Log.logf("frametime: %lu\n", millis()-t);
+#endif
     release();
     delay(1);
 }
@@ -224,20 +294,6 @@ void Screen::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w
                        (i%vis->scaleAccColorEvery==0) ? vis->scaleAccColor : vis->scaleColor);
     }
 
-//    Log.logf(" draw scale pieces: %lu", millis()-t3);
-//    t3 = millis();
-
-    c->setTextColor(vis->fontColor);
-    //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setAttribute(SFBG_ENABLE, true);
-    //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextDatum(side ? CL_DATUM : CR_DATUM);
-    //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->setTextDatum(CC_DATUM);
-    c->setTextPadding(20);
-    //	(isSprite ? (TFT_eSprite*)c : (TFT_eSPI*)c)->loadFont("GaugeHeavyNumbers"+(String)vis->scaleSize);
-    c->loadFont("GaugeHeavyNumbers12");
-
-//    Log.logf(" load font: %lu", millis()-t3);
-//    t3 = millis();
-
     for(int i=0; i<5; i++) {
         int deg;
 
@@ -249,27 +305,19 @@ void Screen::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w
             case 4: deg = 90;break;
         }
 
-        if(deg==0)
-            c->setTextDatum(side ? CR_DATUM : CL_DATUM);
-        else
-            c->setTextDatum(CC_DATUM);
-
-
         int top = i>2 ? -1 : 1;
 
-        if(!side)
-            side = -1;
-
-        c->drawString(
-                ((String)(start + i*(end-start)/vis->scaleTextSteps)).c_str(),
-                vis->width/2 + side*(vis->needleCenterOffset + calcX(0, deg, arrR[deg] - vis->scaleTextOffset)) - spriteX,
-                vis->height/2 + top*(calcY(0, deg, arrR[deg] - vis->scaleTextOffset)) - spriteY
-                );
+        scaleSprite[side][i]->pushToSprite(c,
+               vis->width/2 + (side ? 1 : -1)*(vis->needleCenterOffset + calcX(0, deg, arrR[deg] - vis->scaleTextOffset)) - spriteX - scaleSprite[side][i]->width()/2,
+               vis->height/2 + top*(calcY(0, deg, arrR[deg] - vis->scaleTextOffset)) - spriteY - scaleSprite[side][i]->height()/2
+               );
 
     }
 
-//    Log.logf(" draw numbers: %lu", millis()-t3);
-//    t3 = millis();
+#ifdef LOG_DETAILED_FRAMETIME
+    Log.logf(" draw numbers: %lu", millis()-t3);
+    t3 = millis();
+#endif
 }
 
 //static const uint16_t pallete[] = {
@@ -287,16 +335,16 @@ Settings::DataSource pSource[2];
 
 unsigned long t2;
 
-void Screen::updateNeedle(int side, Settings::DataSource source) {
+void Screen::updateNeedle(int side) {
 
     t2 = millis();
 
     int start, end;
     float value;
 
-    value = settings->dataDisplay[source].value;
-    start = settings->dataDisplay[source].scaleStart;
-    end = settings->dataDisplay[source].scaleEnd;
+    value = settings->dataDisplay[selected[side]].value;
+    start = settings->dataDisplay[selected[side]].scaleStart;
+    end = settings->dataDisplay[selected[side]].scaleEnd;
 
 //    value = (sin(xx/PI/18)/2+0.5)*(end-start)+start;
 
@@ -361,19 +409,12 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	// Log.log(" h:");
 	// Log.log(h);
 
-
-
-	TFT_eSprite update = TFT_eSprite(tft);
-	
-	update.setColorDepth(8);
-	// update.setPaletteColor(pallete, 5);
-
 	int spriteX;
 	int spriteY;
 	int spriteW;
 	int spriteH;
 
-    if(pSource[side] != source || drawWhole[side]) {
+    if(pSource[side] != selected[side] || drawWhole[side]) {
         spriteX = vis->width/2 + (side ? (vis->needleCenterOffset -vis->needleCenterRadius) : (-vis->ellipseA + 1));
         spriteY = vis->height/2 - vis->ellipseB;
         spriteW = vis->ellipseA - vis->needleCenterOffset + vis->needleCenterRadius;
@@ -390,19 +431,24 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
     t2 = millis();
 #endif
 
-    update.createSprite(spriteW, spriteH);
-
-    drawScale(&update, side, spriteX, spriteY, 0, start, end);
+    needleUpdate->setColorDepth(8);
+    needleUpdate->createSprite(spriteW, spriteH);
 
 #ifdef LOG_DETAILED_FRAMETIME
-    Log.logf(" draw scale: %lu", millis()-t2);
+    Log.logf(" draw scale: {", millis()-t2);
+#endif
+
+    drawScale(needleUpdate, side, spriteX, spriteY, 0, start, end);
+
+#ifdef LOG_DETAILED_FRAMETIME
+    Log.logf("} total: %lu", millis()-t2);
     t2 = millis();
 #endif
 
     int needleX = side ? vis->needleCenterRadius : (spriteW-vis->needleCenterRadius);
     int needleY = deg >= 0 ? y1-spriteY+vis->needleCenterRadius : vis->height/2 - spriteY;
 
-    update.drawWedgeLine(
+    needleUpdate->drawWedgeLine(
             needleX,
             needleY,
             side ? calcX(needleX, deg, length) : (spriteW-calcX(vis->needleCenterRadius, deg, length)),
@@ -412,14 +458,14 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
             vis->needleColor
             );
 
-//    update.drawRect(
+//    needleUpdate->drawRect(
 //        0,
 //        0,
 //        spriteW,
 //        spriteH,
 //        TFT_VIOLET);
 
-	update.fillCircle(
+	needleUpdate->fillCircle(
 	        needleX,
 	        needleY,
 	        vis->needleCenterRadius,
@@ -433,9 +479,9 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	std::stringstream ss;
 	ss.precision(1);
 	ss << std::fixed << value;
-	update.setTextDatum(CC_DATUM);
-	update.setTextColor(vis->fontColor);
-	update.drawString(
+	needleUpdate->setTextDatum(CC_DATUM);
+	needleUpdate->setTextColor(vis->fontColor);
+	needleUpdate->drawString(
 	        ss.str().c_str(),
 	        side ? vis->needleCenterRadius : spriteW-vis->needleCenterRadius,
 	        vis->height/2 - spriteY);
@@ -445,10 +491,11 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	t2 = millis();
 #endif
 
-	update.pushSprite(spriteX + vis->offsetX, spriteY + vis->offsetY);
+	needleUpdate->pushSprite(spriteX + vis->offsetX, spriteY + vis->offsetY);
+	needleUpdate->deleteSprite();
 
 #ifdef LOG_DETAILED_FRAMETIME
-	Log.logf(" push sprite: %lu\n", millis()-t2);
+	Log.logf(" push sprite: %lu ", millis()-t2);
 	t2 = millis();
 #endif
 
@@ -457,7 +504,7 @@ void Screen::updateNeedle(int side, Settings::DataSource source) {
 	pW[side] = w;
 	pH[side] = h;
 	pDeg[side] = deg;
-	pSource[side] = source;
+	pSource[side] = selected[side];
     drawWhole[side] = false;
 	xx+=2;
 	if(xx>=360) {
@@ -481,7 +528,7 @@ void Screen::updateText(boolean force, int fps) {
 	if(now.minute() != pMinute || force) {
 		int min = now.minute();
 //		tft->loadFont("GaugeHeavy"+(String)vis->timeSize);
-		tft->loadFont("GaugeHeavy36");
+		tft->loadFont("GaugeHeavy36", true);
 		tft->setTextColor(vis->fontColor, vis->backgroundColor);
 		tft->setAttribute(SFBG_ENABLE, true);
 		tft->setTextDatum(CC_DATUM);
