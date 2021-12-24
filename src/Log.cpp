@@ -1,3 +1,4 @@
+#include <iomanip>
 #include "Log.h"
 
 LogClass Log;
@@ -99,4 +100,14 @@ void LogClass::log(String str) {
 
 void LogClass::log(StringSumHelper& stringSumHelper) {
     _log((stringSumHelper + "\n").c_str());
+}
+
+void LogClass::log(unsigned long n, int base)
+{
+    std::stringstream ss;
+    switch(base){
+        case DEC: ss << n; break;
+        case HEX: ss << "0x" << std::uppercase << std::setfill('0') << std::setw(4) << std::hex << n; break;
+    }
+    _log(ss.str().c_str());
 }

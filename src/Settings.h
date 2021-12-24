@@ -90,7 +90,8 @@ class Settings {
         } InputSettings;
 
         enum DataSource {
-            ADS1115_0, ADS1115_1, ADS1115_2, ADS1115_3, ADC_5, ADC_6, VOLTAGE, CAN_RPM, LAST
+            ADS1115_0, ADS1115_1, ADS1115_2, ADS1115_3, ADC_5, ADC_6, VOLTAGE,
+            CAN_STEERING_ANGLE, CAN_RPM, CAN_SPEED, CAN_GAS, CAN_HB, LAST
         };
 
         const String dataSourceString[LAST] = {
@@ -101,7 +102,11 @@ class Settings {
                 "ADC_5",
                 "ADC_6",
                 "VOLTAGE",
-                "CAN_RPM"
+                "CAN_STEERING_ANGLE",
+                "CAN_RPM",
+                "CAN_SPEED",
+                "CAN_GAS",
+                "CAN_HB"
         };
 
         //enum InputSource {

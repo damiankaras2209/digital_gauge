@@ -221,7 +221,7 @@ void Networking::serverSetupTask(void * pvParameters) {
         for(int i=0;i<params;i++){
             AsyncWebParameter* p = request->getParam(i);
             if(p->isPost()){
-                Log.logf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+                Log.logf("POST[%s]: %s", p->name().c_str(), p->value().c_str());
 
                 std::string str = p->name().c_str();
 
