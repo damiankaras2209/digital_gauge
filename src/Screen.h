@@ -62,11 +62,16 @@ class Screen {
 		int lines = 0;
 		volatile View currentView;
 		boolean drawWhole[2];
+		int16_t selectedInfoCoords[4]; // x, y, w, h;
+		bool selectedInfoVisible;
+		ulong selectedInfoTimestamp;
 		uint16_t c24to16(int);
 		void drawScalePiece(TFT_eSprite*, int, int, int, int, int, int, uint16_t);
 		void drawScale(TFT_eSprite*, int, int, int, int, int, int);
 		void updateNeedle(int);
 		void updateText(boolean, int fps);
+		void drawSelectedInfo();
+		void clearSelectedInfo();
 		void fillTables();
 		void createScaleSprites(Side);
 		void switchView(View);

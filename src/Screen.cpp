@@ -121,7 +121,9 @@ void Screen::init(TFT_eSPI *t, Data *d) {
 	    }
 	}
 	needleUpdate = new TFT_eSprite(tft);
+	needleUpdate->loadFont("GaugeHeavyNumbers12");
 	textUpdate = new TFT_eSprite(tft);
+	textUpdate->loadFont("GaugeHeavy16");
 }
 
 void Screen::setSelected(Settings::DataSource *s) {
@@ -134,8 +136,11 @@ void Screen::setSelected(Side side, Settings::DataSource s) {
     if(selected[side] != s) {
         lock();
         selected[side] = s;
-        createScaleSprites(side);
-        drawWhole[side] = true;
+        if(side != MID) {
+            drawWhole[side] = true;
+            createScaleSprites(side);
+        }
+        drawSelectedInfo();
         release();
     }
 }
@@ -151,6 +156,10 @@ void Screen::reset() {
     fillTables();
     createScaleSprites(LEFT);
     createScaleSprites(RIGHT);
+    selectedInfoCoords[2] = (vis->needleCenterOffset-vis->needleCenterRadius)*2; //width
+    selectedInfoCoords[3] = (textUpdate->fontHeight()+4)*4 - 4 + SCALE_SPRITE_Y_OFFSET_16; //height
+    selectedInfoCoords[0] = vis->width/2+vis->offsetX - selectedInfoCoords[2]/2; //x
+    selectedInfoCoords[1] = vis->height/2+vis->offsetY + 5; //y
 	drawWhole[0] = true;
 	drawWhole[1] = true;
     updateText(true, 0);
@@ -176,8 +185,6 @@ void Screen::switchView(View view) {
 //        needleUpdate->unloadFont();
     switch(view) {
         case GAUGES:  {
-            needleUpdate->loadFont("GaugeHeavyNumbers12");
-            textUpdate->loadFont("GaugeHeavy16");
             tft->fillScreen(settings->visual.backgroundColor);
             drawWhole[0] = true;
             drawWhole[1] = true;
@@ -224,6 +231,9 @@ void Screen::tick() {
 #ifdef LOG_DETAILED_FRAMETIME
             Log.logf(" right: %lu ", millis()-t1);
 #endif
+
+            if(selectedInfoVisible && millis() - selectedInfoTimestamp > 5000)
+                clearSelectedInfo();
             break;
         }
         case CLOCK:  {
@@ -233,6 +243,7 @@ void Screen::tick() {
             break;
         }
     }
+
 #if defined(LOG_FRAMETIME) || defined(LOG_DETAILED_FRAMETIME)
     Log.logf("frametime: %lu\n", millis()-t);
 #endif
@@ -634,4 +645,45 @@ void Screen::appendToPrompt(String text) {
         str = str.substr(nextLine+1);
     }
     release();
+}
+
+void Screen::drawSelectedInfo() {
+
+    std::stringstream ss;
+    ss << "<- " << std::nouppercase << (const char*)settings->dataDisplay[selected[LEFT]].name << "\n";
+    ss << std::nouppercase << (const char*)settings->dataDisplay[selected[RIGHT]].name << " ->\n\n\n";
+    ss << std::nouppercase << (const char*)settings->dataDisplay[selected[MID]].name << ":";
+    std::string str = ss.str();
+    std::transform(str.begin(), str.end(), str.begin(),
+        [](unsigned char c){ return std::tolower(c); });
+
+    textUpdate->setColorDepth(8);
+    textUpdate->createSprite(selectedInfoCoords[2], selectedInfoCoords[3], 1);
+    textUpdate->setTextColor(settings->visual.fontColor);
+    textUpdate->setTextDatum(TC_DATUM);
+    std::size_t nextLine = 0;
+    int x = 0;
+
+    while(nextLine != std::string::npos) {
+        nextLine = str.find_first_of('\n');
+        textUpdate->drawString(str.substr(0, nextLine).c_str(), textUpdate->width()/2, (x++)*(textUpdate->fontHeight()));
+        str = str.substr(nextLine+1);
+    }
+
+    textUpdate->pushSprite(
+            selectedInfoCoords[0],
+            selectedInfoCoords[1]);
+    textUpdate->deleteSprite();
+
+    selectedInfoTimestamp = millis();
+    selectedInfoVisible = true;
+}
+
+void Screen::clearSelectedInfo() {
+    tft->fillRect(selectedInfoCoords[0],
+                  selectedInfoCoords[1],
+                  selectedInfoCoords[2],
+                  selectedInfoCoords[3],
+                  vis->backgroundColor);
+    selectedInfoVisible = false;
 }
