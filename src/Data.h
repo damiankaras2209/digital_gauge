@@ -75,6 +75,7 @@ private:
 //        static void IRAM_ATTR touchStart();
 
 //        [[noreturn]] static void test(void *);
+        static void canReset(MCP2515*);
         static void adjustRTCTask(void *);
         _Noreturn  static void adcLoop(void *);
         _Noreturn  static void canLoop(void *);

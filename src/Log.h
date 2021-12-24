@@ -62,6 +62,7 @@ class LogClass {
         void log(float);
         void log(String);
         void log(StringSumHelper&);
+        void log(unsigned long n, int base);
 };
 
 extern LogClass Log;

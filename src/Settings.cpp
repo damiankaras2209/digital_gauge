@@ -127,12 +127,6 @@ void Settings::loadDefault() {
 	dataDisplay[CAN_GAS].scaleStart = 0;
 	dataDisplay[CAN_GAS].scaleEnd = 100;
 
-	dataDisplay[CAN_AC].enable = false;
-	strcpy((char *)(dataDisplay[CAN_AC].name), "AC");
-	strcpy((char *)(dataDisplay[CAN_AC].unit), "");
-	dataDisplay[CAN_AC].scaleStart = 0;
-	dataDisplay[CAN_AC].scaleEnd = 1;
-
 	dataDisplay[CAN_HB].enable = false;
 	strcpy((char *)(dataDisplay[CAN_HB].name), "HB");
 	strcpy((char *)(dataDisplay[CAN_HB].unit), "");
@@ -176,8 +170,7 @@ void Settings::load() {
         }
 
         for(int i=ADS1115_0; i<LAST; i++) {
-            dataDisplay[i].enable =       doc["dataDisplay_" + (String)i + "_en"] | 1; //<------
-            dataDisplay[i].enable = true; //<------
+            dataDisplay[i].enable =       doc["dataDisplay_" + (String)i + "_en"] | 0;
             strcpy((char *)settings->dataDisplay[i].name, doc["dataDisplay_" + (String)i + "_name"] | "");
             strcpy((char *)settings->dataDisplay[i].unit, doc["dataDisplay_" + (String)i + "_unit"] | "u");
             dataDisplay[i].scaleStart =   doc["dataDisplay_" + (String)i + "_scaleStart"] | 0;
