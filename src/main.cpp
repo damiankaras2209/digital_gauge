@@ -208,6 +208,10 @@ void setup(void) {
 
       data.init();
 
+      while(data.data.i2cBusy)
+          delay(1);
+      data.data.i2cBusy = true;
+
       if(!touch.init(&Serial))
           Log.log("GxFT5436 not found");
       else {
@@ -215,6 +219,8 @@ void setup(void) {
           touch.onEvent(action);
           touch.enableInterrupt(33, &(data.data.i2cBusy), 1, 0);
       }
+
+      data.data.i2cBusy = false;
 
     //  tft.fillScreen(TFT_BLUE);
 
