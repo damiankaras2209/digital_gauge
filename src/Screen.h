@@ -58,6 +58,7 @@ class Screen {
 		double arrR[91], arrX[91], arrY[91];
 		TFT_eSprite* scaleSprite[2][5];
 		TFT_eSprite* needleUpdate;
+		TFT_eSprite* textUpdate;
 		int lines = 0;
 		volatile View currentView;
 		boolean drawWhole[2];

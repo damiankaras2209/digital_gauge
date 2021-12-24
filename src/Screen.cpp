@@ -1,6 +1,7 @@
 #include "Screen.h"
 
-#define SCALE_SPRITE_Y_OFFSET 2
+#define SCALE_SPRITE_Y_OFFSET_12 2
+#define SCALE_SPRITE_Y_OFFSET_16 3
 
 double rad(int16_t deg) {
     return 1.0*deg * PI / 180;
@@ -100,10 +101,10 @@ void Screen::createScaleSprites(Side side) {
             scaleSprite[side][j]->loadFont("GaugeHeavyNumbers12");
             w = scaleSprite[side][j]->textWidth(string);
             h = scaleSprite[side][j]->fontHeight();
-            scaleSprite[side][j]->createSprite(w, h + SCALE_SPRITE_Y_OFFSET, 1);
+            scaleSprite[side][j]->createSprite(w, h + SCALE_SPRITE_Y_OFFSET_12, 1);
             scaleSprite[side][j]->setTextColor(settings->visual.fontColor);
             scaleSprite[side][j]->setTextDatum(TL_DATUM);
-            scaleSprite[side][j]->drawString(string, 0, SCALE_SPRITE_Y_OFFSET);
+            scaleSprite[side][j]->drawString(string, 0, SCALE_SPRITE_Y_OFFSET_12);
             scaleSprite[side][j]->unloadFont();
             delay(1);
         }
@@ -120,6 +121,7 @@ void Screen::init(TFT_eSPI *t, Data *d) {
 	    }
 	}
 	needleUpdate = new TFT_eSprite(tft);
+	textUpdate = new TFT_eSprite(tft);
 }
 
 void Screen::setSelected(Settings::DataSource *s) {
@@ -175,6 +177,7 @@ void Screen::switchView(View view) {
     switch(view) {
         case GAUGES:  {
             needleUpdate->loadFont("GaugeHeavyNumbers12");
+            textUpdate->loadFont("GaugeHeavy16");
             tft->fillScreen(settings->visual.backgroundColor);
             drawWhole[0] = true;
             drawWhole[1] = true;
@@ -206,16 +209,20 @@ void Screen::tick() {
     t = millis();
     switch(currentView) {
         case GAUGES:  {
-            Screen::getInstance()->updateText(false, 0);
             t1 = millis();
+            Screen::getInstance()->updateText(false, 0);
+#ifdef LOG_DETAILED_FRAMETIME
+            Log.logf(" mid: %lu\n", millis()-t1);
+            t1 = millis();
+#endif
             Screen::getInstance()->updateNeedle(LEFT);
 #ifdef LOG_DETAILED_FRAMETIME
-            Log.logf(" total: %lu\n", millis()-t1);
+            Log.logf(" left: %lu\n", millis()-t1);
             t1 = millis();
 #endif
             Screen::getInstance()->updateNeedle(RIGHT);
 #ifdef LOG_DETAILED_FRAMETIME
-            Log.logf(" total: %lu ", millis()-t1);
+            Log.logf(" right: %lu ", millis()-t1);
 #endif
             break;
         }
@@ -293,6 +300,11 @@ void Screen::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w
                        (i%(steps/vis->scaleLargeSteps)==0) ? vis->scaleLargeWidth : vis->scaleSmallWidth,
                        (i%vis->scaleAccColorEvery==0) ? vis->scaleAccColor : vis->scaleColor);
     }
+
+#ifdef LOG_DETAILED_FRAMETIME
+    Log.logf("scale pieces: %lu", millis()-t3);
+    t3 = millis();
+#endif
 
     for(int i=0; i<5; i++) {
         int deg;
@@ -514,11 +526,13 @@ void Screen::updateNeedle(int side) {
 
 int pMinute = -1, pDay = -1;
 
+ulong t5;
 void Screen::updateText(boolean force, int fps) {
+    t5 = millis();
 	DateTime now = data->getTime();
 
-	if(	now.month() > 3 && now.month() < 10 ||
-		now.month() == 3 && now.day() > 28)
+	if(	(now.month() > 3 && now.month() < 10) ||
+		(now.month() == 3 && now.day() > 28))
 
 	tft->setTextColor(vis->fontColor, TFT_RED);
 	tft->setAttribute(SFBG_ENABLE, true);
@@ -528,7 +542,7 @@ void Screen::updateText(boolean force, int fps) {
 	if(now.minute() != pMinute || force) {
 		int min = now.minute();
 //		tft->loadFont("GaugeHeavy"+(String)vis->timeSize);
-		tft->loadFont("GaugeHeavy36", true);
+        tft->loadFont("GaugeHeavyTime36", true);
 		tft->setTextColor(vis->fontColor, vis->backgroundColor);
 		tft->setAttribute(SFBG_ENABLE, true);
 		tft->setTextDatum(CC_DATUM);
@@ -555,27 +569,33 @@ void Screen::updateText(boolean force, int fps) {
 		pDay = now.day();
 	}
 
-//	std::stringstream ss3;
-//	ss3 << "frametime: " << ((String)fps).c_str();
-//	tft->loadFont("GaugeHeavy"+(String)vis->dateSize);
-//	tft->drawString(
-//	        ss3.str().c_str(),
-//	        vis->width/2+vis->offsetX,
-//	        vis->height/2+vis->offsetY-vis->datePosY);
+#ifdef LOG_DETAILED_FRAMETIME
+	Log.logf("time and date: %lu", millis()-t5);
+	t5 = millis();
+#endif
 
-//	 int16_t val_0 = ads->readADC(0);
-//  	 int16_t val_1 = ads->readADC(1);
-//  	 int16_t val_2 = ads->readADC(2);
-//  	 int16_t val_3 = ads->readADC(3);
+	std::stringstream ss3;
+	ss3.precision(1);
+	ss3 << std::fixed << settings->dataDisplay[selected[MID]].value << (const char*)(settings->dataDisplay[selected[MID]].unit);
+    const char* str = ss3.str().c_str();
 
-//	 float f = ads->toVoltage(1);
-//
-//	 std::stringstream ss3;
-//	 ss3 << ((String)(val_0 * f)).c_str() << "\n" << ((String)(val_1 * f)).c_str() << "\n" << ((String)(val_2 * f)).c_str() << "\n" << ((String)(val_3 * f)).c_str();
-//	 tft->drawString(
-//	 ss3.str().c_str(),
-//	 vis->width/2+vis->offsetX,
-//	 vis->height/2+vis->offsetY+vis->timePosY);
+	int w = textUpdate->textWidth(str);
+	int h = textUpdate->fontHeight();
+	textUpdate->setColorDepth(8);
+	textUpdate->createSprite((settings->visual.needleCenterOffset-settings->visual.needleCenterRadius)*2, h + SCALE_SPRITE_Y_OFFSET_12, 1);
+	textUpdate->setTextColor(settings->visual.fontColor);
+	textUpdate->setTextDatum(TC_DATUM);
+	textUpdate->drawString(str, textUpdate->width()/2, SCALE_SPRITE_Y_OFFSET_16);
+
+	textUpdate->pushSprite(
+	        vis->width/2+vis->offsetX - textUpdate->width()/2,
+	        vis->height/2+vis->offsetY+80 - (textUpdate->height()/2 + SCALE_SPRITE_Y_OFFSET_16) / 2);
+	textUpdate->deleteSprite();
+
+#ifdef LOG_DETAILED_FRAMETIME
+	Log.logf("data: %lu", millis()-t5);
+	t5 = millis();
+#endif
 }
 
 void Screen::showPrompt(String text) {

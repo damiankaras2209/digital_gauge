@@ -105,7 +105,7 @@ void Settings::loadDefault() {
 
 	dataDisplay[CAN_STEERING_ANGLE].enable = false;
 	strcpy((char *)(dataDisplay[CAN_STEERING_ANGLE].name), "SW");
-	strcpy((char *)(dataDisplay[CAN_STEERING_ANGLE].unit), "deg");
+	strcpy((char *)(dataDisplay[CAN_STEERING_ANGLE].unit), "°");
 	dataDisplay[CAN_STEERING_ANGLE].scaleStart = -550;
 	dataDisplay[CAN_STEERING_ANGLE].scaleEnd = 550; //?
 
@@ -117,7 +117,7 @@ void Settings::loadDefault() {
 
 	dataDisplay[CAN_RPM].enable = false;
 	strcpy((char *)(dataDisplay[CAN_RPM].name), "RPM");
-	strcpy((char *)(dataDisplay[CAN_RPM].unit), "1000/min");
+	strcpy((char *)(dataDisplay[CAN_RPM].unit), "rpm");
 	dataDisplay[CAN_RPM].scaleStart = 0;
 	dataDisplay[CAN_RPM].scaleEnd = 8;
 

@@ -39,12 +39,12 @@ void loadFonts() {
 
     // ESP32 will crash if any of the fonts are missing
     bool font_missing = false;
-    if (!SPIFFS.exists("/GaugeHeavy10.vlw")) font_missing = true;
+//    if (!SPIFFS.exists("/GaugeHeavy10.vlw")) font_missing = true;
     if (!SPIFFS.exists("/GaugeHeavy12.vlw")) font_missing = true;
     if (!SPIFFS.exists("/GaugeHeavy16.vlw")) font_missing = true;
 //    if (!SPIFFS.exists("/GaugeHeavy20.vlw")) font_missing = true;
 //    if (!SPIFFS.exists("/GaugeHeavy26.vlw")) font_missing = true;
-    if (!SPIFFS.exists("/GaugeHeavy36.vlw")) font_missing = true;
+    if (!SPIFFS.exists("/GaugeHeavyTime36.vlw")) font_missing = true;
     if (!SPIFFS.exists("/GaugeHeavyNumbers12.vlw")) font_missing = true;
 
     if (font_missing)
@@ -109,6 +109,10 @@ static void action(GxFT5436::Event event) {
                     side = LEFT;
                 else if(x > Settings::getInstance()->visual.width/2+Settings::getInstance()->visual.needleCenterOffset)
                     side = RIGHT;
+                else if(x > Settings::getInstance()->visual.width/2-Settings::getInstance()->visual.needleCenterOffset &&
+                        x < Settings::getInstance()->visual.width/2+Settings::getInstance()->visual.needleCenterOffset &&
+                        y > Settings::getInstance()->visual.height/2)
+                    side = MID;
                 
                 if(side != SIDE_LAST) {
                     Settings::DataSource selected[3];
