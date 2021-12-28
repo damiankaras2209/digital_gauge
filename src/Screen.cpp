@@ -1,8 +1,5 @@
 #include "Screen.h"
 
-#define SCALE_SPRITE_Y_OFFSET_12 2
-#define SCALE_SPRITE_Y_OFFSET_16 3
-
 double rad(int16_t deg) {
     return 1.0*deg * PI / 180;
 }
@@ -157,7 +154,7 @@ void Screen::reset() {
     createScaleSprites(LEFT);
     createScaleSprites(RIGHT);
     selectedInfoCoords[2] = (vis->needleCenterOffset-vis->needleCenterRadius)*2; //width
-    selectedInfoCoords[3] = (textUpdate->fontHeight()+4)*4 - 4 + SCALE_SPRITE_Y_OFFSET_16; //height
+    selectedInfoCoords[3] = (textUpdate->fontHeight()+LINE_SPACING)*4 - LINE_SPACING + SCALE_SPRITE_Y_OFFSET_16; //height
     selectedInfoCoords[0] = vis->width/2+vis->offsetX - selectedInfoCoords[2]/2; //x
     selectedInfoCoords[1] = vis->height/2+vis->offsetY + 5; //y
 	drawWhole[0] = true;
@@ -185,7 +182,7 @@ void Screen::switchView(View view) {
 //        needleUpdate->unloadFont();
     switch(view) {
         case GAUGES:  {
-            tft->fillScreen(settings->visual.backgroundColor);
+            tft->fillScreen(vis->backgroundColor);
             drawWhole[0] = true;
             drawWhole[1] = true;
             updateText(true, 0);
@@ -195,8 +192,8 @@ void Screen::switchView(View view) {
             break;
         }
         case PROMPT:  {
-            tft->fillScreen(settings->visual.backgroundColor);
-            tft->loadFont("GaugeHeavy12");
+            tft->fillScreen(vis->backgroundColor);
+            tft->setTextColor(vis->fontColor, vis->backgroundColor);
             tft->drawRect(vis->width/2-vis->promptWidth/2,
                           vis->height/2-vis->promptHeight/2,
                           vis->promptWidth,
@@ -609,9 +606,12 @@ void Screen::updateText(boolean force, int fps) {
 #endif
 }
 
-void Screen::showPrompt(String text) {
+void Screen::showPrompt(String text, int lineSpacing, boolean useDefaultFont) {
     lock();
     switchView(PROMPT);
+
+    if(!useDefaultFont)
+        tft->loadFont("GaugeHeavy12");
 
     std::string str = text.c_str();
 //    Log.log(str.c_str());
@@ -625,13 +625,13 @@ void Screen::showPrompt(String text) {
 //        Log.log(nextLine);
 
         nextLine = str.find_first_of('\n');
-        tft->drawString(str.substr(0, nextLine).c_str(), vis->width/2, vis->height/2-40+(lines++)*(tft->fontHeight()+3+8));
+        tft->drawString(str.substr(0, nextLine).c_str(), vis->width/2, vis->height/2-40+(lines++)*(tft->fontHeight()+lineSpacing));
         str = str.substr(nextLine+1);
     }
     release();
 }
 
-void Screen::appendToPrompt(String text) {
+void Screen::appendToPrompt(String text, int lineSpacing, boolean useDefaultFont) {
     lock();
     if(currentView != PROMPT) {
         Log.log("appendToPrompt() called without showPrompt()");
@@ -641,7 +641,7 @@ void Screen::appendToPrompt(String text) {
     std::size_t nextLine = 0;
     while(nextLine != std::string::npos) {
         nextLine = str.find_first_of('\n');
-        tft->drawString(str.substr(0, nextLine).c_str(), vis->width/2, vis->height/2-40+(lines++)*(tft->fontHeight()+3));
+        tft->drawString(str.substr(0, nextLine).c_str(), vis->width/2, vis->height/2-40+(lines++)*(tft->fontHeight()+lineSpacing));
         str = str.substr(nextLine+1);
     }
     release();

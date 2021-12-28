@@ -16,6 +16,10 @@
 #include "TFT_eSPI.h"
 #include "ADS1X15.h"
 
+#define SCALE_SPRITE_Y_OFFSET_12 2
+#define SCALE_SPRITE_Y_OFFSET_16 3
+#define LINE_SPACING 10
+
 float calcX(int16_t, int16_t, int16_t);
 float calcY(int16_t, int16_t, int16_t);
 double rad(int16_t);
@@ -42,8 +46,8 @@ class Screen {
 		void setSelected(Side, Settings::DataSource);
 		void getSelected(Settings::DataSource*);
 		void reset();
-		void showPrompt(String text);
-		void appendToPrompt(String text);
+		void showPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
+		void appendToPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
 		void setClockMode();
 		void setGaugeMode();
         View getView();

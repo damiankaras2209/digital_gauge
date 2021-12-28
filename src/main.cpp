@@ -28,40 +28,12 @@ UpdaterClass updater;
 Data data;
 GxFT5436 touch = GxFT5436(/*SDA=*/21, /*SCL=*/22,/*RST=*/-1);
 
-
-
-void loadFonts() {
-  if (!SPIFFS.begin()) {
-      Log.log("SPIFFS initialisation failed!");
-      while (1) yield(); // Stay here twiddling thumbs waiting
-    }
-    Log.log("SPIFFS available!");
-
-    // ESP32 will crash if any of the fonts are missing
-    bool font_missing = false;
-//    if (!SPIFFS.exists("/GaugeHeavy10.vlw")) font_missing = true;
-    if (!SPIFFS.exists("/GaugeHeavy12.vlw")) font_missing = true;
-    if (!SPIFFS.exists("/GaugeHeavy16.vlw")) font_missing = true;
-//    if (!SPIFFS.exists("/GaugeHeavy20.vlw")) font_missing = true;
-//    if (!SPIFFS.exists("/GaugeHeavy26.vlw")) font_missing = true;
-    if (!SPIFFS.exists("/GaugeHeavyTime36.vlw")) font_missing = true;
-    if (!SPIFFS.exists("/GaugeHeavyNumbers12.vlw")) font_missing = true;
-
-    if (font_missing)
-    {
-      Log.log("Font missing in SPIFFS, did you upload it?");
-      while(1) yield();
-    }
-    else Log.log("Fonts found OK.");
-
-}
-
 void f(t_httpUpdate_return status) {
     switch (status) {
         case HTTP_UPDATE_FAILED:
             Log.logf("HTTP_UPDATE_FAILD Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
             Screen::getInstance()->appendToPrompt("Update failed " + (String) httpUpdate.getLastError() + ": " +
-                                                  httpUpdate.getLastErrorString().c_str() + "\nReboot to try again");
+                                                  httpUpdate.getLastErrorString().c_str() + "\nReboot to try again", 4, true);
             break;
 
         case HTTP_UPDATE_NO_UPDATES:
@@ -71,7 +43,7 @@ void f(t_httpUpdate_return status) {
         case HTTP_UPDATE_OK:
             Log.log("HTTP_UPDATE_OK");
             Settings::getInstance()->save();
-            Screen::getInstance()->appendToPrompt("Update successful\n Restarting in 3 seconds");
+            Screen::getInstance()->appendToPrompt("Update successful\n Restarting in 3 seconds", 4, true);
             delay(3000);
             esp_restart();
     }
@@ -161,11 +133,14 @@ static void action(GxFT5436::Event event) {
 void setup(void) {
   Serial.begin(115200);
 
+  if (!SPIFFS.begin()) {
+      Log.log("SPIFFS initialisation failed!");
+  }
+  Log.log("SPIFFS available");
+
   tft.init();
   tft.setRotation(3);
   tft.invertDisplay(1);
-
-  loadFonts();
 
   Settings::getInstance()->loadDefault();
   Settings::getInstance()->load();
@@ -187,22 +162,22 @@ void setup(void) {
       proceed = false;
       Log.log("Filesystem version does not match target version. Trying to update");
 
-      Screen::getInstance()->showPrompt("Filesystem version does not match target version\nCurrent: " +
+      Screen::getInstance()->showPrompt("Filesystem version does not match target version\ncurrent: " +
       getCurrentFilesystemVersionString() +
-      "\tTarget: " +
+      ", target: " +
       getTargetFilesystemVersionString() +
       "\nCreate an AP with following credentials:\nSSID: \"" +
       (char *)Settings::getInstance()->general.ssid +
       "\", pass: \"" +
       (char *)Settings::getInstance()->general.pass +
-      "\""
-      );
+      "\"",
+      4, true);
 
       networking.connectWiFi(TIME_INFINITY, (char *)Settings::getInstance()->general.ssid, (char *)Settings::getInstance()->general.pass);
       while(WiFi.status() != WL_CONNECTED){
           delay(50);
       }
-      Screen::getInstance()->appendToPrompt("WiFi connected, updating... this may take a few minutes");
+      Screen::getInstance()->appendToPrompt("WiFi connected, updating... this may take a while", 4, true);
       updater.updateFS(getTargetFilesystemVersionString(), f);
   }
 
@@ -238,16 +213,9 @@ void setup(void) {
     //  }
 
 
-    //  loadFonts();
-
-
-
 
       Screen::getInstance()->reset();
       Screen::getInstance()->setGaugeMode();
-
-    //  networking.connectWiFi(false);
-    //  networking.serverSetup();
 
       ledcWrite(0, 255);
   }
