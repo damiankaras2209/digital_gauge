@@ -17,68 +17,6 @@ Settings* Settings::getInstance()
 
 void Settings::loadDefault() {
 
-    strcpy((char *)(general.ssid), "ESP32");
-    strcpy((char *)(general.pass), "12345678");
-    strcpy((char *)(general.ssid), "dlink-74A1");
-    strcpy((char *)(general.pass), "fdpqg49953");
-
-    visual.antialiasing = true;
-	visual.dark = true;
-	visual.drawMainScaleLine = false;
-
-	visual.width = 480;
-	visual.height = 320;
-
-	visual.offsetX = -2; //17
-	visual.offsetY = -4; //29
-
-	visual.ellipseA = 216;
-	visual.ellipseB = 116;
-
-	visual.promptWidth = 330;
-	visual.promptHeight = 120;
-
-	visual.needleCenterRadius = 20;
-	visual.needleCenterOffset = 75;
-	visual.needleLength = 112; //97
-	visual.needleTopWidth = 2;
-	visual.needleBottomWidth = 10;
-
-	visual.timePosY = -60; //Centre centre
-	visual.timeSize = 36;
-	visual.datePosY = -35; //Centre centre
-	visual.dateSize = 16;
-	visual.scaleSize = 12;
-
-	visual.scaleMainWidth = 7;
-	visual.scaleLargeWidth = 4;
-	visual.scaleSmallWidth = 2;
-	visual.scaleLargeLength = 17;
-	visual.scaleSmallLength = 7;
-	visual.scaleLargeSteps = 12;
-	visual.scaleSmallSteps = 4;
-	visual.scaleAccColorEvery = 8;
-	visual.scaleTextSteps = 4;
-	visual.scaleTextOffset = 35;
-	visual.scaleAntialiasing = 4;
-	visual.internalEllipseDistance = 10;
-
-	visual.backgroundColor = TFT_WHITE;
-	visual.scaleColor = TFT_GREEN;
-	visual.scaleAccColor = TFT_RED;
-	visual.needleCenterColor = 0x31A6;
-	visual.fontColor = visual.scaleColor;
-	visual.iconColor = visual.scaleColor;
-	visual.needleColor = TFT_RED;
-
-	if(visual.dark) {
-		visual.scaleColor = TFT_GREEN;
-		visual.backgroundColor= TFT_BLACK;
-		visual.needleCenterColor = TFT_DARKGREY;
- 	}
-
-	visual.needleCenterColor = 0x31A6;
-
 	for(int i=0; i<6; i++) {
         input[i].r = 0;
         input[i].type = Logarithmic;
@@ -136,7 +74,69 @@ void Settings::loadDefault() {
 
 }
 
+void Settings::init() {
+
+    general[SSID] = new Field("SSID", "dlink-74A1");
+    general[PASS] = new Field("pass", "fdpqg49953");
+    general[WIDTH] = new Field("width", 480, false);
+    general[HEIGHT] = new Field("height", 320, false);
+    general[OFFSET_Y] = new Field("offset_y", -2);
+    general[OFFSET_X] = new Field("offset_x", -4);
+    general[ELLIPSE_A] = new Field("ellipse_A", 216);
+    general[ELLIPSE_B] = new Field("ellipse_B", 116);
+    general[PROMPT_WIDTH] = new Field("prompt_width", 330);
+    general[PROMPT_HEIGHT] = new Field("prompt_height", 120);
+
+    general[NEEDLE_CENTER_RADIUS] = new Field("needle_center_radius", 20);
+    general[NEEDLE_CENTER_OFFSET] = new Field("needle_center_offset", 75);
+    general[NEEDLE_LENGTH] = new Field("needle_length", 112);
+    general[NEEDLE_TOP_WIDTH] = new Field("needle_top_width", 2);
+    general[NEEDLE_BOTTOM_WIDTH] = new Field("needle_bottom_width", 10);
+
+    general[TIME_POS_Y] = new Field("time_pos_Y", -60);
+    general[TIME_SIZE] = new Field("time_size", 36, false);
+    general[DATE_POS_Y] = new Field("date_pos_Y", -35);
+    general[DATE_SIZE] = new Field("date_size", 16, false);
+    general[SCALE_SIZE] = new Field("scale_size", 12, false);
+
+    general[SCALE_MAIN_WIDTH] = new Field("scale_main_width", 7);
+    general[SCALE_LARGE_WIDTH] = new Field("scale_large_width", 4);
+    general[SCALE_SMALL_WIDTH] = new Field("scale_small_width", 2);
+    general[SCALE_LARGE_LENGTH] = new Field("scale_large_length", 17);
+    general[SCALE_SMALL_LENGTH] = new Field("scale_small_length", 7);
+    general[SCALE_LARGE_STEPS] = new Field("scale_large_steps", 12);
+    general[SCALE_SMALL_STEPS] = new Field("scale_small_steps", 4);
+    general[SCALE_ACC_COLOR_EVERY] = new Field("scale_acc_color_every", 8);
+    general[SCALE_TEXT_STEPS] = new Field("scale_text_steps", 4);
+    general[SCALE_TEXT_OFFSET] = new Field("scale_text_offset", 35);
+
+    general[BACKGROUND_COLOR] = new Field("background_color", (float)TFT_BLACK);
+    general[SCALE_COLOR] = new Field("scale_color", TFT_GREEN);
+    general[SCALE_ACC_COLOR] = new Field("scale_acc_color", TFT_RED);
+    general[NEEDLE_CENTER_COLOR] = new Field("needle_center_color", 0x31A6);
+    general[FONT_COLOR] = new Field("font_color", TFT_GREEN);
+    general[ICON_COLOR] = new Field("icon_color", TFT_GREEN);
+    general[NEEDLE_COLOR] = new Field("needle_color", TFT_RED);
+
+//    for(int i=HEIGHT+1; i<FIELDS_SIZE; i++) {
+//        fields[i] = new Field("as", (float)i);
+//    }
+
+//    for(int i=0; i<FIELDS_SIZE; i++) {
+//        fields[i]->setDefault();
+//    }
+
+//    Log.logf("%s: %d\n", fields[OFFSET_Y]->getName().c_str(), fields[OFFSET_Y]->get<int>());
+//    Log.logf("%s: %f\n", fields[OFFSET_Y]->getName().c_str(), fields[OFFSET_Y]->get<float>());
+//    Log.logf("%s: %s\n", fields[OFFSET_Y]->getName().c_str(), fields[OFFSET_Y]->get<bool>() ? "true" : "false");
+//
+//    Log.logf("%s: %s\n", fields[OFFSET_X]->getName().c_str(), fields[OFFSET_X]->getString().c_str());
+////    fields[OFFSET_X]->set("jan pawel");
+//    Log.logf("%s: %s\n", fields[OFFSET_X]->getName().c_str(), fields[OFFSET_X]->getString().c_str());
+}
+
 void Settings::load() {
+
     Log.log("Loading settings");
     if(SPIFFS.exists("/settings.json")) {
         StaticJsonDocument<4*1024> doc;
@@ -147,17 +147,44 @@ void Settings::load() {
             loadDefault();
         }
 
-        strcpy((char *)settings->general.ssid, doc["ssid"] | "");
-        strcpy((char *)settings->general.pass, doc["pass"] | "");
-        visual.offsetX = doc["offsetX"] | 0;
-        visual.offsetY = doc["offsetY"] | 0;
-        visual.ellipseA = doc["ellipseA"] | 0;
-        visual.ellipseB = doc["ellipseB"] | 0;
-        visual.needleCenterRadius = doc["needleCenterRadius"] | 0;
-        visual.needleCenterOffset = doc["needleCenterOffset"] | 0;
-        visual.needleLength = doc["needleLength"] | 0;
-        visual.needleBottomWidth = doc["needleBottomWidth"] | 0;
-        visual.needleTopWidth = doc["needleTopWidth"] | 0;
+
+        for(int i=0; i<FIELDS_SIZE; i++) {
+            switch (general[i]->getType()) {
+                case FLOAT: {
+                    float f = doc[general[i]->getName()] | general[i]->getDefault<float>();
+                    general[i]->set(f);
+                    Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
+                    break;
+                }
+                case STRING: {
+                    char c[64] = "";
+                    strcpy((char *)c, doc[general[i]->getName()] | general[i]->getDefaultString().c_str());
+                    general[i]->set((const char*)c);
+                    Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
+                    break;
+                }
+            }
+//            switch (fields[i]->getType()) {
+//                case FLOAT: Log.logf("%s: %f\n", fields[i]->getName().c_str(), fields[i]->get<float>()); break;
+//                case STRING: Log.logf("%s: %s\n", fields[i]->getName().c_str(), fields[i]->getString().c_str()); break;
+//            }
+        }
+
+//        for(int i=0; i<FIELDS_SIZE; i++) {
+//
+//        }
+
+//        strcpy((char *)settings->general.ssid, doc["ssid"] | "");
+//        strcpy((char *)settings->general.pass, doc["pass"] | "");
+//        visual.offsetX = doc["offsetX"]. | 0;
+//        visual.offsetY = doc["offsetY"] | 0;
+//        visual.ellipseA = doc["ellipseA"] | 0;
+//        visual.ellipseB = doc["ellipseB"] | 0;
+//        visual.needleCenterRadius = doc["needleCenterRadius"] | 0;
+//        visual.needleCenterOffset = doc["needleCenterOffset"] | 0;
+//        visual.needleLength = doc["needleLength"] | 0;
+//        visual.needleBottomWidth = doc["needleBottomWidth"] | 0;
+//        visual.needleTopWidth = doc["needleTopWidth"] | 0;
 
         for(int i=0; i<6; i++) {
             input[i].r =            doc["input_" + (String)i + "_rballance"].as<float>();
@@ -222,39 +249,55 @@ void Settings::load() {
 }
 
 void Settings::save() {
+    Log.log("Saving settings");
     if(SPIFFS.exists("/settings.json"))
         SPIFFS.remove("/settings.json");
     fs::File file = SPIFFS.open("/settings.json", "w");
     StaticJsonDocument<4*1024> doc;
 
+    for(int i=0; i<FIELDS_SIZE; i++) {
+        switch (general[i]->getType()) {
+            case FLOAT: {
+                doc[general[i]->getName()] = general[i]->get<float>();
+                Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
+                break;
+            }
+            case STRING: {
+                doc[general[i]->getName()] = (String)general[i]->getString().c_str();
+                Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
+                break;
+            }
+        }
+    }
 
-    doc["ssid"] = (String)(char*)general.ssid;
-    doc["pass"] = (String)(char*)general.pass;
-    doc["offsetX"] = visual.offsetX;
-    doc["offsetY"] = visual.offsetY;
-    doc["ellipseA"] = visual.ellipseA;
-    doc["ellipseB"] = visual.ellipseB;
-    doc["needleCenterRadius"] = visual.needleCenterRadius;
-    doc["needleCenterOffset"] = visual.needleCenterOffset;
-    doc["needleLength"] = visual.needleLength;
-    doc["needleBottomWidth"] = visual.needleBottomWidth;
-    doc["needleTopWidth"] = visual.needleTopWidth;
-    for(int i=0; i<6; i++) {
-        doc["input_" + (String)i + "_rballance"] = input[i].r;
-        doc["input_" + (String)i + "_type"] = input[i].type;
-        doc["input_" + (String)i + "_beta"] = input[i].beta;
-        doc["input_" + (String)i + "_r25"] = input[i].r25;
-        doc["input_" + (String)i + "_rmin"] = input[i].rmin;
-        doc["input_" + (String)i + "_rmax"] = input[i].rmax;
-        doc["input_" + (String)i + "_max_val"] = input[i].maxVal;
-    }
-    for(int i=ADS1115_0; i<LAST; i++) {
-        doc["dataDisplay_" + (String)i + "_en"] = dataDisplay[i].enable;
-        doc["dataDisplay_" + (String)i + "_name"] = (String)(char*)dataDisplay[i].name;
-        doc["dataDisplay_" + (String)i + "_unit"] = (String)(char*)dataDisplay[i].unit;
-        doc["dataDisplay_" + (String)i + "_scaleStart"] = dataDisplay[i].scaleStart;
-        doc["dataDisplay_" + (String)i + "_scaleEnd"] = dataDisplay[i].scaleEnd;
-    }
+
+//    doc["ssid"] = (String)(char*)general.ssid;
+//    doc["pass"] = (String)(char*)general.pass;
+//    doc["offsetX"] = visual.offsetX;
+//    doc["offsetY"] = visual.offsetY;
+//    doc["ellipseA"] = visual.ellipseA;
+//    doc["ellipseB"] = visual.ellipseB;
+//    doc["needleCenterRadius"] = visual.needleCenterRadius;
+//    doc["needleCenterOffset"] = visual.needleCenterOffset;
+//    doc["needleLength"] = visual.needleLength;
+//    doc["needleBottomWidth"] = visual.needleBottomWidth;
+//    doc["needleTopWidth"] = visual.needleTopWidth;
+//    for(int i=0; i<6; i++) {
+//        doc["input_" + (String)i + "_rballance"] = input[i].r;
+//        doc["input_" + (String)i + "_type"] = input[i].type;
+//        doc["input_" + (String)i + "_beta"] = input[i].beta;
+//        doc["input_" + (String)i + "_r25"] = input[i].r25;
+//        doc["input_" + (String)i + "_rmin"] = input[i].rmin;
+//        doc["input_" + (String)i + "_rmax"] = input[i].rmax;
+//        doc["input_" + (String)i + "_max_val"] = input[i].maxVal;
+//    }
+//    for(int i=ADS1115_0; i<LAST; i++) {
+//        doc["dataDisplay_" + (String)i + "_en"] = dataDisplay[i].enable;
+//        doc["dataDisplay_" + (String)i + "_name"] = (String)(char*)dataDisplay[i].name;
+//        doc["dataDisplay_" + (String)i + "_unit"] = (String)(char*)dataDisplay[i].unit;
+//        doc["dataDisplay_" + (String)i + "_scaleStart"] = dataDisplay[i].scaleStart;
+//        doc["dataDisplay_" + (String)i + "_scaleEnd"] = dataDisplay[i].scaleEnd;
+//    }
     if (serializeJson(doc, file) == 0) {
         Log.log("Failed to write to file");
     }

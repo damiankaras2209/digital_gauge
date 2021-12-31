@@ -85,28 +85,50 @@ boolean Networking::isWiFiConnected() {
 String processor(const String& var){
 //    Log.log(var);
     char c[10];
-    if(var == "ssid"){
-        return String((char *)settings->general.ssid);
-    } else if(var == "pass") {
-        return String((char *)settings->general.pass);
-    } else if(var == "offsetX") {
-        return itoa(settings->visual.offsetX, c, 10);
-    } else if(var == "offsetY") {
-        return itoa(settings->visual.offsetY, c, 10);
-    } else if(var == "ellipseA") {
-        return itoa(settings->visual.ellipseA, c, 10);
-    } else if(var == "ellipseB") {
-        return itoa(settings->visual.ellipseB, c, 10);
-    } else if(var == "needleCenterRadius") {
-        return itoa(settings->visual.needleCenterRadius, c, 10);
-    } else if(var == "needleCenterOffset") {
-        return itoa(settings->visual.needleCenterOffset, c, 10);
-    } else if(var == "needleLength") {
-        return itoa(settings->visual.needleLength, c, 10);
-    } else if(var == "needleBottomWidth") {
-        return itoa(settings->visual.needleBottomWidth, c, 10);
-    } else if(var == "needleTopWidth") {
-        return itoa(settings->visual.needleTopWidth, c, 10);
+
+    if(var == "settings"){
+
+        std::stringstream ss;
+
+        for(int i=0; i<FIELDS_SIZE; i++) {
+            if(settings->general[i]->isConfigurable()) {
+                ss << "<p>" << settings->general[i]->getName() << "</p>";
+                ss << "<input value='";
+                switch (settings->general[i]->getType()) {
+                    case FLOAT: {
+                        ss << settings->general[i]->get<float>();
+                        ss << "' type='number'";
+                        break;
+                    }
+                    case STRING: {
+                        ss << settings->general[i]->getString();
+                        ss << "' type='text'";
+                        break;
+                    }
+                }
+                ss << " id='";
+                ss << settings->general[i]->getName();
+                ss << "'>\n";
+            }
+        }
+
+        return String(ss.str().c_str());
+
+    } else if(var == "settings_js"){
+
+        std::stringstream ss;
+
+        for(int i=0; i<FIELDS_SIZE; i++) {
+            if(settings->general[i]->isConfigurable()) {
+                ss << "data.append('";
+                ss << settings->general[i]->getName();
+                ss << "', document.getElementById('";
+                ss << settings->general[i]->getName();
+                ss << "').value);\n";
+            }
+        }
+
+        return String(ss.str().c_str());
 
     } else if(var == "dataDisplayLength") {
         return itoa(Settings::LAST, c, 10);
@@ -221,7 +243,7 @@ void Networking::serverSetupTask(void * pvParameters) {
         for(int i=0;i<params;i++){
             AsyncWebParameter* p = request->getParam(i);
             if(p->isPost()){
-                Log.logf("POST[%s]: %s", p->name().c_str(), p->value().c_str());
+                Log.logf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
 
                 std::string str = p->name().c_str();
 
@@ -270,28 +292,19 @@ void Networking::serverSetupTask(void * pvParameters) {
                         settings->dataDisplay[i].scaleEnd = strtof(p->value().c_str(), NULL);
                 }
 
-                if(p->name()=="ssid")
-                    strcpy((char *)settings->general.ssid, p->value().c_str());
-                else if(p->name()=="pass")
-                    strcpy((char *)settings->general.pass, p->value().c_str());
-                else if(p->name()=="offsetX")
-                    settings->visual.offsetX = atoi(p->value().c_str());
-                else if(p->name()=="offsetY")
-                    settings->visual.offsetY = atoi(p->value().c_str());
-                else if(p->name()=="ellipseA")
-                    settings->visual.ellipseA = atoi(p->value().c_str());
-                else if(p->name()=="ellipseB")
-                    settings->visual.ellipseB = atoi(p->value().c_str());
-                else if(p->name()=="needleCenterRadius")
-                    settings->visual.needleCenterRadius = atoi(p->value().c_str());
-                else if(p->name()=="needleCenterOffset")
-                    settings->visual.needleCenterOffset = atoi(p->value().c_str());
-                else if(p->name()=="needleLength")
-                    settings->visual.needleLength = atoi(p->value().c_str());
-                else if(p->name()=="needleBottomWidth")
-                    settings->visual.needleBottomWidth = atoi(p->value().c_str());
-                else if(p->name()=="needleTopWidth")
-                    settings->visual.needleTopWidth = atoi(p->value().c_str());
+                for(int i=0; i<FIELDS_SIZE; i++) {
+                    if(settings->general[i]->getName() == p->name().c_str()) {
+                        switch (settings->general[i]->getType()) {
+                            case FLOAT: {
+                                settings->general[i]->set(atoi(p->value().c_str())); break;
+                            }
+                            case STRING: {
+                                settings->general[i]->set(p->value().c_str()); break;
+                            }
+                        }
+                    }
+
+                }
 
             }
         }

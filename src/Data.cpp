@@ -14,7 +14,7 @@ Data::Data() {
 void Data::canReset(MCP2515* mcp) {
     MCP2515::ERROR error = mcp->reset();
     if(error == MCP2515::ERROR_OK) {
-        Log.log("MCP2515 good");
+//        Log.log("MCP2515 good");
         mcp->setBitrate(CAN_500KBPS, MCP_8MHZ);
         mcp->setListenOnlyMode();
     } else {

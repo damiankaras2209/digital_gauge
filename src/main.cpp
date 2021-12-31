@@ -70,20 +70,20 @@ static void action(GxFT5436::Event event) {
             }
             case GAUGES: {
                 //show menu
-                if(Screen::getInstance()->getView() != PROMPT && x > Settings::getInstance()->visual.width/2 - Settings::getInstance()->visual.needleCenterOffset && x < Settings::getInstance()->visual.width/2 + Settings::getInstance()->visual.needleCenterOffset && y < Settings::getInstance()->visual.height/2) {
-                    Screen::getInstance()->showPrompt("SSID: " + String((char *)Settings::getInstance()->general.ssid) + "\npass: " + String((char *)Settings::getInstance()->general.pass) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
+                if(Screen::getInstance()->getView() != PROMPT && x > Settings::getInstance()->general[WIDTH]->get<int>()/2 - Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>() && x < Settings::getInstance()->general[WIDTH]->get<int>()/2 + Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>() && y < Settings::getInstance()->general[HEIGHT]->get<int>()/2) {
+                    Screen::getInstance()->showPrompt("SSID: " + String((char *)Settings::getInstance()->general[SSID]->getString().c_str()) + "\npass: " + String((char *)Settings::getInstance()->general[PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
                 }
 
                 //change gauge
 
                 Side side = SIDE_LAST;
-                if(x < Settings::getInstance()->visual.width/2-Settings::getInstance()->visual.needleCenterOffset)
+                if(x < Settings::getInstance()->general[WIDTH]->get<int>()/2-Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>())
                     side = LEFT;
-                else if(x > Settings::getInstance()->visual.width/2+Settings::getInstance()->visual.needleCenterOffset)
+                else if(x > Settings::getInstance()->general[WIDTH]->get<int>()/2+Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>())
                     side = RIGHT;
-                else if(x > Settings::getInstance()->visual.width/2-Settings::getInstance()->visual.needleCenterOffset &&
-                        x < Settings::getInstance()->visual.width/2+Settings::getInstance()->visual.needleCenterOffset &&
-                        y > Settings::getInstance()->visual.height/2)
+                else if(x > Settings::getInstance()->general[WIDTH]->get<int>()/2-Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>() &&
+                        x < Settings::getInstance()->general[WIDTH]->get<int>()/2+Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>() &&
+                        y > Settings::getInstance()->general[HEIGHT]->get<int>()/2)
                     side = MID;
                 
                 if(side != SIDE_LAST) {
@@ -142,6 +142,9 @@ void setup(void) {
   tft.setRotation(3);
   tft.invertDisplay(1);
 
+
+  Settings::getInstance()->init();
+
   Settings::getInstance()->loadDefault();
   Settings::getInstance()->load();
   Settings::DataSource selected[SIDE_LAST];
@@ -167,13 +170,13 @@ void setup(void) {
       ", target: " +
       getTargetFilesystemVersionString() +
       "\nCreate an AP with following credentials:\nSSID: \"" +
-      (char *)Settings::getInstance()->general.ssid +
+      (char *)Settings::getInstance()->general[SSID]->getString().c_str() +
       "\", pass: \"" +
-      (char *)Settings::getInstance()->general.pass +
+      (char *)Settings::getInstance()->general[PASS]->getString().c_str() +
       "\"",
       4, true);
 
-      networking.connectWiFi(TIME_INFINITY, (char *)Settings::getInstance()->general.ssid, (char *)Settings::getInstance()->general.pass);
+      networking.connectWiFi(TIME_INFINITY, (char *)Settings::getInstance()->general[SSID]->getString().c_str(), (char *)Settings::getInstance()->general[PASS]->getString().c_str());
       while(WiFi.status() != WL_CONNECTED){
           delay(50);
       }
@@ -183,7 +186,7 @@ void setup(void) {
 
   if(proceed) {
 
-      networking.connectWiFi(CONNECTING_TIME, (char *)Settings::getInstance()->general.ssid, (char *)Settings::getInstance()->general.pass);
+      networking.connectWiFi(CONNECTING_TIME, (char *)Settings::getInstance()->general[SSID]->getString().c_str(), (char *)Settings::getInstance()->general[PASS]->getString().c_str());
 
       data.init();
 

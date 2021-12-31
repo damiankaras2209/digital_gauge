@@ -9,8 +9,141 @@
 #include <TFT_eSPI.h>
 #include "ArduinoJson.h"
 
-#define OFFSET_X 0
-#define OFFSET_Y 1
+enum Fields : unsigned int {
+    SSID,
+    PASS,
+
+    WIDTH,
+    HEIGHT,
+    OFFSET_Y,
+    OFFSET_X,
+    ELLIPSE_A, //half of ellipse width (x-axis)
+    ELLIPSE_B, //half of ellipse height (y-axis)
+    PROMPT_WIDTH,
+    PROMPT_HEIGHT,
+
+    NEEDLE_CENTER_RADIUS,
+    NEEDLE_CENTER_OFFSET,
+    NEEDLE_LENGTH,
+    NEEDLE_TOP_WIDTH, //in degrees
+    NEEDLE_BOTTOM_WIDTH, //in pixles
+
+    TIME_POS_Y,
+    TIME_SIZE,
+    DATE_POS_Y,
+    DATE_SIZE,
+    SCALE_SIZE,
+
+    SCALE_MAIN_WIDTH,
+    SCALE_LARGE_WIDTH,
+    SCALE_SMALL_WIDTH,
+    SCALE_LARGE_LENGTH,
+    SCALE_SMALL_LENGTH,
+    SCALE_LARGE_STEPS,
+    SCALE_SMALL_STEPS,
+    SCALE_ACC_COLOR_EVERY,
+    SCALE_TEXT_STEPS,
+    SCALE_TEXT_OFFSET,
+//    SCALE_ANTIALIASING,
+//    INTERNAL_ELLIPSE_DISTANCE,
+
+    BACKGROUND_COLOR,
+    SCALE_COLOR,
+    SCALE_ACC_COLOR,
+    NEEDLE_CENTER_COLOR,
+    FONT_COLOR,
+    ICON_COLOR,
+    NEEDLE_COLOR,
+    FIELDS_SIZE
+
+};
+
+//enum InputFields {
+//    R,
+//    TYPE,
+//    BETA,
+//    R25,
+//    RMIN,
+//    RMAX,
+//    MAX_VAL,
+//    INPUT_FIELDS_SIZE
+//};
+
+enum Type {
+    FLOAT, STRING//, INPUTS, DATA
+};
+
+struct Field {
+    Type _type;
+    bool _configurable;
+    std::string _name;
+    float _defaultFloat;
+    volatile float _valueFloat;
+    std::string _defaultChar;
+    std::string _valueChar;
+    Field(const char* c, float d, bool configurable = true) {
+        _type = FLOAT;
+        _configurable = configurable;
+        _name = std::string(c);
+        _valueFloat = d;
+        _defaultFloat = d;
+    }
+
+    Field(const char* c, const char* d, bool configurable = true) {
+        _type = STRING;
+        _configurable = configurable;
+        _name = std::string(c);
+        _defaultChar = std::string(d);
+        _valueChar = std::string(d);
+    }
+
+    void set(float v) {
+        _valueFloat = v;
+    }
+
+    void set(const char* v) {
+        _valueChar = std::string(v);
+    }
+
+    void setDefault() {
+        _valueFloat = _defaultFloat;
+        _valueChar = std::string(_defaultChar);
+    }
+
+    std::string getName() {
+        return _name;
+    }
+
+    bool isConfigurable() {
+        return _configurable;
+    }
+
+    template<class T>
+    T get() {
+        return static_cast<T>(_valueFloat);
+    }
+
+    template<class T>
+    T getDefault() {
+        return static_cast<T>(_defaultFloat);
+    }
+
+    std::string getString() {
+        return _valueChar;
+    }
+
+    std::string getDefaultString() {
+        return _defaultChar;
+    }
+
+    std::string getChar() {
+        return _valueChar.c_str();
+    }
+
+    Type getType() const {
+        return _type;
+    }
+};
 
 
 class Settings {
@@ -19,59 +152,6 @@ class Settings {
         static Settings* settings;
 
     public:
-
-        typedef struct GeneralSettings {
-            char ssid[32] = "";
-            char pass[32] = "";
-        } GeneralSettings;
-
-        typedef struct VisualSettings {
-           int16_t width;
-           int16_t height;
-           int16_t offsetX;
-           int16_t offsetY;
-           int16_t ellipseA; //half of ellipse width (x-axis)
-           int16_t ellipseB; //half of ellipse height (y-axis)
-           int16_t promptWidth;
-           int16_t promptHeight;
-
-           bool antialiasing;
-           bool dark;
-           bool drawMainScaleLine;
-
-           int16_t needleCenterRadius;
-           int16_t needleCenterOffset;
-           int16_t needleLength;
-           int16_t needleTopWidth; //in degrees
-           int16_t needleBottomWidth; //in pixles
-
-           int16_t timePosY;
-           int16_t timeSize;
-           int16_t datePosY;
-           int16_t dateSize;
-           int16_t scaleSize;
-
-           int16_t scaleMainWidth;
-           int16_t scaleLargeWidth;
-           int16_t scaleSmallWidth;
-           int16_t scaleLargeLength;
-           int16_t scaleSmallLength;
-           int16_t scaleLargeSteps;
-           int16_t scaleSmallSteps;
-           int16_t scaleAccColorEvery;
-           int16_t scaleTextSteps;
-           int16_t scaleTextOffset;
-           int16_t scaleAntialiasing;
-           int16_t internalEllipseDistance;
-
-           uint32_t backgroundColor;
-           uint32_t scaleColor;
-           uint32_t scaleAccColor;
-           uint32_t needleCenterColor;
-           uint32_t fontColor;
-           uint32_t iconColor;
-           uint32_t needleColor;
-        } VisualSettings;
 
         enum InputType {
             Linear, Logarithmic, Voltage, Dummy
@@ -128,6 +208,7 @@ class Settings {
 	public:
 		Settings();
 		static Settings *getInstance();
+		void init();
 		void loadDefault();
 		void load();
 		void save();
@@ -136,10 +217,10 @@ class Settings {
 
 	 public:
 
-        volatile GeneralSettings general;
+        Field* general[Fields::FIELDS_SIZE];
+
 		volatile InputSettings input[6];
 		volatile DataDisplaySettings dataDisplay[LAST];
-		volatile VisualSettings visual;
 
 };
 
