@@ -4,38 +4,18 @@
         <title>ESP32</title>
         <meta charset='UTF-8'>
         <script>
+
+        const INPUT_0 = %INPUT_0%;
+        const INPUT_SETTINGS_SIZE = %INPUT_SETTINGS_SIZE%;
+        const INPUT_SIZE = %INPUT_SIZE%;
+        const DATA_0 = %DATA_0%;
+        const DATA_SETTINGS_SIZE = %DATA_SETTINGS_SIZE%;
+        const DATA_SIZE = %DATA_SIZE%;
+
         function send(){
           let data = new FormData();
-          data.append('ssid', document.getElementById('ssid').value);
-          data.append('pass', document.getElementById('pass').value);
-          data.append('offsetX', document.getElementById('offsetX').value);
-          data.append('offsetY', document.getElementById('offsetY').value);
-          data.append('ellipseA', document.getElementById('ellipseA').value);
-          data.append('ellipseB', document.getElementById('ellipseB').value);
-          data.append('needleCenterRadius', document.getElementById('needleCenterRadius').value);
-          data.append('needleCenterOffset', document.getElementById('needleCenterOffset').value);
-          data.append('needleLength', document.getElementById('needleLength').value);
-          data.append('needleBottomWidth', document.getElementById('needleBottomWidth').value);
-          data.append('needleTopWidth', document.getElementById('needleTopWidth').value);
 
-          for(let i=0; i<6; i++) {
-              data.append('input_' + i + '_rballance', document.getElementById('input_' + i + '_rballance').value);
-              data.append('input_' + i + '_type', document.getElementById('input_' + i + '_type').value);
-              data.append('input_' + i + '_beta', document.getElementById('input_' + i + '_beta').value);
-              data.append('input_' + i + '_r25', document.getElementById('input_' + i + '_r25').value);
-              data.append('input_' + i + '_rmin', document.getElementById('input_' + i + '_rmin').value);
-              data.append('input_' + i + '_rmax', document.getElementById('input_' + i + '_rmax').value);
-              data.append('input_' + i + '_max_val', document.getElementById('input_' + i + '_max_val').value);
-          }
-
-          for(let i=0; i<%dataDisplayLength%; i++) {
-              data.append('data_' + i + '_en', document.getElementById('data_' + i + '_en').checked ? "1" : "0");
-              data.append('data_' + i + '_name', document.getElementById('data_' + i + '_name').value);
-              data.append('data_' + i + '_unit', document.getElementById('data_' + i + '_unit').value);
-              data.append('data_' + i + '_scaleStart', document.getElementById('data_' + i + '_scaleStart').value);
-              data.append('data_' + i + '_scaleEnd', document.getElementById('data_' + i + '_scaleEnd').value);
-
-          }
+%settings_js%
 
           let xhr = new XMLHttpRequest();
           xhr.open('POST', 'settingsSet');
@@ -57,43 +37,43 @@
 
             switch (preset) {
                 case -1:
-                    document.getElementById('input_' + i + '_rballance').value = 0;
-                    document.getElementById('data_' + i + '_name').value = "";
-                    document.getElementById('data_' + i + '_unit').value = "u";
-                    document.getElementById('data_' + i + '_scaleStart').value = 0;
-                    document.getElementById('data_' + i + '_scaleEnd').value = 0;
-                    document.getElementById('input_' + i + '_type').value = 0;
-                    document.getElementById('input_' + i + '_beta').value = 0;
-                    document.getElementById('input_' + i + '_r25').value = 0;
-                    document.getElementById('input_' + i + '_rmin').value = 0;
-                    document.getElementById('input_' + i + '_rmax').value = 0;
-                    document.getElementById('input_' + i + '_max_val').value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 0).value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 1).selectedIndex = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 2).value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 3).value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 4).value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 5).value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 6).value = 0;
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 1).value = "";
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 2).value = "u";
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 3).value = 0;
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 4).value = 0;
                     break;
                 case 0:
-                    document.getElementById('input_' + i + '_rballance').value = 101.5;
-                    document.getElementById('data_' + i + '_name').value = "Ciśnienie oleju";
-                    document.getElementById('data_' + i + '_unit').value = "bar";
-                    document.getElementById('data_' + i + '_scaleStart').value = 0;
-                    document.getElementById('data_' + i + '_scaleEnd').value = 12;
-                    document.getElementById('input_' + i + '_type').selectedIndex = 0;
-                    document.getElementById('input_' + i + '_beta').value = 0;
-                    document.getElementById('input_' + i + '_r25').value = 0;
-                    document.getElementById('input_' + i + '_rmin').value = 3.0;
-                    document.getElementById('input_' + i + '_rmax').value = 160.0;
-                    document.getElementById('input_' + i + '_max_val').value = 10.0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 0).value = 101.5;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 1).selectedIndex = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 2).value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 3).value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 4).value = 3.0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 5).value = 160.0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 6).value = 10.0;
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 1).value = "Oil press";
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 2).value = "bar";
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 3).value = 0;
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 4).value = 12;
                     break;
                 case 1:
-                    document.getElementById('input_' + i + '_rballance').value = 10110.0;
-                    document.getElementById('data_' + i + '_name').value = "Temperatura oleju";
-                    document.getElementById('data_' + i + '_unit').value = "°C";
-                    document.getElementById('data_' + i + '_scaleStart').value = 30;
-                    document.getElementById('data_' + i + '_scaleEnd').value = 150;
-                    document.getElementById('input_' + i + '_type').selectedIndex = 1;
-                    document.getElementById('input_' + i + '_beta').value = 3800.0;
-                    document.getElementById('input_' + i + '_r25').value = 58000.0;
-                    document.getElementById('input_' + i + '_rmin').value = 0;
-                    document.getElementById('input_' + i + '_rmax').value = 0;
-                    document.getElementById('input_' + i + '_max_val').value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  0).value = 10110.0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  1).selectedIndex = 1;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  2).value = 3800.0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  3).value = 58000.0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  4).value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  5).value = 0;
+                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  6).value = 0;
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  +  1).value = "Oil temp";
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  +  2).value = "°C";
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  +  3).value = 30;
+                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  +  4).value = 150;
                     break;
             }
         }
@@ -129,22 +109,8 @@
     <body>
         <form onsubmit='return send()'>
             <h1>Ustawienia</h1><p id='frametime'>frametime: </p>
-            <h2>Ustawienia ogólne</h2>
-            <p>SSID</p><input value='%ssid%' type='text' id='ssid'>
-            <p>Hasło</p><input value='%pass%' type='text' id='pass'>
-            <h2>Ustawienia wyświetlania</h2>
-            <button onclick='return post("reset");window.location.reload(true); '>Przywróć domyślne</button>
             <button onclick='return reset();window.location.reload(true); '>Przywróć domyślne</button>
-            <p>Przesunięcie X</p><input value='%offsetX%' type='number' id='offsetX'>
-            <p>Przesunięcie Y</p><input value='%offsetY%' type='number' id='offsetY'>
-            <p>Szerokość elipsy</p><input value='%ellipseA%' type='number' id='ellipseA'>
-            <p>Wysokość elipsy</p><input value='%ellipseB%' type='number' id='ellipseB'>
-            <p>Promień środka wskazówki</p><input value='%needleCenterRadius%' type='number' id='needleCenterRadius'>
-            <p>Odległość środka wskazówki od środka elipsy</p><input value='%needleCenterOffset%' type='number' id='needleCenterOffset'>
-            <p>Długość wskazówki</p><input value='%needleLength%' type='number' id='needleLength'>
-            <p>Szerokość podstawy wskazówki</p><input value='%needleBottomWidth%' type='number' id='needleBottomWidth'>
-            <p>Szerokość końcówki wskazówki</p><input value='%needleTopWidth%' type='number' id='needleTopWidth'>
-            <p>Kolor</p><input type='color' id='color'>
+            %settings%
             <h2>Wejścia analogowe</h2>
             %input_table%
             <h2>Ustawienia danych</h2>

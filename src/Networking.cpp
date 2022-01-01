@@ -81,41 +81,79 @@ boolean Networking::isWiFiConnected() {
     return WiFi.status() == WL_CONNECTED;
 }
 
-
 String processor(const String& var){
 //    Log.log(var);
     char c[10];
-    if(var == "ssid"){
-        return String((char *)settings->general.ssid);
-    } else if(var == "pass") {
-        return String((char *)settings->general.pass);
-    } else if(var == "offsetX") {
-        return itoa(settings->visual.offsetX, c, 10);
-    } else if(var == "offsetY") {
-        return itoa(settings->visual.offsetY, c, 10);
-    } else if(var == "ellipseA") {
-        return itoa(settings->visual.ellipseA, c, 10);
-    } else if(var == "ellipseB") {
-        return itoa(settings->visual.ellipseB, c, 10);
-    } else if(var == "needleCenterRadius") {
-        return itoa(settings->visual.needleCenterRadius, c, 10);
-    } else if(var == "needleCenterOffset") {
-        return itoa(settings->visual.needleCenterOffset, c, 10);
-    } else if(var == "needleLength") {
-        return itoa(settings->visual.needleLength, c, 10);
-    } else if(var == "needleBottomWidth") {
-        return itoa(settings->visual.needleBottomWidth, c, 10);
-    } else if(var == "needleTopWidth") {
-        return itoa(settings->visual.needleTopWidth, c, 10);
+
+    if(var == "settings"){
+
+        std::stringstream ss;
+
+        for(int i=0; i<GENERAL_SETTINGS_SIZE; i++) {
+            if(settings->general[i]->isConfigurable()) {
+                ss << "<p>" << settings->general[i]->getName() << "</p>";
+                ss << settings->general[i]->getHTMLInput(i);
+            }
+        }
+
+        return String(ss.str().c_str());
+
+    } else if(var == "settings_js"){
+
+        std::stringstream ss;
+
+        for(int i=0; i<SETTINGS_SIZE; i++) {
+            if(settings->general[i]->isConfigurable()) {
+                switch(settings->general[i]->getType()) {
+                    case Settings::CHECKBOX: {
+                        ss << "data.append('";
+                        ss << i;
+                        ss << "', document.getElementById('";
+                        ss << i;
+                        ss << "').checked ? \"1\" : \"0\");\n";
+                        break;
+                    }
+                    default: {
+                        ss << "data.append('";
+                        ss << i;
+                        ss << "', document.getElementById('";
+                        ss << i;
+                        ss << "').value);\n";
+                        break;
+                    }
+                }
+
+            }
+        }
+
+        return String(ss.str().c_str());
 
     } else if(var == "dataDisplayLength") {
         return itoa(Settings::LAST, c, 10);
+
+    } else if(var == "INPUT_0") {
+        return itoa(INPUT_0, c, 10);
+
+    } else if(var == "INPUT_SETTINGS_SIZE") {
+        return itoa(INPUT_SETTINGS_SIZE, c, 10);
+
+    } else if(var == "INPUT_SIZE") {
+        return itoa(INPUT_SIZE, c, 10);
+
+    } else if(var == "DATA_0") {
+        return itoa(DATA_0, c, 10);
+
+    } else if(var == "DATA_SETTINGS_SIZE") {
+        return itoa(DATA_SETTINGS_SIZE, c, 10);
+
+    } else if(var == "DATA_SIZE") {
+        return itoa(DATA_SIZE, c, 10);
 
     } else if(var == "input_table") {
 
         std::stringstream ss;
         ss << "<table>\n<tr>";
-        for(int i=0; i<6; i++) {
+        for(int i=0; i<INPUT_SIZE; i++) {
             if(i<4)
                 ss << "<td>ADS1115_" << i << "</td>";
             else
@@ -123,59 +161,45 @@ String processor(const String& var){
         }
         ss << "</tr>\n<tr>";
 
-        for(int i=0; i<6; i++)
+        for(int i=0; i<INPUT_SIZE; i++)
             ss << "<td>Preset<select id='input_" << i << "_preset' onchange='return preset(" << i <<");' type='checkbox' ><option value='-1'>Puste</option><option value='0'>Ciśń. oleju</option><option value='1'>Temp. oleju</option></section></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>R<input value='" << settings->input[i].r << "' type='number' step='0.1' id='input_" << i << "_rballance'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++) {
-            ss << "<td>Typ<select id='input_" << i << "_type'>";
-            for(int j=0; j != Settings::Dummy; j++){
-                Settings::InputType type = static_cast<Settings::InputType>(j);
-                ss << "<option value='" << j <<"' " << (settings->input[i].type == j ? "selected" : "") << ">" << settings->inputTypeString[j].c_str() << "</option>";
+        ss << "</tr>\n";
+
+        for(int i=0; i<INPUT_SETTINGS_SIZE; i++) {
+            ss << "<tr>";
+            for(int j=0; j<INPUT_SIZE; j++) {
+                int ind = INPUT_0 + INPUT_SETTINGS_SIZE * j + i;
+                if(settings->general[ind]->isConfigurable())
+                    ss << "<td>" << settings->general[ind]->getName() << settings->general[ind]->getHTMLInput(ind) << "</td>";
             }
-            ss << "</select></td>";
+            ss << "</tr>\n";
         }
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>Beta<input value='" << settings->input[i].beta << "' type='number' step='0.1' id='input_" << i << "_beta'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>R25<input value='" << settings->input[i].r25 << "' type='number' step='0.1' id='input_" << i << "_r25'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>Rmin<input value='" << settings->input[i].rmin << "' type='number' step='0.1' id='input_" << i << "_rmin'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>Rmaks<input value='" << settings->input[i].rmax << "' type='number' step='0.1' id='input_" << i << "_rmax'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<6; i++)
-            ss << "<td>Maks. wartość<input value='" << settings->input[i].maxVal << "' type='number' step='0.1' id='input_" << i << "_max_val'></td>";
-        ss << "</tr>\n<table>";
+
+        ss << "</table>";
+
         return String(ss.str().c_str());
 
     } else if(var == "data_list") {
+
         std::stringstream ss;
+
         ss << "<table>\n<tr>";
-        for(int i=0; i<Settings::LAST; i++)
+        for(int i=0; i<DATA_SIZE; i++)
             ss << "<td>" << settings->dataSourceString[i].c_str() << "</td>";
         ss << "</tr>\n<tr>";
-        for(int i=0; i<Settings::LAST; i++)
-            ss <<"<td>Włącz<input type='checkbox' id='data_" << i << "_en' " << (settings->dataDisplay[i].enable ? "checked" : "") << "></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<Settings::LAST; i++)
-            ss << "<td>Nazwa<input value='" << (char *)(settings->dataDisplay[i].name) << "' type='text' id='data_" << i << "_name'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<Settings::LAST; i++)
-            ss << "<td>Jednostka<input value='" << (char *)(settings->dataDisplay[i].unit) << "' type='text' id='data_" << i << "_unit'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<Settings::LAST; i++)
-            ss << "<td>Początek skali<input value='" << settings->dataDisplay[i].scaleStart << "' type='number' step='1' id='data_" << i << "_scaleStart'></td>";
-        ss << "</tr>\n<tr>";
-        for(int i=0; i<Settings::LAST; i++)
-            ss << "<td>Koniec skali<input value='" << settings->dataDisplay[i].scaleEnd << "' type='number' step='1' id='data_" << i << "_scaleEnd'></td>";
-        ss << "</tr>\n<table>";
+
+        for(int i=0; i<DATA_SETTINGS_SIZE; i++) {
+            ss << "<tr>";
+            for(int j=0; j<DATA_SIZE; j++) {
+                int ind = DATA_0 + DATA_SETTINGS_SIZE * j + i;
+                if(settings->general[ind]->isConfigurable())
+                    ss << "<td>" << settings->general[ind]->getName() << settings->general[ind]->getHTMLInput(ind) << "</td>";
+            }
+            ss << "</tr>\n";
+        }
+
+        ss << "</table>";
+
         return String(ss.str().c_str());
     }
 
@@ -221,77 +245,21 @@ void Networking::serverSetupTask(void * pvParameters) {
         for(int i=0;i<params;i++){
             AsyncWebParameter* p = request->getParam(i);
             if(p->isPost()){
-                Log.logf("POST[%s]: %s", p->name().c_str(), p->value().c_str());
+                Log.logf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
 
-                std::string str = p->name().c_str();
-
-                if(str.find("input") != std::string::npos) {
-                    int i = str.at(6) - 48;
-                    std::string str2 = str.substr(8);
-
-                    if(str2.compare("rballance") == 0)
-                        settings->input[i].r = strtof(p->value().c_str(), NULL);
-                    else if(str2.compare("type") == 0)
-                        settings->input[i].type = static_cast<Settings::InputType>(strtof(p->value().c_str(), NULL));
-                    else if(str2.compare("beta") == 0)
-                        settings->input[i].beta = strtof(p->value().c_str(), NULL);
-                    else if(str2.compare("r25") == 0)
-                        settings->input[i].r25 = strtof(p->value().c_str(), NULL);
-                    else if(str2.compare("rmin") == 0)
-                        settings->input[i].rmin = strtof(p->value().c_str(), NULL);
-                    else if(str2.compare("rmax") == 0)
-                        settings->input[i].rmax = strtof(p->value().c_str(), NULL);
-                    else if(str2.compare("max_val") == 0)
-                        settings->input[i].maxVal = strtof(p->value().c_str(), NULL);
+                for(int i=0; i<SETTINGS_SIZE; i++) {
+                    if((String)i == p->name().c_str()) {
+                        switch (settings->general[i]->getType()) {
+                            case Settings::Type::STRING: {
+                                settings->general[i]->set(p->value().c_str()); break;
+                            }
+                            default: {
+                                settings->general[i]->set(strtof(p->value().c_str(), nullptr)); break;
+                            }
+                        }
+                    }
 
                 }
-
-                if(str.find("data") != std::string::npos) {
-
-                    int pos = str.find('_');
-                    int pos2 = str.find('_', pos + 1);
-
-//                    Log.logf("pos: %d, n: %d", pos, pos2-pos-1);
-//                    Log.logf("sub: %s", str.substr(pos+1,pos2-pos-1).c_str());
-//                    Log.logf("d: %d", strtol(str.substr(pos+1,pos2-pos-1).c_str(), NULL, DEC));
-
-                    int i = strtol(str.substr(pos+1,pos2-pos-1).c_str(), NULL, DEC);
-                    std::string str2 = str.substr(pos2+1);
-
-                    if(str2.compare("en") == 0)
-                        settings->dataDisplay[i].enable = atoi(p->value().c_str());
-                    else if(str2.compare("name") == 0)
-                        strcpy((char *)settings->dataDisplay[i].name, p->value().c_str());
-                    else if(str2.compare("unit") == 0)
-                        strcpy((char *)settings->dataDisplay[i].unit, p->value().c_str());
-                    else if(str2.compare("scaleStart") == 0)
-                        settings->dataDisplay[i].scaleStart = strtof(p->value().c_str(), NULL);
-                    else if(str2.compare("scaleEnd") == 0)
-                        settings->dataDisplay[i].scaleEnd = strtof(p->value().c_str(), NULL);
-                }
-
-                if(p->name()=="ssid")
-                    strcpy((char *)settings->general.ssid, p->value().c_str());
-                else if(p->name()=="pass")
-                    strcpy((char *)settings->general.pass, p->value().c_str());
-                else if(p->name()=="offsetX")
-                    settings->visual.offsetX = atoi(p->value().c_str());
-                else if(p->name()=="offsetY")
-                    settings->visual.offsetY = atoi(p->value().c_str());
-                else if(p->name()=="ellipseA")
-                    settings->visual.ellipseA = atoi(p->value().c_str());
-                else if(p->name()=="ellipseB")
-                    settings->visual.ellipseB = atoi(p->value().c_str());
-                else if(p->name()=="needleCenterRadius")
-                    settings->visual.needleCenterRadius = atoi(p->value().c_str());
-                else if(p->name()=="needleCenterOffset")
-                    settings->visual.needleCenterOffset = atoi(p->value().c_str());
-                else if(p->name()=="needleLength")
-                    settings->visual.needleLength = atoi(p->value().c_str());
-                else if(p->name()=="needleBottomWidth")
-                    settings->visual.needleBottomWidth = atoi(p->value().c_str());
-                else if(p->name()=="needleTopWidth")
-                    settings->visual.needleTopWidth = atoi(p->value().c_str());
 
             }
         }

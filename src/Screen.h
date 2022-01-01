@@ -58,7 +58,7 @@ class Screen {
         Data *data;
         Settings *settings;
         Settings::DataSource selected[3];
-        volatile Settings::VisualSettings *vis;
+        Settings::Field** gen;
 		double arrR[91], arrX[91], arrY[91];
 		TFT_eSprite* scaleSprite[2][5];
 		TFT_eSprite* needleUpdate;

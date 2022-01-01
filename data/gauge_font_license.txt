@@ -57,8 +57,8 @@ in Original or Modified Versions, may be sold by itself.
 redistributed and/or sold with any software, provided that each copy
 contains the above copyright notice and this license. These can be
 included either as stand-alone text files, human-readable headers or
-in the appropriate machine-readable metadata fields within text or
-binary files as long as those fields can be easily viewed by the user.
+in the appropriate machine-readable metadata general within text or
+binary files as long as those general can be easily viewed by the user.
 
 3) No Modified Version of the Font Software may use the Reserved Font
 Name(s) unless explicit written permission is granted by the corresponding

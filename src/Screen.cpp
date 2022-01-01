@@ -17,7 +17,7 @@ Screen* Screen::screen = nullptr;
 Screen::Screen() {
     isBusy = false;
     settings = Settings::getInstance();
-    vis = &(settings->visual);
+    gen = settings->general;
 }
 
 Screen* Screen::getInstance()
@@ -43,9 +43,9 @@ uint16_t Screen::c24to16(int i) {
 
 void Screen::fillTables() {
 	int density = 1;
-	int a = vis->ellipseA;
-	int b = vis->ellipseB;
-	int offset = vis->needleCenterOffset;
+	int a = gen[ELLIPSE_A]->get<int>();
+	int b = gen[ELLIPSE_B]->get<int>();
+	int offset = gen[NEEDLE_CENTER_OFFSET]->get<int>();;
 	for(int i=0; i<91; i++) {
 		double tga = tan(rad(i));
 		double r = 0.0;
@@ -54,9 +54,9 @@ void Screen::fillTables() {
 			for(int nx=1; nx<(a+1)*density; nx++) {
 				double x = 1.0/density*nx;
 				double y=tga*x;
-				//tft->drawPixel(vis->width/2+vis->needleCenterOffset+x,vis->height/2+y, TFT_RED);
+				//tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x,gen[HEIGHT]->get<int>()/2+y, TFT_RED);
 				if(1.0*(x+offset)*(x+offset)/(a*a)+1.0*y*y/(b*b)> 0.98) {
-					//tft->drawPixel(vis->width/2+vis->needleCenterOffset+x,vis->height/2+y, TFT_WHITE);
+					//tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x,gen[HEIGHT]->get<int>()/2+y, TFT_WHITE);
 					arrX[i] = x;
 					arrY[i] = y;
 					arrR[i] = sqrt(x*x+y*y);
@@ -67,9 +67,9 @@ void Screen::fillTables() {
 			for(int ny=1; ny<(b+1)*density; ny++) {
 				double y = 1.0/density*ny;
 				double x=y/tga;
-				//tft->drawPixel(vis->width/2+vis->needleCenterOffset+x,vis->height/2+y, TFT_RED);
+				//tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x,gen[HEIGHT]->get<int>()/2+y, TFT_RED);
 				if(1.0*(x+offset)*(x+offset)/(a*a)+1.0*y*y/(b*b)> 0.98) {
-					//tft->drawPixel(vis->width/2+vis->needleCenterOffset+x,vis->height/2+y, TFT_WHITE);
+					//tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x,gen[HEIGHT]->get<int>()/2+y, TFT_WHITE);
 					
 					arrX[i] = x;
 					arrY[i] = y;
@@ -87,10 +87,10 @@ void Screen::createScaleSprites(Side side) {
 //    t4 = millis();
     if(side != MID) {
         for(int j=0; j<5; j++) {
-            int start = settings->dataDisplay[selected[side]].scaleStart;
-            int end = settings->dataDisplay[selected[side]].scaleEnd;
+            int start = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
+            int end = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
 
-            String string = (String)(start + j*(end-start)/vis->scaleTextSteps);
+            String string = (String)(start + j*(end-start)/gen[SCALE_TEXT_STEPS]->get<int>());
 
             int w,h;
             scaleSprite[side][j]->deleteSprite();
@@ -99,7 +99,7 @@ void Screen::createScaleSprites(Side side) {
             w = scaleSprite[side][j]->textWidth(string);
             h = scaleSprite[side][j]->fontHeight();
             scaleSprite[side][j]->createSprite(w, h + SCALE_SPRITE_Y_OFFSET_12, 1);
-            scaleSprite[side][j]->setTextColor(settings->visual.fontColor);
+            scaleSprite[side][j]->setTextColor(gen[FONT_COLOR]->get<int>());
             scaleSprite[side][j]->setTextDatum(TL_DATUM);
             scaleSprite[side][j]->drawString(string, 0, SCALE_SPRITE_Y_OFFSET_12);
             scaleSprite[side][j]->unloadFont();
@@ -149,14 +149,14 @@ void Screen::getSelected(Settings::DataSource* s) {
 
 void Screen::reset() {
     lock();
-    tft->fillScreen(settings->visual.backgroundColor);
+    tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
     fillTables();
     createScaleSprites(LEFT);
     createScaleSprites(RIGHT);
-    selectedInfoCoords[2] = (vis->needleCenterOffset-vis->needleCenterRadius)*2; //width
+    selectedInfoCoords[2] = (gen[NEEDLE_CENTER_OFFSET]->get<int>() - gen[SCALE_TEXT_STEPS]->get<int>()) * 2; //width
     selectedInfoCoords[3] = (textUpdate->fontHeight()+LINE_SPACING)*4 - LINE_SPACING + SCALE_SPRITE_Y_OFFSET_16; //height
-    selectedInfoCoords[0] = vis->width/2+vis->offsetX - selectedInfoCoords[2]/2; //x
-    selectedInfoCoords[1] = vis->height/2+vis->offsetY + 5; //y
+    selectedInfoCoords[0] = gen[WIDTH]->get<int>()/2 + gen[OFFSET_X]->get<int>() - selectedInfoCoords[2]/2; //x
+    selectedInfoCoords[1] = gen[HEIGHT]->get<int>()/2 + gen[OFFSET_Y]->get<int>() + 5; //y
 	drawWhole[0] = true;
 	drawWhole[1] = true;
     updateText(true, 0);
@@ -182,7 +182,7 @@ void Screen::switchView(View view) {
 //        needleUpdate->unloadFont();
     switch(view) {
         case GAUGES:  {
-            tft->fillScreen(vis->backgroundColor);
+            tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
             drawWhole[0] = true;
             drawWhole[1] = true;
             updateText(true, 0);
@@ -192,13 +192,13 @@ void Screen::switchView(View view) {
             break;
         }
         case PROMPT:  {
-            tft->fillScreen(vis->backgroundColor);
-            tft->setTextColor(vis->fontColor, vis->backgroundColor);
-            tft->drawRect(vis->width/2-vis->promptWidth/2,
-                          vis->height/2-vis->promptHeight/2,
-                          vis->promptWidth,
-                          vis->promptHeight,
-                          vis->fontColor);
+            tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
+            tft->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
+            tft->drawRect(gen[WIDTH]->get<int>()/2 - gen[PROMPT_WIDTH]->get<int>()/2,
+                          gen[HEIGHT]->get<int>()/2 - gen[PROMPT_HEIGHT]->get<int>()/2,
+                          gen[PROMPT_WIDTH]->get<int>(),
+                          gen[PROMPT_HEIGHT]->get<int>(),
+                          gen[FONT_COLOR]->get<int>());
             tft->setTextDatum(CC_DATUM);
             break;
         }
@@ -270,8 +270,8 @@ void Screen::drawScalePiece(TFT_eSprite* c, int deg, int side, int spriteX, int 
 
     //if(deg <1) {
 
-    //tft->drawPixel(vis->width/2+vis->needleCenterOffset+x1,vis->height/2+y1, TFT_PINK);
-    //tft->drawPixel(vis->width/2+vis->needleCenterOffset+x2,vis->height/2+y2, TFT_BLUE);
+    //tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x1,gen[HEIGHT]->get<int>()/2+y1, TFT_PINK);
+    //tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x2,gen[HEIGHT]->get<int>()/2+y2, TFT_BLUE);
 
 
     // Log.log(x1);
@@ -283,13 +283,13 @@ void Screen::drawScalePiece(TFT_eSprite* c, int deg, int side, int spriteX, int 
     // Log.log(y2);
 
     c->drawWideLine(
-            vis->width/2 +side*(vis->needleCenterOffset+x1) - spriteX,
-            vis->height/2 +m*(y1) - spriteY,
-            vis->width/2 +side*(vis->needleCenterOffset+x2) - spriteX,
-            vis->height/2 +m*(y2) - spriteY,
+            gen[WIDTH]->get<int>()/2 +side*(gen[NEEDLE_CENTER_OFFSET]->get<int>()+x1) - spriteX,
+            gen[HEIGHT]->get<int>()/2 +m*(y1) - spriteY,
+            gen[WIDTH]->get<int>()/2 +side*(gen[NEEDLE_CENTER_OFFSET]->get<int>()+x2) - spriteX,
+            gen[HEIGHT]->get<int>()/2 +m*(y2) - spriteY,
             width,
             color,
-            vis->backgroundColor);
+            gen[BACKGROUND_COLOR]->get<int>());
     // }
 }
 
@@ -299,14 +299,14 @@ void Screen::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w
 
     t3 = millis();
 
-    float stepSmall = 180/((vis->scaleLargeSteps*vis->scaleSmallSteps)*1.0);
-    int steps = vis->scaleLargeSteps*vis->scaleSmallSteps+1;
+    float stepSmall = 180/((gen[SCALE_LARGE_STEPS]->get<int>()*gen[SCALE_SMALL_STEPS]->get<int>())*1.0);
+    int steps = gen[SCALE_LARGE_STEPS]->get<int>()*gen[SCALE_SMALL_STEPS]->get<int>()+1;
     for(uint8_t i=0; i<steps; i++) {
         int16_t deg = stepSmall*i;
         drawScalePiece(c, deg, side, spriteX, spriteY,
-                       (i%(steps/vis->scaleLargeSteps)==0) ? vis->scaleLargeLength : vis->scaleSmallLength,
-                       (i%(steps/vis->scaleLargeSteps)==0) ? vis->scaleLargeWidth : vis->scaleSmallWidth,
-                       (i%vis->scaleAccColorEvery==0) ? vis->scaleAccColor : vis->scaleColor);
+                       (i%(steps/gen[SCALE_LARGE_STEPS]->get<int>())==0) ? gen[SCALE_LARGE_LENGTH]->get<int>() : gen[SCALE_SMALL_LENGTH]->get<int>(),
+                       (i%(steps/gen[SCALE_LARGE_STEPS]->get<int>())==0) ? gen[SCALE_LARGE_WIDTH]->get<int>() : gen[SCALE_SMALL_WIDTH]->get<int>(),
+                       (i%gen[SCALE_ACC_COLOR_EVERY]->get<int>()==0) ? gen[SCALE_ACC_COLOR]->get<int>() : gen[SCALE_COLOR]->get<int>());
     }
 
 #ifdef LOG_DETAILED_FRAMETIME
@@ -328,8 +328,8 @@ void Screen::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w
         int top = i>2 ? -1 : 1;
 
         scaleSprite[side][i]->pushToSprite(c,
-               vis->width/2 + (side ? 1 : -1)*(vis->needleCenterOffset + calcX(0, deg, arrR[deg] - vis->scaleTextOffset)) - spriteX - scaleSprite[side][i]->width()/2,
-               vis->height/2 + top*(calcY(0, deg, arrR[deg] - vis->scaleTextOffset)) - spriteY - scaleSprite[side][i]->height()/2
+               gen[WIDTH]->get<int>()/2 + (side ? 1 : -1)*(gen[NEEDLE_CENTER_OFFSET]->get<int>() + calcX(0, deg, arrR[deg] - gen[SCALE_TEXT_OFFSET]->get<int>())) - spriteX - scaleSprite[side][i]->width()/2,
+               gen[HEIGHT]->get<int>()/2 + top*(calcY(0, deg, arrR[deg] - gen[SCALE_TEXT_OFFSET]->get<int>())) - spriteY - scaleSprite[side][i]->height()/2
                );
 
     }
@@ -362,9 +362,9 @@ void Screen::updateNeedle(int side) {
     int start, end;
     float value;
 
-    value = settings->dataDisplay[selected[side]].value;
-    start = settings->dataDisplay[selected[side]].scaleStart;
-    end = settings->dataDisplay[selected[side]].scaleEnd;
+    value = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>();
+    start = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
+    end = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
 
 //    value = (sin(xx/PI/18)/2+0.5)*(end-start)+start;
 
@@ -390,27 +390,27 @@ void Screen::updateNeedle(int side) {
 	double length;
 	int x, y, x1, y1, w, h;
 
-	int off = 5+vis->needleTopWidth;
+	int off = 5+gen[NEEDLE_TOP_WIDTH]->get<int>();
 
 	length = arrR[lround(abs(deg))];
 
 	if(deg >= 0) {
 		x = length*cos(rad(deg));
 		y = length*sin(rad(deg));
-		y1 = vis->height/2-vis->needleCenterRadius;
-		h = max(y+vis->needleCenterRadius, vis->needleCenterRadius*2)+off;
+		y1 = gen[HEIGHT]->get<int>()/2-gen[NEEDLE_CENTER_RADIUS]->get<int>();
+		h = max(y+gen[NEEDLE_CENTER_RADIUS]->get<int>(), gen[NEEDLE_CENTER_RADIUS]->get<int>()*2)+off;
 //		tft->drawRect(x1, y1, w, h, TFT_RED);
 	} else {
 		y = length*cos(rad(deg+90));
 		x = length*sin(rad(deg+90));
-		y1 = vis->height/2-max((int)vis->needleCenterRadius, y)-off;
-		h = max(y+vis->needleCenterRadius, vis->needleCenterRadius*2)+off;
+		y1 = gen[HEIGHT]->get<int>()/2-max((int)gen[NEEDLE_CENTER_RADIUS]->get<int>(), y)-off;
+		h = max(y+gen[NEEDLE_CENTER_RADIUS]->get<int>(), gen[NEEDLE_CENTER_RADIUS]->get<int>()*2)+off;
 //		tft->drawRect(x1, y1, w, h, TFT_RED);
 	}
 
-	x1 = vis->width/2+(vis->needleCenterOffset-vis->needleCenterRadius);
-	w = max(x+vis->needleCenterRadius, vis->needleCenterRadius*2)+off;
-	w = vis->ellipseA-vis->needleCenterOffset+vis->needleCenterRadius;
+	x1 = gen[WIDTH]->get<int>()/2+(gen[NEEDLE_CENTER_OFFSET]->get<int>()-gen[NEEDLE_CENTER_RADIUS]->get<int>());
+	w = max(x+gen[NEEDLE_CENTER_RADIUS]->get<int>(), gen[NEEDLE_CENTER_RADIUS]->get<int>()*2)+off;
+	w = gen[ELLIPSE_A]->get<int>()-gen[NEEDLE_CENTER_OFFSET]->get<int>()+gen[NEEDLE_CENTER_RADIUS]->get<int>();
 
 	// Log.log("x1:");
 	// Log.log(x1);
@@ -435,13 +435,13 @@ void Screen::updateNeedle(int side) {
 	int spriteH;
 
     if(pSource[side] != selected[side] || drawWhole[side]) {
-        spriteX = vis->width/2 + (side ? (vis->needleCenterOffset -vis->needleCenterRadius) : (-vis->ellipseA + 1));
-        spriteY = vis->height/2 - vis->ellipseB;
-        spriteW = vis->ellipseA - vis->needleCenterOffset + vis->needleCenterRadius;
-        spriteH = vis->ellipseB*2;
+        spriteX = gen[WIDTH]->get<int>()/2 + (side ? (gen[NEEDLE_CENTER_OFFSET]->get<int>() -gen[NEEDLE_CENTER_RADIUS]->get<int>()) : (-gen[ELLIPSE_A]->get<int>() + 1));
+        spriteY = gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>();
+        spriteW = gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>() + gen[NEEDLE_CENTER_RADIUS]->get<int>();
+        spriteH = gen[ELLIPSE_B]->get<int>()*2;
     } else {
         spriteW = max(w, pW[side]);
-        spriteX = side ? x1 : (vis->width/2 - abs(vis->width/2 - x1) - spriteW);
+        spriteX = side ? x1 : (gen[WIDTH]->get<int>()/2 - abs(gen[WIDTH]->get<int>()/2 - x1) - spriteW);
         spriteY = min(y1, pY1[side]);
         spriteH = pY1[side]+pH[side] > y1+h ? pY1[side]+pH[side]-spriteY : h+abs(y1-pY1[side]);
     }
@@ -465,17 +465,17 @@ void Screen::updateNeedle(int side) {
     t2 = millis();
 #endif
 
-    int needleX = side ? vis->needleCenterRadius : (spriteW-vis->needleCenterRadius);
-    int needleY = deg >= 0 ? y1-spriteY+vis->needleCenterRadius : vis->height/2 - spriteY;
+    int needleX = side ? gen[NEEDLE_CENTER_RADIUS]->get<int>() : (spriteW-gen[NEEDLE_CENTER_RADIUS]->get<int>());
+    int needleY = deg >= 0 ? y1-spriteY+gen[NEEDLE_CENTER_RADIUS]->get<int>() : gen[HEIGHT]->get<int>()/2 - spriteY;
 
     needleUpdate->drawWedgeLine(
             needleX,
             needleY,
-            side ? calcX(needleX, deg, length) : (spriteW-calcX(vis->needleCenterRadius, deg, length)),
+            side ? calcX(needleX, deg, length) : (spriteW-calcX(gen[NEEDLE_CENTER_RADIUS]->get<int>(), deg, length)),
             calcY(needleY, deg, length),
-            vis->needleBottomWidth,
-            vis->needleTopWidth,
-            vis->needleColor
+            gen[NEEDLE_BOTTOM_WIDTH]->get<int>(),
+            gen[NEEDLE_TOP_WIDTH]->get<int>(),
+            gen[NEEDLE_COLOR]->get<int>()
             );
 
 //    needleUpdate->drawRect(
@@ -488,8 +488,8 @@ void Screen::updateNeedle(int side) {
 	needleUpdate->fillCircle(
 	        needleX,
 	        needleY,
-	        vis->needleCenterRadius,
-	        vis->needleCenterColor);
+	        gen[NEEDLE_CENTER_RADIUS]->get<int>(),
+	        gen[NEEDLE_CENTER_COLOR]->get<int>());
 
 #ifdef LOG_DETAILED_FRAMETIME
 	Log.logf(" draw needle: %lu", millis()-t2);
@@ -497,21 +497,21 @@ void Screen::updateNeedle(int side) {
 #endif
 
 	std::stringstream ss;
-	ss.precision(1);
+	ss.precision(settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
 	ss << std::fixed << value;
 	needleUpdate->setTextDatum(CC_DATUM);
-	needleUpdate->setTextColor(vis->fontColor);
+	needleUpdate->setTextColor(gen[FONT_COLOR]->get<int>());
 	needleUpdate->drawString(
 	        ss.str().c_str(),
-	        side ? vis->needleCenterRadius : spriteW-vis->needleCenterRadius,
-	        vis->height/2 - spriteY);
+	        side ? gen[NEEDLE_CENTER_RADIUS]->get<int>() : spriteW-gen[NEEDLE_CENTER_RADIUS]->get<int>(),
+	        gen[HEIGHT]->get<int>()/2 - spriteY);
 
 #ifdef LOG_DETAILED_FRAMETIME
 	Log.logf(" draw value: %lu", millis()-t2);
 	t2 = millis();
 #endif
 
-	needleUpdate->pushSprite(spriteX + vis->offsetX, spriteY + vis->offsetY);
+	needleUpdate->pushSprite(spriteX + gen[OFFSET_X]->get<int>(), spriteY + gen[OFFSET_Y]->get<int>());
 	needleUpdate->deleteSprite();
 
 #ifdef LOG_DETAILED_FRAMETIME
@@ -542,7 +542,7 @@ void Screen::updateText(boolean force, int fps) {
 	if(	(now.month() > 3 && now.month() < 10) ||
 		(now.month() == 3 && now.day() > 28))
 
-	tft->setTextColor(vis->fontColor, TFT_RED);
+	tft->setTextColor(gen[FONT_COLOR]->get<int>(), TFT_RED);
 	tft->setAttribute(SFBG_ENABLE, true);
 	tft->setTextDatum(CC_DATUM);
 //	tft->setTextPadding(24);
@@ -551,15 +551,15 @@ void Screen::updateText(boolean force, int fps) {
 		int min = now.minute();
 //		tft->loadFont("GaugeHeavy"+(String)vis->timeSize);
         tft->loadFont("GaugeHeavyTime36", true);
-		tft->setTextColor(vis->fontColor, vis->backgroundColor);
+		tft->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
 		tft->setAttribute(SFBG_ENABLE, true);
 		tft->setTextDatum(CC_DATUM);
 		std::stringstream ss;
 		ss << std::setfill('0') << std::setw(2) << ((String)now.hour()).c_str() << ":" << std::setw(2) << ((String)min).c_str();
 		tft->drawString(
 			ss.str().c_str(),
-			vis->width/2+vis->offsetX,
-			vis->height/2+vis->offsetY+vis->timePosY);
+			gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>(),
+			gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[TIME_POS_Y]->get<int>());
 		pMinute = min;
 	}
 	if(now.day() != pDay || force) {
@@ -567,13 +567,13 @@ void Screen::updateText(boolean force, int fps) {
 		ss2 << std::setfill('0') << std::setw(2) << ((String)now.day()).c_str() << "." << std::setw(2) << ((String)now.month()).c_str()  << "." << std::setw(2) << ((String)now.year()).substring(2).c_str();
 //		tft->loadFont("GaugeHeavy"+(String)vis->dateSize);
 		tft->loadFont("GaugeHeavy16");
-		tft->setTextColor(vis->fontColor, vis->backgroundColor);
+		tft->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
 		tft->setAttribute(SFBG_ENABLE, true);
 		tft->setTextDatum(CC_DATUM);
 		tft->drawString(
 			ss2.str().c_str(),
-			vis->width/2+vis->offsetX,
-			vis->height/2+vis->offsetY+vis->datePosY);
+			gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>(),
+			gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[DATE_POS_Y]->get<int>());
 		pDay = now.day();
 	}
 
@@ -583,21 +583,21 @@ void Screen::updateText(boolean force, int fps) {
 #endif
 
 	std::stringstream ss3;
-	ss3.precision(1);
-	ss3 << std::fixed << settings->dataDisplay[selected[MID]].value << (const char*)(settings->dataDisplay[selected[MID]].unit);
+	ss3.precision(settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
+	ss3 << std::fixed << settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>() << settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_UNIT_OFFSET]->getString();
     const char* str = ss3.str().c_str();
 
 	int w = textUpdate->textWidth(str);
 	int h = textUpdate->fontHeight();
 	textUpdate->setColorDepth(8);
-	textUpdate->createSprite((settings->visual.needleCenterOffset-settings->visual.needleCenterRadius)*2, h + SCALE_SPRITE_Y_OFFSET_12, 1);
-	textUpdate->setTextColor(settings->visual.fontColor);
+	textUpdate->createSprite((gen[NEEDLE_CENTER_OFFSET]->get<int>()-gen[NEEDLE_CENTER_RADIUS]->get<int>())*2, h + SCALE_SPRITE_Y_OFFSET_12, 1);
+	textUpdate->setTextColor(gen[FONT_COLOR]->get<int>());
 	textUpdate->setTextDatum(TC_DATUM);
 	textUpdate->drawString(str, textUpdate->width()/2, SCALE_SPRITE_Y_OFFSET_16);
 
 	textUpdate->pushSprite(
-	        vis->width/2+vis->offsetX - textUpdate->width()/2,
-	        vis->height/2+vis->offsetY+80 - (textUpdate->height()/2 + SCALE_SPRITE_Y_OFFSET_16) / 2);
+	        gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>() - textUpdate->width()/2,
+	        gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+80 - (textUpdate->height()/2 + SCALE_SPRITE_Y_OFFSET_16) / 2);
 	textUpdate->deleteSprite();
 
 #ifdef LOG_DETAILED_FRAMETIME
@@ -625,7 +625,7 @@ void Screen::showPrompt(String text, int lineSpacing, boolean useDefaultFont) {
 //        Log.log(nextLine);
 
         nextLine = str.find_first_of('\n');
-        tft->drawString(str.substr(0, nextLine).c_str(), vis->width/2, vis->height/2-40+(lines++)*(tft->fontHeight()+lineSpacing));
+        tft->drawString(str.substr(0, nextLine).c_str(), gen[WIDTH]->get<int>()/2, gen[HEIGHT]->get<int>()/2-40+(lines++)*(tft->fontHeight()+lineSpacing));
         str = str.substr(nextLine+1);
     }
     release();
@@ -641,7 +641,7 @@ void Screen::appendToPrompt(String text, int lineSpacing, boolean useDefaultFont
     std::size_t nextLine = 0;
     while(nextLine != std::string::npos) {
         nextLine = str.find_first_of('\n');
-        tft->drawString(str.substr(0, nextLine).c_str(), vis->width/2, vis->height/2-40+(lines++)*(tft->fontHeight()+lineSpacing));
+        tft->drawString(str.substr(0, nextLine).c_str(), gen[WIDTH]->get<int>()/2, gen[HEIGHT]->get<int>()/2-40+(lines++)*(tft->fontHeight()+lineSpacing));
         str = str.substr(nextLine+1);
     }
     release();
@@ -650,16 +650,16 @@ void Screen::appendToPrompt(String text, int lineSpacing, boolean useDefaultFont
 void Screen::drawSelectedInfo() {
 
     std::stringstream ss;
-    ss << "<- " << std::nouppercase << (const char*)settings->dataDisplay[selected[LEFT]].name << "\n";
-    ss << std::nouppercase << (const char*)settings->dataDisplay[selected[RIGHT]].name << " ->\n\n\n";
-    ss << std::nouppercase << (const char*)settings->dataDisplay[selected[MID]].name << ":";
+    ss << "<- " << std::nouppercase << settings->general[DATA_0 + selected[LEFT] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << "\n";
+    ss << std::nouppercase << settings->general[DATA_0 + selected[RIGHT] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << " ->\n\n\n";
+    ss << std::nouppercase << settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << ":";
     std::string str = ss.str();
     std::transform(str.begin(), str.end(), str.begin(),
         [](unsigned char c){ return std::tolower(c); });
 
     textUpdate->setColorDepth(8);
     textUpdate->createSprite(selectedInfoCoords[2], selectedInfoCoords[3], 1);
-    textUpdate->setTextColor(settings->visual.fontColor);
+    textUpdate->setTextColor(gen[FONT_COLOR]->get<int>());
     textUpdate->setTextDatum(TC_DATUM);
     std::size_t nextLine = 0;
     int x = 0;
@@ -684,6 +684,6 @@ void Screen::clearSelectedInfo() {
                   selectedInfoCoords[1],
                   selectedInfoCoords[2],
                   selectedInfoCoords[3],
-                  vis->backgroundColor);
+                  gen[BACKGROUND_COLOR]->get<int>());
     selectedInfoVisible = false;
 }

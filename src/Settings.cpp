@@ -16,127 +16,127 @@ Settings* Settings::getInstance()
 
 
 void Settings::loadDefault() {
+    for(int i=0; i<SETTINGS_SIZE; i++)
+        settings->general[i]->setDefault();
+}
 
-    strcpy((char *)(general.ssid), "ESP32");
-    strcpy((char *)(general.pass), "12345678");
-    strcpy((char *)(general.ssid), "dlink-74A1");
-    strcpy((char *)(general.pass), "fdpqg49953");
+void Settings::init() {
 
-    visual.antialiasing = true;
-	visual.dark = true;
-	visual.drawMainScaleLine = false;
+    general[WIFI_SSID] = new Field("SSID", "dlink-74A1");
+    general[WIFI_PASS] = new Field("pass", "fdpqg49953");
+    general[WIDTH] = new Field("width", 480, false);
+    general[HEIGHT] = new Field("height", 320, false);
+    general[OFFSET_Y] = new Field("offset_y", -2);
+    general[OFFSET_X] = new Field("offset_x", -4);
+    general[ELLIPSE_A] = new Field("ellipse_A", 216);
+    general[ELLIPSE_B] = new Field("ellipse_B", 116);
+    general[PROMPT_WIDTH] = new Field("prompt_width", 330);
+    general[PROMPT_HEIGHT] = new Field("prompt_height", 120);
 
-	visual.width = 480;
-	visual.height = 320;
+    general[NEEDLE_CENTER_RADIUS] = new Field("needle_center_radius", 20);
+    general[NEEDLE_CENTER_OFFSET] = new Field("needle_center_offset", 75);
+    general[NEEDLE_LENGTH] = new Field("needle_length", 112);
+    general[NEEDLE_TOP_WIDTH] = new Field("needle_top_width", 2);
+    general[NEEDLE_BOTTOM_WIDTH] = new Field("needle_bottom_width", 10);
 
-	visual.offsetX = -2; //17
-	visual.offsetY = -4; //29
+    general[TIME_POS_Y] = new Field("time_pos_Y", -60);
+    general[TIME_SIZE] = new Field("time_size", 36, false);
+    general[DATE_POS_Y] = new Field("date_pos_Y", -35);
+    general[DATE_SIZE] = new Field("date_size", 16, false);
+    general[SCALE_SIZE] = new Field("scale_size", 12, false);
 
-	visual.ellipseA = 216;
-	visual.ellipseB = 116;
+    general[SCALE_MAIN_WIDTH] = new Field("scale_main_width", 7);
+    general[SCALE_LARGE_WIDTH] = new Field("scale_large_width", 4);
+    general[SCALE_SMALL_WIDTH] = new Field("scale_small_width", 2);
+    general[SCALE_LARGE_LENGTH] = new Field("scale_large_length", 17);
+    general[SCALE_SMALL_LENGTH] = new Field("scale_small_length", 7);
+    general[SCALE_LARGE_STEPS] = new Field("scale_large_steps", 12);
+    general[SCALE_SMALL_STEPS] = new Field("scale_small_steps", 4);
+    general[SCALE_ACC_COLOR_EVERY] = new Field("scale_acc_color_every", 8);
+    general[SCALE_TEXT_STEPS] = new Field("scale_text_steps", 4);
+    general[SCALE_TEXT_OFFSET] = new Field("scale_text_offset", 35);
 
-	visual.promptWidth = 330;
-	visual.promptHeight = 120;
+    general[BACKGROUND_COLOR] = new Field("background_color", (float)TFT_BLACK);
+    general[SCALE_COLOR] = new Field("scale_color", TFT_GREEN);
+    general[SCALE_ACC_COLOR] = new Field("scale_acc_color", TFT_RED);
+    general[NEEDLE_CENTER_COLOR] = new Field("needle_center_color", 0x31A6);
+    general[FONT_COLOR] = new Field("font_color", TFT_GREEN);
+    general[ICON_COLOR] = new Field("icon_color", TFT_GREEN);
+    general[NEEDLE_COLOR] = new Field("needle_color", TFT_RED);
 
-	visual.needleCenterRadius = 20;
-	visual.needleCenterOffset = 75;
-	visual.needleLength = 112; //97
-	visual.needleTopWidth = 2;
-	visual.needleBottomWidth = 10;
 
-	visual.timePosY = -60; //Centre centre
-	visual.timeSize = 36;
-	visual.datePosY = -35; //Centre centre
-	visual.dateSize = 16;
-	visual.scaleSize = 12;
+    for(int i=0; i<INPUT_SIZE; i++) {
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_R_OFFSET] = (new Field("r", 0.0f))->setStep(0.1f);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_TYPE_OFFSET] = (new Field("type", Logarithmic))->setType(LIST);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_BETA_OFFSET] = (new Field("beta", 0.0f))->setStep(0.1f);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_R25_OFFSET] = (new Field("r25", 0.0f))->setStep(0.1f);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_RMIN_OFFSET] = (new Field("r_min", 0.0f))->setStep(0.1f);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_RMAX_OFFSET] = (new Field("r_max", 0.0f))->setStep(0.1f);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_MAXVAL_OFFSET] = (new Field("max_val", 0.0f))->setStep(0.1f);
+    }
 
-	visual.scaleMainWidth = 7;
-	visual.scaleLargeWidth = 4;
-	visual.scaleSmallWidth = 2;
-	visual.scaleLargeLength = 17;
-	visual.scaleSmallLength = 7;
-	visual.scaleLargeSteps = 12;
-	visual.scaleSmallSteps = 4;
-	visual.scaleAccColorEvery = 8;
-	visual.scaleTextSteps = 4;
-	visual.scaleTextOffset = 35;
-	visual.scaleAntialiasing = 4;
-	visual.internalEllipseDistance = 10;
+    for(int i=ADS1115_0; i<=ADC_6; i++) {
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_NAME_OFFSET] = new Field("name", "");
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_UNIT_OFFSET] = new Field("unit", "");
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_SCALE_END_OFFSET] = new Field("scale_end", 0.0f);
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_PRECISION_OFFSET] = new Field("precision", 1);
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+    }
 
-	visual.backgroundColor = TFT_WHITE;
-	visual.scaleColor = TFT_GREEN;
-	visual.scaleAccColor = TFT_RED;
-	visual.needleCenterColor = 0x31A6;
-	visual.fontColor = visual.scaleColor;
-	visual.iconColor = visual.scaleColor;
-	visual.needleColor = TFT_RED;
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_ENABLE_OFFSET] = (new Field("enable", 1))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_NAME_OFFSET] = new Field("name", "Voltage");
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_UNIT_OFFSET] = new Field("unit", "V");
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_START_OFFSET] = new Field("scale_start", 6);
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_END_OFFSET] = new Field("scale_end", 18);
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_PRECISION_OFFSET] = new Field("precision", 1);
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
 
-	if(visual.dark) {
-		visual.scaleColor = TFT_GREEN;
-		visual.backgroundColor= TFT_BLACK;
-		visual.needleCenterColor = TFT_DARKGREY;
- 	}
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_NAME_OFFSET] = new Field("name", "SW");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_UNIT_OFFSET] = new Field("unit", "°");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_START_OFFSET] = new Field("scale_start", -550);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_END_OFFSET] = new Field("scale_end", 550);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_PRECISION_OFFSET] = new Field("precision", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
 
-	visual.needleCenterColor = 0x31A6;
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_NAME_OFFSET] = new Field("name", "Speed");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_UNIT_OFFSET] = new Field("unit", "km/h");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_END_OFFSET] = new Field("scale_end", 280);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_PRECISION_OFFSET] = new Field("precision", 1);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
 
-	for(int i=0; i<6; i++) {
-        input[i].r = 0;
-        input[i].type = Logarithmic;
-        input[i].beta = 0;
-        input[i].r25 = 0;
-        input[i].rmin = 0;
-        input[i].rmax = 0;
-        input[i].maxVal = 0;
-	}
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_NAME_OFFSET] = new Field("name", "RPM");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_UNIT_OFFSET] = new Field("unit", "rpm");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_START_OFFSET] = new Field("scale_start", 6);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_END_OFFSET] = new Field("scale_end", 8);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_PRECISION_OFFSET] = new Field("precision", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
 
-	for(int i=ADS1115_0; i<=ADC_6; i++) {
-	    dataDisplay[i].enable = false;
-	    strcpy((char *)(dataDisplay[i].name), "");
-	    strcpy((char *)(dataDisplay[i].unit), "u");
-	    dataDisplay[i].scaleStart = 0;
-	    dataDisplay[i].scaleEnd = 0;
-	}
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_NAME_OFFSET] = new Field("name", "Throttle");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_UNIT_OFFSET] = new Field("unit", "%");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_END_OFFSET] = new Field("scale_end", 100);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_PRECISION_OFFSET] = new Field("precision", 0.1f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
 
-	dataDisplay[VOLTAGE].enable = true;
-	strcpy((char *)(dataDisplay[VOLTAGE].name), "Voltage");
-	strcpy((char *)(dataDisplay[VOLTAGE].unit), "V");
-	dataDisplay[VOLTAGE].scaleStart = 6;
-	dataDisplay[VOLTAGE].scaleEnd = 18;
-
-	dataDisplay[CAN_STEERING_ANGLE].enable = false;
-	strcpy((char *)(dataDisplay[CAN_STEERING_ANGLE].name), "SW");
-	strcpy((char *)(dataDisplay[CAN_STEERING_ANGLE].unit), "°");
-	dataDisplay[CAN_STEERING_ANGLE].scaleStart = -550;
-	dataDisplay[CAN_STEERING_ANGLE].scaleEnd = 550; //?
-
-	dataDisplay[CAN_SPEED].enable = false;
-	strcpy((char *)(dataDisplay[CAN_SPEED].name), "Speed");
-	strcpy((char *)(dataDisplay[CAN_SPEED].unit), "km/h");
-	dataDisplay[CAN_SPEED].scaleStart = 0;
-	dataDisplay[CAN_SPEED].scaleEnd = 280;
-
-	dataDisplay[CAN_RPM].enable = false;
-	strcpy((char *)(dataDisplay[CAN_RPM].name), "RPM");
-	strcpy((char *)(dataDisplay[CAN_RPM].unit), "rpm");
-	dataDisplay[CAN_RPM].scaleStart = 0;
-	dataDisplay[CAN_RPM].scaleEnd = 8;
-
-	dataDisplay[CAN_GAS].enable = false;
-	strcpy((char *)(dataDisplay[CAN_GAS].name), "Throttle");
-	strcpy((char *)(dataDisplay[CAN_GAS].unit), "%");
-	dataDisplay[CAN_GAS].scaleStart = 0;
-	dataDisplay[CAN_GAS].scaleEnd = 100;
-
-	dataDisplay[CAN_HB].enable = false;
-	strcpy((char *)(dataDisplay[CAN_HB].name), "HB");
-	strcpy((char *)(dataDisplay[CAN_HB].unit), "");
-	dataDisplay[CAN_HB].scaleStart = 0;
-	dataDisplay[CAN_HB].scaleEnd = 1;
-
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_NAME_OFFSET] = new Field("name", "Handbrake");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_UNIT_OFFSET] = new Field("unit", "");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_END_OFFSET] = new Field("scale_end", 1);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_PRECISION_OFFSET] = new Field("precision", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
 
 }
 
 void Settings::load() {
+
     Log.log("Loading settings");
     if(SPIFFS.exists("/settings.json")) {
         StaticJsonDocument<4*1024> doc;
@@ -145,36 +145,26 @@ void Settings::load() {
         if (error) {
             Log.log("Failed to read file, using default configuration");
             loadDefault();
-        }
-
-        strcpy((char *)settings->general.ssid, doc["ssid"] | "");
-        strcpy((char *)settings->general.pass, doc["pass"] | "");
-        visual.offsetX = doc["offsetX"] | 0;
-        visual.offsetY = doc["offsetY"] | 0;
-        visual.ellipseA = doc["ellipseA"] | 0;
-        visual.ellipseB = doc["ellipseB"] | 0;
-        visual.needleCenterRadius = doc["needleCenterRadius"] | 0;
-        visual.needleCenterOffset = doc["needleCenterOffset"] | 0;
-        visual.needleLength = doc["needleLength"] | 0;
-        visual.needleBottomWidth = doc["needleBottomWidth"] | 0;
-        visual.needleTopWidth = doc["needleTopWidth"] | 0;
-
-        for(int i=0; i<6; i++) {
-            input[i].r =            doc["input_" + (String)i + "_rballance"].as<float>();
-            input[i].type =         doc["input_" + (String)i + "_type"] | Linear;
-            input[i].beta =         doc["input_" + (String)i + "_beta"].as<float>();
-            input[i].r25 =          doc["input_" + (String)i + "_r25"].as<float>();
-            input[i].rmin =         doc["input_" + (String)i + "_rmin"].as<float>();
-            input[i].rmax =         doc["input_" + (String)i + "_rmax"].as<float>();
-            input[i].maxVal =       doc["input_" + (String)i + "_max_val"].as<float>();
-        }
-
-        for(int i=ADS1115_0; i<LAST; i++) {
-            dataDisplay[i].enable =       doc["dataDisplay_" + (String)i + "_en"] | 0;
-            strcpy((char *)settings->dataDisplay[i].name, doc["dataDisplay_" + (String)i + "_name"] | "");
-            strcpy((char *)settings->dataDisplay[i].unit, doc["dataDisplay_" + (String)i + "_unit"] | "u");
-            dataDisplay[i].scaleStart =   doc["dataDisplay_" + (String)i + "_scaleStart"] | 0;
-            dataDisplay[i].scaleEnd =     doc["dataDisplay_" + (String)i + "_scaleEnd"] | 0;
+        } else {
+            for(int i=0; i<SETTINGS_SIZE; i++) {
+                if(settings->general[i]->isConfigurable()) {
+                    switch (general[i]->getType()) {
+                        case STRING: {
+                            char c[64] = "";
+                            strcpy((char *)c, doc[i]);
+                            general[i]->set((const char*)c);
+                            Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
+                            break;
+                        }
+                        default: {
+                            float f = doc[i].as<float>();
+                            general[i]->set(f);
+                            Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         file.close();
@@ -222,45 +212,34 @@ void Settings::load() {
 }
 
 void Settings::save() {
+    Log.log("Saving settings");
     if(SPIFFS.exists("/settings.json"))
         SPIFFS.remove("/settings.json");
     fs::File file = SPIFFS.open("/settings.json", "w");
     StaticJsonDocument<4*1024> doc;
 
+    for(int i=0; i<SETTINGS_SIZE; i++) {
+        if(settings->general[i]->isConfigurable()) {
+            switch (general[i]->getType()) {
+                case STRING: {
+                    doc[i] = (String)general[i]->getString().c_str();
+                    Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
+                    break;
+                }
+                default: {
+                    doc[i] = general[i]->get<float>();
+                    Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
+                    break;
+                }
+            }
+        }
+    }
 
-    doc["ssid"] = (String)(char*)general.ssid;
-    doc["pass"] = (String)(char*)general.pass;
-    doc["offsetX"] = visual.offsetX;
-    doc["offsetY"] = visual.offsetY;
-    doc["ellipseA"] = visual.ellipseA;
-    doc["ellipseB"] = visual.ellipseB;
-    doc["needleCenterRadius"] = visual.needleCenterRadius;
-    doc["needleCenterOffset"] = visual.needleCenterOffset;
-    doc["needleLength"] = visual.needleLength;
-    doc["needleBottomWidth"] = visual.needleBottomWidth;
-    doc["needleTopWidth"] = visual.needleTopWidth;
-    for(int i=0; i<6; i++) {
-        doc["input_" + (String)i + "_rballance"] = input[i].r;
-        doc["input_" + (String)i + "_type"] = input[i].type;
-        doc["input_" + (String)i + "_beta"] = input[i].beta;
-        doc["input_" + (String)i + "_r25"] = input[i].r25;
-        doc["input_" + (String)i + "_rmin"] = input[i].rmin;
-        doc["input_" + (String)i + "_rmax"] = input[i].rmax;
-        doc["input_" + (String)i + "_max_val"] = input[i].maxVal;
-    }
-    for(int i=ADS1115_0; i<LAST; i++) {
-        doc["dataDisplay_" + (String)i + "_en"] = dataDisplay[i].enable;
-        doc["dataDisplay_" + (String)i + "_name"] = (String)(char*)dataDisplay[i].name;
-        doc["dataDisplay_" + (String)i + "_unit"] = (String)(char*)dataDisplay[i].unit;
-        doc["dataDisplay_" + (String)i + "_scaleStart"] = dataDisplay[i].scaleStart;
-        doc["dataDisplay_" + (String)i + "_scaleEnd"] = dataDisplay[i].scaleEnd;
-    }
     if (serializeJson(doc, file) == 0) {
         Log.log("Failed to write to file");
     }
     Log.log("Settings saved");
 
-    // Close the file
     file.close();
 }
 
@@ -299,6 +278,5 @@ void Settings::saveSelected(Settings::DataSource *selected) {
     }
     Log.log("Selected saved");
 
-    // Close the file
     file.close();
 }
