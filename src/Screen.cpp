@@ -87,8 +87,8 @@ void Screen::createScaleSprites(Side side) {
 //    t4 = millis();
     if(side != MID) {
         for(int j=0; j<5; j++) {
-            int start = settings->dataDisplay[selected[side]].scaleStart;
-            int end = settings->dataDisplay[selected[side]].scaleEnd;
+            int start = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
+            int end = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
 
             String string = (String)(start + j*(end-start)/gen[SCALE_TEXT_STEPS]->get<int>());
 
@@ -362,9 +362,9 @@ void Screen::updateNeedle(int side) {
     int start, end;
     float value;
 
-    value = settings->dataDisplay[selected[side]].value;
-    start = settings->dataDisplay[selected[side]].scaleStart;
-    end = settings->dataDisplay[selected[side]].scaleEnd;
+    value = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>();
+    start = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
+    end = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
 
 //    value = (sin(xx/PI/18)/2+0.5)*(end-start)+start;
 
@@ -497,7 +497,7 @@ void Screen::updateNeedle(int side) {
 #endif
 
 	std::stringstream ss;
-	ss.precision(1);
+	ss.precision(settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
 	ss << std::fixed << value;
 	needleUpdate->setTextDatum(CC_DATUM);
 	needleUpdate->setTextColor(gen[FONT_COLOR]->get<int>());
@@ -583,8 +583,8 @@ void Screen::updateText(boolean force, int fps) {
 #endif
 
 	std::stringstream ss3;
-	ss3.precision(1);
-	ss3 << std::fixed << settings->dataDisplay[selected[MID]].value << (const char*)(settings->dataDisplay[selected[MID]].unit);
+	ss3.precision(settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
+	ss3 << std::fixed << settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>() << settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_UNIT_OFFSET]->getString();
     const char* str = ss3.str().c_str();
 
 	int w = textUpdate->textWidth(str);
@@ -650,9 +650,9 @@ void Screen::appendToPrompt(String text, int lineSpacing, boolean useDefaultFont
 void Screen::drawSelectedInfo() {
 
     std::stringstream ss;
-    ss << "<- " << std::nouppercase << (const char*)settings->dataDisplay[selected[LEFT]].name << "\n";
-    ss << std::nouppercase << (const char*)settings->dataDisplay[selected[RIGHT]].name << " ->\n\n\n";
-    ss << std::nouppercase << (const char*)settings->dataDisplay[selected[MID]].name << ":";
+    ss << "<- " << std::nouppercase << settings->general[DATA_0 + selected[LEFT] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << "\n";
+    ss << std::nouppercase << settings->general[DATA_0 + selected[RIGHT] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << " ->\n\n\n";
+    ss << std::nouppercase << settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << ":";
     std::string str = ss.str();
     std::transform(str.begin(), str.end(), str.begin(),
         [](unsigned char c){ return std::tolower(c); });

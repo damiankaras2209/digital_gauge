@@ -16,68 +16,14 @@ Settings* Settings::getInstance()
 
 
 void Settings::loadDefault() {
-
-	for(int i=0; i<6; i++) {
-        input[i].r = 0;
-        input[i].type = Logarithmic;
-        input[i].beta = 0;
-        input[i].r25 = 0;
-        input[i].rmin = 0;
-        input[i].rmax = 0;
-        input[i].maxVal = 0;
-	}
-
-	for(int i=ADS1115_0; i<=ADC_6; i++) {
-	    dataDisplay[i].enable = false;
-	    strcpy((char *)(dataDisplay[i].name), "");
-	    strcpy((char *)(dataDisplay[i].unit), "u");
-	    dataDisplay[i].scaleStart = 0;
-	    dataDisplay[i].scaleEnd = 0;
-	}
-
-	dataDisplay[VOLTAGE].enable = true;
-	strcpy((char *)(dataDisplay[VOLTAGE].name), "Voltage");
-	strcpy((char *)(dataDisplay[VOLTAGE].unit), "V");
-	dataDisplay[VOLTAGE].scaleStart = 6;
-	dataDisplay[VOLTAGE].scaleEnd = 18;
-
-	dataDisplay[CAN_STEERING_ANGLE].enable = false;
-	strcpy((char *)(dataDisplay[CAN_STEERING_ANGLE].name), "SW");
-	strcpy((char *)(dataDisplay[CAN_STEERING_ANGLE].unit), "°");
-	dataDisplay[CAN_STEERING_ANGLE].scaleStart = -550;
-	dataDisplay[CAN_STEERING_ANGLE].scaleEnd = 550; //?
-
-	dataDisplay[CAN_SPEED].enable = false;
-	strcpy((char *)(dataDisplay[CAN_SPEED].name), "Speed");
-	strcpy((char *)(dataDisplay[CAN_SPEED].unit), "km/h");
-	dataDisplay[CAN_SPEED].scaleStart = 0;
-	dataDisplay[CAN_SPEED].scaleEnd = 280;
-
-	dataDisplay[CAN_RPM].enable = false;
-	strcpy((char *)(dataDisplay[CAN_RPM].name), "RPM");
-	strcpy((char *)(dataDisplay[CAN_RPM].unit), "rpm");
-	dataDisplay[CAN_RPM].scaleStart = 0;
-	dataDisplay[CAN_RPM].scaleEnd = 8;
-
-	dataDisplay[CAN_GAS].enable = false;
-	strcpy((char *)(dataDisplay[CAN_GAS].name), "Throttle");
-	strcpy((char *)(dataDisplay[CAN_GAS].unit), "%");
-	dataDisplay[CAN_GAS].scaleStart = 0;
-	dataDisplay[CAN_GAS].scaleEnd = 100;
-
-	dataDisplay[CAN_HB].enable = false;
-	strcpy((char *)(dataDisplay[CAN_HB].name), "HB");
-	strcpy((char *)(dataDisplay[CAN_HB].unit), "");
-	dataDisplay[CAN_HB].scaleStart = 0;
-	dataDisplay[CAN_HB].scaleEnd = 1;
-
-
+    for(int i=0; i<SETTINGS_SIZE; i++)
+        settings->general[i]->setDefault();
 }
 
 void Settings::init() {
 
-    general[SSID] = new Field("SSID", "dlink-74A1");
-    general[PASS] = new Field("pass", "fdpqg49953");
+    general[WIFI_SSID] = new Field("SSID", "dlink-74A1");
+    general[WIFI_PASS] = new Field("pass", "fdpqg49953");
     general[WIDTH] = new Field("width", 480, false);
     general[HEIGHT] = new Field("height", 320, false);
     general[OFFSET_Y] = new Field("offset_y", -2);
@@ -118,21 +64,75 @@ void Settings::init() {
     general[ICON_COLOR] = new Field("icon_color", TFT_GREEN);
     general[NEEDLE_COLOR] = new Field("needle_color", TFT_RED);
 
-//    for(int i=HEIGHT+1; i<FIELDS_SIZE; i++) {
-//        fields[i] = new Field("as", (float)i);
-//    }
 
-//    for(int i=0; i<FIELDS_SIZE; i++) {
-//        fields[i]->setDefault();
-//    }
+    for(int i=0; i<INPUT_SIZE; i++) {
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_R_OFFSET] = (new Field("r", 0.0f))->setStep(0.1f);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_TYPE_OFFSET] = (new Field("type", Logarithmic))->setType(LIST);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_BETA_OFFSET] = (new Field("beta", 0.0f))->setStep(0.1f);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_R25_OFFSET] = (new Field("r25", 0.0f))->setStep(0.1f);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_RMIN_OFFSET] = (new Field("r_min", 0.0f))->setStep(0.1f);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_RMAX_OFFSET] = (new Field("r_max", 0.0f))->setStep(0.1f);
+        general[INPUT_0 + INPUT_SETTINGS_SIZE * i + INPUT_MAXVAL_OFFSET] = (new Field("max_val", 0.0f))->setStep(0.1f);
+    }
 
-//    Log.logf("%s: %d\n", fields[OFFSET_Y]->getName().c_str(), fields[OFFSET_Y]->get<int>());
-//    Log.logf("%s: %f\n", fields[OFFSET_Y]->getName().c_str(), fields[OFFSET_Y]->get<float>());
-//    Log.logf("%s: %s\n", fields[OFFSET_Y]->getName().c_str(), fields[OFFSET_Y]->get<bool>() ? "true" : "false");
-//
-//    Log.logf("%s: %s\n", fields[OFFSET_X]->getName().c_str(), fields[OFFSET_X]->getString().c_str());
-////    fields[OFFSET_X]->set("jan pawel");
-//    Log.logf("%s: %s\n", fields[OFFSET_X]->getName().c_str(), fields[OFFSET_X]->getString().c_str());
+    for(int i=ADS1115_0; i<=ADC_6; i++) {
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_NAME_OFFSET] = new Field("name", "");
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_UNIT_OFFSET] = new Field("unit", "");
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_SCALE_END_OFFSET] = new Field("scale_end", 0.0f);
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_PRECISION_OFFSET] = new Field("precision", 1);
+        general[DATA_0 + DATA_SETTINGS_SIZE * i + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+    }
+
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_ENABLE_OFFSET] = (new Field("enable", 1))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_NAME_OFFSET] = new Field("name", "Voltage");
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_UNIT_OFFSET] = new Field("unit", "V");
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_START_OFFSET] = new Field("scale_start", 6);
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_END_OFFSET] = new Field("scale_end", 18);
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_PRECISION_OFFSET] = new Field("precision", 1);
+    general[DATA_0 + DATA_SETTINGS_SIZE * VOLTAGE + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_NAME_OFFSET] = new Field("name", "SW");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_UNIT_OFFSET] = new Field("unit", "°");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_START_OFFSET] = new Field("scale_start", -550);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_END_OFFSET] = new Field("scale_end", 550);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_PRECISION_OFFSET] = new Field("precision", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_NAME_OFFSET] = new Field("name", "Speed");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_UNIT_OFFSET] = new Field("unit", "km/h");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_END_OFFSET] = new Field("scale_end", 280);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_PRECISION_OFFSET] = new Field("precision", 1);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_NAME_OFFSET] = new Field("name", "RPM");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_UNIT_OFFSET] = new Field("unit", "rpm");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_START_OFFSET] = new Field("scale_start", 6);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_END_OFFSET] = new Field("scale_end", 8);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_PRECISION_OFFSET] = new Field("precision", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_RPM + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_NAME_OFFSET] = new Field("name", "Throttle");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_UNIT_OFFSET] = new Field("unit", "%");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_END_OFFSET] = new Field("scale_end", 100);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_PRECISION_OFFSET] = new Field("precision", 0.1f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_GAS + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_NAME_OFFSET] = new Field("name", "Handbrake");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_UNIT_OFFSET] = new Field("unit", "");
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_END_OFFSET] = new Field("scale_end", 1);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_PRECISION_OFFSET] = new Field("precision", 0.0f);
+    general[DATA_0 + DATA_SETTINGS_SIZE * CAN_HB + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+
 }
 
 void Settings::load() {
@@ -145,63 +145,26 @@ void Settings::load() {
         if (error) {
             Log.log("Failed to read file, using default configuration");
             loadDefault();
-        }
-
-
-        for(int i=0; i<FIELDS_SIZE; i++) {
-            switch (general[i]->getType()) {
-                case FLOAT: {
-                    float f = doc[general[i]->getName()] | general[i]->getDefault<float>();
-                    general[i]->set(f);
-                    Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
-                    break;
-                }
-                case STRING: {
-                    char c[64] = "";
-                    strcpy((char *)c, doc[general[i]->getName()] | general[i]->getDefaultString().c_str());
-                    general[i]->set((const char*)c);
-                    Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
-                    break;
+        } else {
+            for(int i=0; i<SETTINGS_SIZE; i++) {
+                if(settings->general[i]->isConfigurable()) {
+                    switch (general[i]->getType()) {
+                        case STRING: {
+                            char c[64] = "";
+                            strcpy((char *)c, doc[i]);
+                            general[i]->set((const char*)c);
+                            Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
+                            break;
+                        }
+                        default: {
+                            float f = doc[i].as<float>();
+                            general[i]->set(f);
+                            Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
+                            break;
+                        }
+                    }
                 }
             }
-//            switch (fields[i]->getType()) {
-//                case FLOAT: Log.logf("%s: %f\n", fields[i]->getName().c_str(), fields[i]->get<float>()); break;
-//                case STRING: Log.logf("%s: %s\n", fields[i]->getName().c_str(), fields[i]->getString().c_str()); break;
-//            }
-        }
-
-//        for(int i=0; i<FIELDS_SIZE; i++) {
-//
-//        }
-
-//        strcpy((char *)settings->general.ssid, doc["ssid"] | "");
-//        strcpy((char *)settings->general.pass, doc["pass"] | "");
-//        visual.offsetX = doc["offsetX"]. | 0;
-//        visual.offsetY = doc["offsetY"] | 0;
-//        visual.ellipseA = doc["ellipseA"] | 0;
-//        visual.ellipseB = doc["ellipseB"] | 0;
-//        visual.needleCenterRadius = doc["needleCenterRadius"] | 0;
-//        visual.needleCenterOffset = doc["needleCenterOffset"] | 0;
-//        visual.needleLength = doc["needleLength"] | 0;
-//        visual.needleBottomWidth = doc["needleBottomWidth"] | 0;
-//        visual.needleTopWidth = doc["needleTopWidth"] | 0;
-
-        for(int i=0; i<6; i++) {
-            input[i].r =            doc["input_" + (String)i + "_rballance"].as<float>();
-            input[i].type =         doc["input_" + (String)i + "_type"] | Linear;
-            input[i].beta =         doc["input_" + (String)i + "_beta"].as<float>();
-            input[i].r25 =          doc["input_" + (String)i + "_r25"].as<float>();
-            input[i].rmin =         doc["input_" + (String)i + "_rmin"].as<float>();
-            input[i].rmax =         doc["input_" + (String)i + "_rmax"].as<float>();
-            input[i].maxVal =       doc["input_" + (String)i + "_max_val"].as<float>();
-        }
-
-        for(int i=ADS1115_0; i<LAST; i++) {
-            dataDisplay[i].enable =       doc["dataDisplay_" + (String)i + "_en"] | 0;
-            strcpy((char *)settings->dataDisplay[i].name, doc["dataDisplay_" + (String)i + "_name"] | "");
-            strcpy((char *)settings->dataDisplay[i].unit, doc["dataDisplay_" + (String)i + "_unit"] | "u");
-            dataDisplay[i].scaleStart =   doc["dataDisplay_" + (String)i + "_scaleStart"] | 0;
-            dataDisplay[i].scaleEnd =     doc["dataDisplay_" + (String)i + "_scaleEnd"] | 0;
         }
 
         file.close();
@@ -255,55 +218,28 @@ void Settings::save() {
     fs::File file = SPIFFS.open("/settings.json", "w");
     StaticJsonDocument<4*1024> doc;
 
-    for(int i=0; i<FIELDS_SIZE; i++) {
-        switch (general[i]->getType()) {
-            case FLOAT: {
-                doc[general[i]->getName()] = general[i]->get<float>();
-                Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
-                break;
-            }
-            case STRING: {
-                doc[general[i]->getName()] = (String)general[i]->getString().c_str();
-                Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
-                break;
+    for(int i=0; i<SETTINGS_SIZE; i++) {
+        if(settings->general[i]->isConfigurable()) {
+            switch (general[i]->getType()) {
+                case STRING: {
+                    doc[i] = (String)general[i]->getString().c_str();
+                    Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
+                    break;
+                }
+                default: {
+                    doc[i] = general[i]->get<float>();
+                    Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
+                    break;
+                }
             }
         }
     }
 
-
-//    doc["ssid"] = (String)(char*)general.ssid;
-//    doc["pass"] = (String)(char*)general.pass;
-//    doc["offsetX"] = visual.offsetX;
-//    doc["offsetY"] = visual.offsetY;
-//    doc["ellipseA"] = visual.ellipseA;
-//    doc["ellipseB"] = visual.ellipseB;
-//    doc["needleCenterRadius"] = visual.needleCenterRadius;
-//    doc["needleCenterOffset"] = visual.needleCenterOffset;
-//    doc["needleLength"] = visual.needleLength;
-//    doc["needleBottomWidth"] = visual.needleBottomWidth;
-//    doc["needleTopWidth"] = visual.needleTopWidth;
-//    for(int i=0; i<6; i++) {
-//        doc["input_" + (String)i + "_rballance"] = input[i].r;
-//        doc["input_" + (String)i + "_type"] = input[i].type;
-//        doc["input_" + (String)i + "_beta"] = input[i].beta;
-//        doc["input_" + (String)i + "_r25"] = input[i].r25;
-//        doc["input_" + (String)i + "_rmin"] = input[i].rmin;
-//        doc["input_" + (String)i + "_rmax"] = input[i].rmax;
-//        doc["input_" + (String)i + "_max_val"] = input[i].maxVal;
-//    }
-//    for(int i=ADS1115_0; i<LAST; i++) {
-//        doc["dataDisplay_" + (String)i + "_en"] = dataDisplay[i].enable;
-//        doc["dataDisplay_" + (String)i + "_name"] = (String)(char*)dataDisplay[i].name;
-//        doc["dataDisplay_" + (String)i + "_unit"] = (String)(char*)dataDisplay[i].unit;
-//        doc["dataDisplay_" + (String)i + "_scaleStart"] = dataDisplay[i].scaleStart;
-//        doc["dataDisplay_" + (String)i + "_scaleEnd"] = dataDisplay[i].scaleEnd;
-//    }
     if (serializeJson(doc, file) == 0) {
         Log.log("Failed to write to file");
     }
     Log.log("Settings saved");
 
-    // Close the file
     file.close();
 }
 
@@ -342,6 +278,5 @@ void Settings::saveSelected(Settings::DataSource *selected) {
     }
     Log.log("Selected saved");
 
-    // Close the file
     file.close();
 }
