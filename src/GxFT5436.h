@@ -152,7 +152,7 @@ class GxFT5436
         Stream* diagOut;
         GxFT5436* touch;
         volatile bool* i2cBusy;
-        Callback action;
+        Callback action = nullptr;
     } LoopData;
     LoopData _loopData;
 

@@ -46,10 +46,10 @@ bool GxFT5436::init(Stream* pDiagnosticOutput)
   uint8_t error = I2C.endTransmission();
   if (error != 0)
   {
-    DiagOut.println("GxFT5436::init() - I2C failed for address 0x"); DiagOut.print(FT5436_I2C_ADDR, HEX);
+//    DiagOut.println("GxFT5436::init() - I2C failed for address 0x"); DiagOut.print(FT5436_I2C_ADDR, HEX);
     return false;
   }
-  DiagOut.println("GxFT5436 init() successful");
+//  DiagOut.println("GxFT5436 init() successful");
   I2C_Write(FT5436_I2C_ADDR, FT_REG_DEV_MODE, 0);
 //  I2C_Write(FT5436_I2C_ADDR, FT_REG_THGROUP, 1);
 //  I2C_Write(FT5436_I2C_ADDR, 0x81, 1);
@@ -137,7 +137,7 @@ void GxFT5436::onEvent(GxFT5436::Callback callback) {
 [[noreturn]] void GxFT5436::touch(void * pvParameters) {
     auto data = (LoopData*)pvParameters;
 
-    data->diagOut->printf("%s started on core %d", pcTaskGetTaskName(NULL), xPortGetCoreID());
+    data->diagOut->printf("%s started on core %d\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
 
     unsigned long last[5];
     bool down[5] = {false, false, false, false, false};
@@ -148,7 +148,7 @@ void GxFT5436::onEvent(GxFT5436::Callback callback) {
     while(1) {
 //        data->diagOut->print("millis() - touchDetectedTime: ");
 //        data->diagOut->print (millis() - touchDetectedTime);
-        if(millis() - touchDetectedTime < 10) {
+        if(millis() - touchDetectedTime < 10 && data->action != nullptr) {
             while(*(data->i2cBusy)) {
                 delay(1);
             }
