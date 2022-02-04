@@ -153,13 +153,17 @@ void Settings::load() {
                             char c[64] = "";
                             strcpy((char *)c, doc[i]);
                             general[i]->set((const char*)c);
+#ifdef LOG_SETTINGS
                             Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
+#endif
                             break;
                         }
                         default: {
                             float f = doc[i].as<float>();
                             general[i]->set(f);
+#ifdef LOG_SETTINGS
                             Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
+#endif
                             break;
                         }
                     }
@@ -169,40 +173,6 @@ void Settings::load() {
 
         file.close();
 
-#ifdef LOG_LOADED_SETTINGS
-
-        Log.log("Read from JSON: ");
-
-        Log.log("[offsetX]" + (String)visual.offsetX);
-        Log.log("[offsetY]" + (String)visual.offsetY);
-        Log.log("[ellipseA]" + (String)visual.ellipseA);
-        Log.log("[ellipseB]" + (String)visual.ellipseB);
-        Log.log("[needleCenterRadius]" + (String)visual.needleCenterRadius);
-        Log.log("[needleCenterOffset]" + (String)visual.needleCenterOffset);
-        Log.log("[needleLength]" + (String)visual.needleLength);
-        Log.log("[needleBottomWidth]" + (String)visual.needleBottomWidth);
-        Log.log("[needleTopWidth]" + (String)visual.needleTopWidth);
-
-        for(int i=0; i<6; i++) {
-            Log.log("[input_" + (String)i + ".r]" + (String)input[i].r);
-            Log.log("[input_" + (String)i + ".type]" + (String)input[i].type);
-            Log.log("[input_" + (String)i + ".beta]" + (String)input[i].beta);
-            Log.log("[input_" + (String)i + ".r25]" + (String)input[i].r25);
-            Log.log("[input_" + (String)i + ".rmin]" + (String)input[i].rmin);
-            Log.log("[input_" + (String)i + ".rmax]" + (String)input[i].rmax);
-            Log.log("[input_" + (String)i + ".maxVal]" + (String)input[i].maxVal);
-        }
-
-        for(int i=ADS1115_0; i<LAST; i++) {
-            Log.log("[dataDisplay_" + (String)i + ".enable]" + (String)dataDisplay[i].enable);
-            Log.log("[dataDisplay_" + (String)i + ".name]" + (String)(char *)dataDisplay[i].name);
-            Log.log("[dataDisplay_" + (String)i + ".unit]" + (String)(char *)dataDisplay[i].unit);
-            Log.log("[dataDisplay_" + (String)i + ".scaleStart]" + (String)dataDisplay[i].scaleStart);
-            Log.log("[dataDisplay_" + (String)i + ".scaleEnd]" + (String)dataDisplay[i].scaleEnd);
-        }
-        Log.log("End of read");
-
-#endif
 
     } else {
         Log.log("File not found. Loading defaults");
@@ -223,12 +193,16 @@ void Settings::save() {
             switch (general[i]->getType()) {
                 case STRING: {
                     doc[i] = (String)general[i]->getString().c_str();
+#ifdef LOG_SETTINGS
                     Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
+#endif
                     break;
                 }
                 default: {
                     doc[i] = general[i]->get<float>();
+#ifdef LOG_SETTINGS
                     Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
+#endif
                     break;
                 }
             }
