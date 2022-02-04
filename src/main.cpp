@@ -26,7 +26,6 @@ TFT_eSPI tft = TFT_eSPI();
 Networking networking;
 UpdaterClass updater;
 Data data;
-GxFT5436 touch = GxFT5436(/*SDA=*/21, /*SCL=*/22,/*RST=*/-1);
 
 void f(t_httpUpdate_return status) {
     switch (status) {
@@ -188,21 +187,10 @@ void setup(void) {
 
       networking.connectWiFi(CONNECTING_TIME, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
 
+      data.POST();
       data.init();
 
-      while(data.data.i2cBusy)
-          delay(1);
-      data.data.i2cBusy = true;
-
-      if(!touch.init(&Serial))
-          Log.log("GxFT5436 not found");
-      else {
-          Log.log("GxFT5436 found");
-          touch.onEvent(action);
-          touch.enableInterrupt(33, &(data.data.i2cBusy), 1, 0);
-      }
-
-      data.data.i2cBusy = false;
+      data.touch.onEvent(action);
 
     //  tft.fillScreen(TFT_BLUE);
 

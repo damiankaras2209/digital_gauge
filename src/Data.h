@@ -38,6 +38,12 @@
 //
 //typedef std::function<void(t_httpUpdate_return status)> Callback;
 
+enum Device {
+    D_FT5436, D_DS3231, D_MCP2515, D_ADS1115, D_MCP23008, D_LAST
+};
+
+const String deviceName[] = {"FT5436", "DS3231", "MCP2515", "ADS1115", "MCP23008"};
+
 class Data {
 
 public:
@@ -45,7 +51,7 @@ public:
     typedef struct DataStruct {
             RTC_DS3231* rtcPtr;
             MCP2515* mcp2515Ptr;
-            class ADS1115* adsPtr;
+            ADS1115* adsPtr;
             Adafruit_MCP23X08* mcp23X08Ptr;
             RCSwitch* rcPtr;
 
@@ -58,6 +64,9 @@ public:
 
         Data();
         void init();
+        void POST();
+        bool status[D_LAST];
+        GxFT5436 touch = GxFT5436(21, 22,-1);
         RTC_DS3231 rtc;
         MCP2515 mcp = MCP2515(5);
         ADS1115 ads = ADS1115(0x48);

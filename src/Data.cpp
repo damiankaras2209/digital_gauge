@@ -22,21 +22,37 @@ void Data::canReset(MCP2515* mcp) {
     }
 }
 
+void Data::POST() {
+    std::fill(status, status + D_LAST - 1, false);
+
+    Log.log("POST start");
+
+    status[D_FT5436] = touch.init(&Serial);
+    status[D_DS3231] = rtc.begin();
+    status[D_ADS1115] = ads.begin();
+    status[D_MCP2515] = mcp.reset() == MCP2515::ERROR_OK;
+    status[D_MCP23008] = mcp23008.begin_I2C();
+
+    for(int i=0; i<D_LAST; i++) {
+        Log.logf("%s... %s\n", deviceName[i].c_str(), status[i] ? "good" : "fail");
+    }
+
+    Log.log("POST completed");
+}
+
 void Data::init() {
 
     data = DataStruct();
-//    data.dataDisplaySettings = Settings::getInstance()->dataDisplay;
+    //    data.dataDisplaySettings = Settings::getInstance()->dataDisplay;
     data.adsPtr = &ads;
     data.rtcPtr = &rtc;
     data.mcp23X08Ptr = &mcp23008;
     data.mcp2515Ptr = &mcp;
     data.rcPtr = &rc;
 
-    if (!rtc.begin()) {
-        Log.log("Couldn't find RTC");
+    if (!status[D_DS3231]) {
         data.RTCAvailable = false;
     } else {
-        Log.log("RTC good");
         data.RTCAvailable = true;
         data.now = rtc.now();
         data.lastRTC = millis();
@@ -46,21 +62,22 @@ void Data::init() {
         }
     }
 
-    canReset(&mcp);
+    if(status[D_MCP2515]) {
+        mcp.setBitrate(CAN_500KBPS, MCP_8MHZ);
+        mcp.setListenOnlyMode();
+    }
 
-    if(!ads.begin())
-        Log.log("ADS1115 not found");
-    else {
-        Log.log("ADS1115 found");
+    if(status[D_ADS1115]) {
         ads.setGain(1);
         ads.setDataRate(7);
     }
 
-
-
     rc.enableReceive(3);
 
-    if(data.RTCAvailable) {
+
+    touch.enableInterrupt(33, &(data.i2cBusy), 1, 0);
+
+    if(status[D_DS3231]) {
         TaskHandle_t rtcAdjustHandle;
         if(!xTaskCreatePinnedToCore(adjustRTCTask,
              "adjustRTC",
@@ -82,16 +99,17 @@ void Data::init() {
         0))
         Log.log("Failed to start adcLoop task");
 
-    TaskHandle_t canHandle;
-    if(!xTaskCreatePinnedToCore(canLoop,
-        "canLoop",
-        4*1024,
-        &data,
-        1,
-        &canHandle,
-        0))
-            Log.log("Failed to start canLoop task");
-
+    if(status[D_MCP2515]) {
+        TaskHandle_t canHandle;
+        if(!xTaskCreatePinnedToCore(canLoop,
+            "canLoop",
+            4*1024,
+            &data,
+            1,
+            &canHandle,
+            0))
+                Log.log("Failed to start canLoop task");
+    }
 
 }
 
