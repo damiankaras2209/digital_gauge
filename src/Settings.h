@@ -7,6 +7,7 @@
 #include <fstream>
 #include <cstring>
 #include <TFT_eSPI.h>
+#include <iomanip>
 #include "ArduinoJson.h"
 
 #define WIFI_SSID 0
@@ -224,7 +225,7 @@ class Settings {
 
 
         enum Type {
-            FLOAT, STRING, LIST, CHECKBOX
+            FLOAT, STRING, LIST, CHECKBOX, COLOR
         };
 
         struct Field {
@@ -347,6 +348,17 @@ class Settings {
                         ss << "' ";
                         ss << (_valueFloat == 1 ? "checked" : "");
                         ss << ">";
+                        break;
+                    }
+                    case COLOR: {
+                        uint8_t r = ((int)_valueFloat >> 8) & 0xF8; r |= (r >> 5);
+                        uint8_t g = ((int)_valueFloat >> 3) & 0xFC; g |= (g >> 6);
+                        uint8_t b = ((int)_valueFloat << 3) & 0xF8; b |= (b >> 5);
+                        ss << "<input value='#";
+                        ss << std::hex << std::uppercase << std::setfill('0') << std::setw(6) << (((uint32_t)r << 16) | ((uint32_t)g << 8) | ((uint32_t)b << 0));
+                        ss << "' type='color' id='";
+                        ss << std::dec << id;
+                        ss << "'>";
                         break;
                     }
                 }

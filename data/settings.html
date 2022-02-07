@@ -27,9 +27,7 @@
         function post(s) {
             let xhr = new XMLHttpRequest();
             xhr.open('POST', s);
-            xhr.onload = function(){ console.log(this.response); };
-            xhr.send(data);
-            return false;
+            xhr.send(null);
         }
 
         function preset(i) {
@@ -109,7 +107,7 @@
     <body>
         <form onsubmit='return send()'>
             <h1>Ustawienia</h1><p id='frametime'>frametime: </p>
-            <button onclick='return reset();window.location.reload(true); '>Przywróć domyślne</button>
+            <button type="button" onclick='post("reset"); window.location.reload(true);'>Przywróć domyślne</button>
             %settings%
             <h2>Wejścia analogowe</h2>
             %input_table%

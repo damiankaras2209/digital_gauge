@@ -56,13 +56,13 @@ void Settings::init() {
     general[SCALE_TEXT_STEPS] = new Field("scale_text_steps", 4);
     general[SCALE_TEXT_OFFSET] = new Field("scale_text_offset", 35);
 
-    general[BACKGROUND_COLOR] = new Field("background_color", (float)TFT_BLACK);
-    general[SCALE_COLOR] = new Field("scale_color", TFT_GREEN);
-    general[SCALE_ACC_COLOR] = new Field("scale_acc_color", TFT_RED);
-    general[NEEDLE_CENTER_COLOR] = new Field("needle_center_color", 0x31A6);
-    general[FONT_COLOR] = new Field("font_color", TFT_GREEN);
-    general[ICON_COLOR] = new Field("icon_color", TFT_GREEN);
-    general[NEEDLE_COLOR] = new Field("needle_color", TFT_RED);
+    general[BACKGROUND_COLOR] = (new Field("background_color", (float)TFT_BLACK))->setType(COLOR);
+    general[SCALE_COLOR] = (new Field("scale_color", TFT_GREEN))->setType(COLOR);
+    general[SCALE_ACC_COLOR] = (new Field("scale_acc_color", TFT_RED))->setType(COLOR);
+    general[NEEDLE_CENTER_COLOR] = (new Field("needle_center_color", 0x31A6))->setType(COLOR);
+    general[FONT_COLOR] = (new Field("font_color", TFT_GREEN))->setType(COLOR);
+    general[ICON_COLOR] = (new Field("icon_color", TFT_GREEN))->setType(COLOR);
+    general[NEEDLE_COLOR] = (new Field("needle_color", TFT_RED))->setType(COLOR);
 
 
     for(int i=0; i<INPUT_SIZE; i++) {

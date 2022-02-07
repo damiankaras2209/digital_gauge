@@ -253,6 +253,20 @@ void Networking::serverSetupTask(void * pvParameters) {
                             case Settings::Type::STRING: {
                                 settings->general[i]->set(p->value().c_str()); break;
                             }
+                            case Settings::Type::COLOR: {
+                                String str = p->value().substring(1);
+                                Log.logf("%s\n", str.c_str());
+
+                                char *p;
+                                long color888 = std::strtol(str.c_str(), &p, 16);
+                                uint16_t r = (color888 >> 8) & 0xF800;
+                                uint16_t g = (color888 >> 5) & 0x07E0;
+                                uint16_t b = (color888 >> 3) & 0x001F;
+
+                                settings->general[i]->set((r | g | b));
+                                Log.logf("%d\n", settings->general[i]->get<int>());
+                                break;
+                            }
                             default: {
                                 settings->general[i]->set(strtof(p->value().c_str(), nullptr)); break;
                             }
@@ -278,6 +292,8 @@ void Networking::serverSetupTask(void * pvParameters) {
 
     server.on("/reset", HTTP_POST, [](AsyncWebServerRequest *request){
         settings->loadDefault();
+        settings->save();
+        screen->reset();
     });
 
   server.begin();
