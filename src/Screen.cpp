@@ -99,6 +99,7 @@ void Screen::createScaleSprites(Side side) {
             w = scaleSprite[side][j]->textWidth(string);
             h = scaleSprite[side][j]->fontHeight();
             scaleSprite[side][j]->createSprite(w, h + SCALE_SPRITE_Y_OFFSET_12, 1);
+            scaleSprite[side][j]->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
             scaleSprite[side][j]->setTextColor(gen[FONT_COLOR]->get<int>());
             scaleSprite[side][j]->setTextDatum(TL_DATUM);
             scaleSprite[side][j]->drawString(string, 0, SCALE_SPRITE_Y_OFFSET_12);
@@ -153,7 +154,7 @@ void Screen::reset() {
     fillTables();
     createScaleSprites(LEFT);
     createScaleSprites(RIGHT);
-    selectedInfoCoords[2] = (gen[NEEDLE_CENTER_OFFSET]->get<int>() - gen[SCALE_TEXT_STEPS]->get<int>()) * 2; //width
+    selectedInfoCoords[2] = (gen[NEEDLE_CENTER_OFFSET]->get<int>() - gen[NEEDLE_CENTER_RADIUS]->get<int>()) * 2; //width
     selectedInfoCoords[3] = (textUpdate->fontHeight()+LINE_SPACING)*4 - LINE_SPACING + SCALE_SPRITE_Y_OFFSET_16; //height
     selectedInfoCoords[0] = gen[WIDTH]->get<int>()/2 + gen[OFFSET_X]->get<int>() - selectedInfoCoords[2]/2; //x
     selectedInfoCoords[1] = gen[HEIGHT]->get<int>()/2 + gen[OFFSET_Y]->get<int>() + 5; //y
@@ -435,7 +436,7 @@ void Screen::updateNeedle(int side) {
 	int spriteH;
 
     if(pSource[side] != selected[side] || drawWhole[side]) {
-        spriteX = gen[WIDTH]->get<int>()/2 + (side ? (gen[NEEDLE_CENTER_OFFSET]->get<int>() -gen[NEEDLE_CENTER_RADIUS]->get<int>()) : (-gen[ELLIPSE_A]->get<int>() + 1));
+        spriteX = gen[WIDTH]->get<int>()/2 + (side ? (gen[NEEDLE_CENTER_OFFSET]->get<int>() -gen[NEEDLE_CENTER_RADIUS]->get<int>()) : -gen[ELLIPSE_A]->get<int>());
         spriteY = gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>();
         spriteW = gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>() + gen[NEEDLE_CENTER_RADIUS]->get<int>();
         spriteH = gen[ELLIPSE_B]->get<int>()*2;
@@ -453,6 +454,7 @@ void Screen::updateNeedle(int side) {
 
     needleUpdate->setColorDepth(8);
     needleUpdate->createSprite(spriteW, spriteH);
+    needleUpdate->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
 
 #ifdef LOG_DETAILED_FRAMETIME
     Log.logf(" draw scale: {", millis()-t2);
@@ -591,6 +593,7 @@ void Screen::updateText(boolean force, int fps) {
 	int h = textUpdate->fontHeight();
 	textUpdate->setColorDepth(8);
 	textUpdate->createSprite((gen[NEEDLE_CENTER_OFFSET]->get<int>()-gen[NEEDLE_CENTER_RADIUS]->get<int>())*2, h + SCALE_SPRITE_Y_OFFSET_12, 1);
+	textUpdate->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
 	textUpdate->setTextColor(gen[FONT_COLOR]->get<int>());
 	textUpdate->setTextDatum(TC_DATUM);
 	textUpdate->drawString(str, textUpdate->width()/2, SCALE_SPRITE_Y_OFFSET_16);
@@ -659,6 +662,7 @@ void Screen::drawSelectedInfo() {
 
     textUpdate->setColorDepth(8);
     textUpdate->createSprite(selectedInfoCoords[2], selectedInfoCoords[3], 1);
+    textUpdate->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
     textUpdate->setTextColor(gen[FONT_COLOR]->get<int>());
     textUpdate->setTextDatum(TC_DATUM);
     std::size_t nextLine = 0;
