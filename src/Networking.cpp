@@ -255,7 +255,6 @@ void Networking::serverSetupTask(void * pvParameters) {
                             }
                             case Settings::Type::COLOR: {
                                 String str = p->value().substring(1);
-                                Log.logf("%s\n", str.c_str());
 
                                 char *p;
                                 long color888 = std::strtol(str.c_str(), &p, 16);
@@ -264,7 +263,6 @@ void Networking::serverSetupTask(void * pvParameters) {
                                 uint16_t b = (color888 >> 3) & 0x001F;
 
                                 settings->general[i]->set((r | g | b));
-                                Log.logf("%d\n", settings->general[i]->get<int>());
                                 break;
                             }
                             default: {
