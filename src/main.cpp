@@ -53,7 +53,7 @@ void f(t_httpUpdate_return status) {
 static void action(GxFT5436::Event event) {
 
     if(event.type == GxFT5436::SINGLE_CLICK) {
-        
+
         int16_t x = event.startX;
         int16_t y = event.startY;
 
@@ -84,7 +84,7 @@ static void action(GxFT5436::Event event) {
                         x < Settings::getInstance()->general[WIDTH]->get<int>()/2+Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>() &&
                         y > Settings::getInstance()->general[HEIGHT]->get<int>()/2)
                     side = MID;
-                
+
                 if(side != SIDE_LAST) {
                     Settings::DataSource selected[3];
                     Screen::getInstance()->getSelected(selected);
@@ -128,69 +128,70 @@ static void action(GxFT5436::Event event) {
 
 }
 
+ulong bootTime;
 
 void setup(void) {
-  Serial.begin(115200);
+    Serial.begin(115200);
 
-  if (!SPIFFS.begin()) {
-      Log.log("SPIFFS initialisation failed!");
-  }
-  Log.log("SPIFFS available");
+    if (!SPIFFS.begin()) {
+        Log.log("SPIFFS initialisation failed!");
+    }
+    Log.log("SPIFFS available");
 
-  tft.init();
-  tft.setRotation(3);
-  tft.invertDisplay(1);
+    tft.init();
+    tft.setRotation(3);
+    tft.invertDisplay(1);
 
 
-  Settings::getInstance()->init();
+    Settings::getInstance()->init();
 
-  Settings::getInstance()->loadDefault();
-  Settings::getInstance()->load();
-  Settings::DataSource selected[SIDE_LAST];
-  Settings::getInstance()->loadSelected(selected);
+    Settings::getInstance()->loadDefault();
+    Settings::getInstance()->load();
+    Settings::DataSource selected[SIDE_LAST];
+    Settings::getInstance()->loadSelected(selected);
 
-  Screen::getInstance()->init(&tft, &data);
-  Screen::getInstance()->setSelected(selected);
+    Screen::getInstance()->init(&tft, &data);
+    Screen::getInstance()->setSelected(selected);
 
-  ledcSetup(ledChannel, freq, resolution);
-  ledcAttachPin(ledPin, ledChannel);
-  ledcWrite(0, 0);
+    ledcSetup(ledChannel, freq, resolution);
+    ledcAttachPin(ledPin, ledChannel);
+    ledcWrite(0, 0);
 
-  Log.logf("Firmware version: %s\n", getCurrentFirmwareVersionString().c_str());
-  Log.logf("Filesystem current version: %s\n", getCurrentFilesystemVersionString().c_str());
-  Log.logf("Filesystem target version: %s\n", getTargetFilesystemVersionString().c_str());
-  if(getCurrentFilesystemVersion() != getTargetFilesystemVersion()) {
-      ledcWrite(0, 255);
-      proceed = false;
-      Log.log("Filesystem version does not match target version. Trying to update");
+    Log.logf("Firmware version: %s\n", getCurrentFirmwareVersionString().c_str());
+    Log.logf("Filesystem current version: %s\n", getCurrentFilesystemVersionString().c_str());
+    Log.logf("Filesystem target version: %s\n", getTargetFilesystemVersionString().c_str());
+    if(getCurrentFilesystemVersion() != getTargetFilesystemVersion()) {
+        ledcWrite(0, 255);
+        proceed = false;
+        Log.log("Filesystem version does not match target version. Trying to update");
 
-      Screen::getInstance()->showPrompt("Filesystem version does not match target version\ncurrent: " +
-      getCurrentFilesystemVersionString() +
-      ", target: " +
-      getTargetFilesystemVersionString() +
-      "\nCreate an AP with following credentials:\nSSID: \"" +
-      (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str() +
-      "\", pass: \"" +
-      (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str() +
-      "\"",
-      4, true);
+        Screen::getInstance()->showPrompt("Filesystem version does not match target version\ncurrent: " +
+        getCurrentFilesystemVersionString() +
+        ", target: " +
+        getTargetFilesystemVersionString() +
+        "\nCreate an AP with following credentials:\nSSID: \"" +
+        (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str() +
+        "\", pass: \"" +
+        (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str() +
+        "\"",
+        4, true);
 
-      networking.connectWiFi(TIME_INFINITY, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
-      while(WiFi.status() != WL_CONNECTED){
-          delay(50);
-      }
-      Screen::getInstance()->appendToPrompt("WiFi connected, updating... this may take a while", 4, true);
-      updater.updateFS(getTargetFilesystemVersionString(), f);
-  }
+        networking.connectWiFi(TIME_INFINITY, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
+        while(WiFi.status() != WL_CONNECTED){
+            delay(50);
+        }
+        Screen::getInstance()->appendToPrompt("WiFi connected, updating... this may take a while", 4, true);
+        updater.updateFS(getTargetFilesystemVersionString(), f);
+    }
 
-  if(proceed) {
+    if(proceed) {
 
-      networking.connectWiFi(CONNECTING_TIME, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
+         networking.connectWiFi(CONNECTING_TIME, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
 
-      data.POST();
-      data.init();
+         data.POST();
+         data.init();
 
-      data.touch.onEvent(action);
+         data.touch.onEvent(action);
 
     //  tft.fillScreen(TFT_BLUE);
 
@@ -205,10 +206,10 @@ void setup(void) {
 
 
 
-      Screen::getInstance()->reset();
-      Screen::getInstance()->setGaugeMode();
+        Screen::getInstance()->reset();
+        Screen::getInstance()->setGaugeMode();
 
-      ledcWrite(0, 255);
+        ledcWrite(0, 255);
   }
   Log.log("setup() complete");
 }
