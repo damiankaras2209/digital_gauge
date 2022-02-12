@@ -45,7 +45,9 @@ void Screen::fillTables() {
 	int density = 1;
 	int a = gen[ELLIPSE_A]->get<int>();
 	int b = gen[ELLIPSE_B]->get<int>();
-	int offset = gen[NEEDLE_CENTER_OFFSET]->get<int>();;
+	int offset = gen[NEEDLE_CENTER_OFFSET]->get<int>();
+	double rmin = 1000.0;
+//	double rmax = 0.0;
 	for(int i=0; i<91; i++) {
 		double tga = tan(rad(i));
 		double r = 0.0;
@@ -78,7 +80,16 @@ void Screen::fillTables() {
 				}
 			}
 		}
+		if(arrR[i] < rmin)
+		    rmin = arrR[i];
+//		if(arrR[i] > rmax)
+//		    rmax = arrR[i];
+
+		for(int i=0; i<91; i++) {
+		    arrOffset[i] = arrR[i] - rmin;
+		}
 	}
+
 
 }
 
@@ -87,8 +98,8 @@ void Screen::createScaleSprites(Side side) {
 //    t4 = millis();
     if(side != MID) {
         for(int j=0; j<5; j++) {
-            int start = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
-            int end = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
+            int start = settings->general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
+            int end = settings->general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
 
             String string = (String)(start + j*(end-start)/gen[SCALE_TEXT_STEPS]->get<int>());
 
@@ -361,15 +372,19 @@ void Screen::updateNeedle(int side) {
     t2 = millis();
 
     int start, end;
-    float value;
+    double value;
 
-    value = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>();
-    start = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
-    end = settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
+    if(gen[DEMO]->get<bool>()) {
+        value =  (sin((xx + (side ? 0 : 180))/PI/18)/2+0.5);
+        start = 0;
+        end = 1;
+    } else {
+        value = settings->general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>();
+        start = settings->general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
+        end = settings->general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
+    }
 
-//    value = (sin(xx/PI/18)/2+0.5)*(end-start)+start;
-
-    float val = (value-start)/(end-start);
+    double val = (value-start)/(end-start);
 
 	if(val<0.0)
 	    val = 0.0;
@@ -393,7 +408,11 @@ void Screen::updateNeedle(int side) {
 
 	int off = 5+gen[NEEDLE_TOP_WIDTH]->get<int>();
 
-	length = arrR[lround(abs(deg))];
+//	length = arrR[lround(abs(deg))];
+	length = gen[NEEDLE_LENGTH]->get<double>();
+	if(gen[NEEDLE_LENGTH_ADAPTIVE]->get<bool>()) {
+	    length += arrOffset[lround(abs(deg))];
+	}
 
 	if(deg >= 0) {
 		x = length*cos(rad(deg));
@@ -499,7 +518,7 @@ void Screen::updateNeedle(int side) {
 #endif
 
 	std::stringstream ss;
-	ss.precision(settings->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
+	ss.precision(settings->general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
 	ss << std::fixed << value;
 	needleUpdate->setTextDatum(CC_DATUM);
 	needleUpdate->setTextColor(gen[FONT_COLOR]->get<int>());
@@ -528,10 +547,13 @@ void Screen::updateNeedle(int side) {
 	pDeg[side] = deg;
 	pSource[side] = selected[side];
     drawWhole[side] = false;
-	xx+=2;
-	if(xx>=360) {
-	    xx-=360;
-	}
+
+    if(gen[DEMO]->get<bool>()) {
+        xx+=2;
+        if(xx>=360) {
+            xx-=360;
+        }
+    }
 }
 
 int pMinute = -1, pDay = -1;
@@ -585,8 +607,8 @@ void Screen::updateText(boolean force, int fps) {
 #endif
 
 	std::stringstream ss3;
-	ss3.precision(settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
-	ss3 << std::fixed << settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>() << settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_UNIT_OFFSET]->getString();
+	ss3.precision(settings->general[DATA_BEGIN_BEGIN + selected[MID] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
+	ss3 << std::fixed << settings->general[DATA_BEGIN_BEGIN + selected[MID] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>() << settings->general[DATA_BEGIN_BEGIN + selected[MID] * DATA_SETTINGS_SIZE + DATA_UNIT_OFFSET]->getString();
     const char* str = ss3.str().c_str();
 
 	int w = textUpdate->textWidth(str);
@@ -653,9 +675,9 @@ void Screen::appendToPrompt(String text, int lineSpacing, boolean useDefaultFont
 void Screen::drawSelectedInfo() {
 
     std::stringstream ss;
-    ss << "<- " << std::nouppercase << settings->general[DATA_0 + selected[LEFT] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << "\n";
-    ss << std::nouppercase << settings->general[DATA_0 + selected[RIGHT] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << " ->\n\n\n";
-    ss << std::nouppercase << settings->general[DATA_0 + selected[MID] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << ":";
+    ss << "<- " << std::nouppercase << settings->general[DATA_BEGIN_BEGIN + selected[LEFT] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << "\n";
+    ss << std::nouppercase << settings->general[DATA_BEGIN_BEGIN + selected[RIGHT] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << " ->\n\n\n";
+    ss << std::nouppercase << settings->general[DATA_BEGIN_BEGIN + selected[MID] * DATA_SETTINGS_SIZE + DATA_NAME_OFFSET]->getString() << ":";
     std::string str = ss.str();
     std::transform(str.begin(), str.end(), str.begin(),
         [](unsigned char c){ return std::tolower(c); });

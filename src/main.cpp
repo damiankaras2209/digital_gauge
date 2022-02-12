@@ -94,7 +94,7 @@ static void action(GxFT5436::Event event) {
                         selected[side] = static_cast<Settings::DataSource>(selected[side]+1);
                         if(selected[side] == Settings::LAST)
                             selected[side] = static_cast<Settings::DataSource>(0);
-                    } while (!Settings::getInstance()->general[DATA_0 + selected[side] * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
+                    } while (!Settings::getInstance()->general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
                     Log.logf("Changing to: %s\n", Settings::getInstance()->dataSourceString[selected[side]].c_str());
                     Screen::getInstance()->setSelected(side, selected[side]);
                     Settings::getInstance()->saveSelected(selected);

@@ -59,7 +59,7 @@ class Screen {
         Settings *settings;
         Settings::DataSource selected[3];
         Settings::Field** gen;
-		double arrR[91], arrX[91], arrY[91];
+		double arrR[91], arrOffset[91], arrX[91], arrY[91];
 		TFT_eSprite* scaleSprite[2][5];
 		TFT_eSprite* needleUpdate;
 		TFT_eSprite* textUpdate;

@@ -91,7 +91,6 @@ String processor(const String& var){
 
         for(int i=0; i<GENERAL_SETTINGS_SIZE; i++) {
             if(settings->general[i]->isConfigurable()) {
-                ss << "<p>" << settings->general[i]->getName() << "</p>";
                 ss << settings->general[i]->getHTMLInput(i);
             }
         }
@@ -131,8 +130,8 @@ String processor(const String& var){
     } else if(var == "dataDisplayLength") {
         return itoa(Settings::LAST, c, 10);
 
-    } else if(var == "INPUT_0") {
-        return itoa(INPUT_0, c, 10);
+    } else if(var == "INPUT_BEGIN_BEGIN") {
+        return itoa(INPUT_BEGIN_BEGIN, c, 10);
 
     } else if(var == "INPUT_SETTINGS_SIZE") {
         return itoa(INPUT_SETTINGS_SIZE, c, 10);
@@ -140,8 +139,8 @@ String processor(const String& var){
     } else if(var == "INPUT_SIZE") {
         return itoa(INPUT_SIZE, c, 10);
 
-    } else if(var == "DATA_0") {
-        return itoa(DATA_0, c, 10);
+    } else if(var == "DATA_BEGIN_BEGIN") {
+        return itoa(DATA_BEGIN_BEGIN, c, 10);
 
     } else if(var == "DATA_SETTINGS_SIZE") {
         return itoa(DATA_SETTINGS_SIZE, c, 10);
@@ -168,9 +167,9 @@ String processor(const String& var){
         for(int i=0; i<INPUT_SETTINGS_SIZE; i++) {
             ss << "<tr>";
             for(int j=0; j<INPUT_SIZE; j++) {
-                int ind = INPUT_0 + INPUT_SETTINGS_SIZE * j + i;
+                int ind = INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * j + i;
                 if(settings->general[ind]->isConfigurable())
-                    ss << "<td>" << settings->general[ind]->getName() << settings->general[ind]->getHTMLInput(ind) << "</td>";
+                    ss << "<td>" << settings->general[ind]->getHTMLInput(ind) << "</td>";
             }
             ss << "</tr>\n";
         }
@@ -191,9 +190,9 @@ String processor(const String& var){
         for(int i=0; i<DATA_SETTINGS_SIZE; i++) {
             ss << "<tr>";
             for(int j=0; j<DATA_SIZE; j++) {
-                int ind = DATA_0 + DATA_SETTINGS_SIZE * j + i;
+                int ind = DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * j + i;
                 if(settings->general[ind]->isConfigurable())
-                    ss << "<td>" << settings->general[ind]->getName() << settings->general[ind]->getHTMLInput(ind) << "</td>";
+                    ss << "<td>" << settings->general[ind]->getHTMLInput(ind) << "</td>";
             }
             ss << "</tr>\n";
         }

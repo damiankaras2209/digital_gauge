@@ -10,52 +10,74 @@
 #include <iomanip>
 #include "ArduinoJson.h"
 
-#define WIFI_SSID 0
-#define WIFI_PASS 1
+enum Field : uint16_t{
 
-#define WIDTH 2
-#define HEIGHT 3
-#define OFFSET_Y 4
-#define OFFSET_X 5
-#define ELLIPSE_A 6//half of ellipse width (x-axis)
-#define ELLIPSE_B 7//half of ellipse height (y-axis)
-#define PROMPT_WIDTH 8
-#define PROMPT_HEIGHT 9
+    DEMO,
+    WIFI_SSID,
+    WIFI_PASS,
+    WIDTH,
+    HEIGHT,
+    OFFSET_Y,
+    OFFSET_X,
+    ELLIPSE_A, //half of ellipse width (x-axis)
+    ELLIPSE_B, //half of ellipse height (y-axis)
+    PROMPT_WIDTH,
+    PROMPT_HEIGHT,
 
-#define NEEDLE_CENTER_RADIUS 10
-#define NEEDLE_CENTER_OFFSET 11
-#define NEEDLE_LENGTH 12
-#define NEEDLE_TOP_WIDTH 13//in degrees
-#define NEEDLE_BOTTOM_WIDTH 14
+    NEEDLE_CENTER_RADIUS,
+    NEEDLE_CENTER_OFFSET,
+    NEEDLE_LENGTH_ADAPTIVE,
+    NEEDLE_LENGTH,
+    NEEDLE_TOP_WIDTH, //in degrees
+    NEEDLE_BOTTOM_WIDTH,
 
-#define TIME_POS_Y 15
-#define TIME_SIZE 16
-#define DATE_POS_Y 17
-#define DATE_SIZE 18
+    TIME_POS_Y,
+    TIME_SIZE,
+    DATE_POS_Y,
+    DATE_SIZE,
+    SCALE_SIZE,
 
-#define SCALE_SIZE 19
-#define SCALE_MAIN_WIDTH 20
-#define SCALE_LARGE_WIDTH 21
-#define SCALE_SMALL_WIDTH 22
-#define SCALE_LARGE_LENGTH 23
-#define SCALE_SMALL_LENGTH 24
-#define SCALE_LARGE_STEPS 25
-#define SCALE_SMALL_STEPS 26
-#define SCALE_ACC_COLOR_EVERY 27
-#define SCALE_TEXT_STEPS 28
-#define SCALE_TEXT_OFFSET 29
-//#define    //    SCALE_ANTIALIASING,
-//#define    //    INTERNAL_ELLIPSE_DISTANCE,
+    SCALE_LARGE_WIDTH,
+    SCALE_SMALL_WIDTH,
+    SCALE_LARGE_LENGTH,
+    SCALE_SMALL_LENGTH,
+    SCALE_LARGE_STEPS,
+    SCALE_SMALL_STEPS,
+    SCALE_ACC_COLOR_EVERY,
+    SCALE_TEXT_STEPS,
+    SCALE_TEXT_OFFSET,
 
-#define BACKGROUND_COLOR 30
-#define SCALE_COLOR 31
-#define SCALE_ACC_COLOR 32
-#define NEEDLE_CENTER_COLOR 33
-#define FONT_COLOR 34
-#define ICON_COLOR 35
-#define NEEDLE_COLOR 36
+    BACKGROUND_COLOR,
+    SCALE_COLOR,
+    SCALE_ACC_COLOR,
+    NEEDLE_CENTER_COLOR,
+    FONT_COLOR,
+    NEEDLE_COLOR,
 
-#define GENERAL_SETTINGS_SIZE 37
+    INPUT_BEGIN_BEGIN,  INPUT_0_1, INPUT_0_2, INPUT_0_3, INPUT_0_4, INPUT_0_5, INPUT_0_END,
+    INPUT_1_BEGIN,      INPUT_1_1, INPUT_1_2, INPUT_1_3, INPUT_1_4, INPUT_1_5, INPUT_1_END,
+    INPUT_2_BEGIN,      INPUT_2_1, INPUT_2_2, INPUT_2_3, INPUT_2_4, INPUT_2_5, INPUT_2_END,
+    INPUT_3_BEGIN,      INPUT_3_1, INPUT_3_2, INPUT_3_3, INPUT_3_4, INPUT_3_5, INPUT_3_END,
+    INPUT_4_BEGIN,      INPUT_4_1, INPUT_4_2, INPUT_4_3, INPUT_4_4, INPUT_4_5, INPUT_4_END,
+    INPUT_5_BEGIN,      INPUT_5_1, INPUT_5_2, INPUT_5_3, INPUT_5_4, INPUT_5_5, INPUT_END_END,
+
+    DATA_BEGIN_BEGIN,   DATA_0_1,   DATA_0_2,    DATA_0_3,    DATA_0_4,    DATA_0_5,    DATA_0_END,
+    DATA_1_BEGIN,       DATA_1_1,   DATA_1_2,    DATA_1_3,    DATA_1_4,    DATA_1_5,    DATA_1_END,
+    DATA_2_BEGIN,       DATA_2_1,   DATA_2_2,    DATA_2_3,    DATA_2_4,    DATA_2_5,    DATA_2_END,
+    DATA_3_BEGIN,       DATA_3_1,   DATA_3_2,    DATA_3_3,    DATA_3_4,    DATA_3_5,    DATA_3_END,
+    DATA_4_BEGIN,       DATA_4_1,   DATA_4_2,    DATA_4_3,    DATA_4_4,    DATA_4_5,    DATA_4_END,
+    DATA_5_BEGIN,       DATA_5_1,   DATA_5_2,    DATA_5_3,    DATA_5_4,    DATA_5_5,    DATA_5_END,
+    DATA_6_BEGIN,       DATA_6_1,   DATA_6_2,    DATA_6_3,    DATA_6_4,    DATA_6_5,    DATA_6_END,
+    DATA_7_BEGIN,       DATA_7_1,   DATA_7_2,    DATA_7_3,    DATA_7_4,    DATA_7_5,    DATA_7_END,
+    DATA_8_BEGIN,       DATA_8_1,   DATA_8_2,    DATA_8_3,    DATA_8_4,    DATA_8_5,    DATA_8_END,
+    DATA_9_BEGIN,       DATA_9_1,   DATA_9_2,    DATA_9_3,    DATA_9_4,    DATA_9_5,    DATA_9_END,
+    DATA_10_BEGIN,      DATA_10_1,  DATA_10_2,   DATA_10_3,   DATA_10_4,   DATA_10_5,   DATA_10_END,
+    DATA_11_BEGIN,      DATA_11_1,  DATA_11_2,   DATA_11_3,   DATA_11_4,   DATA_11_5,   DATA_END_END,
+
+    SETTINGS_LAST
+};
+
+#define GENERAL_SETTINGS_SIZE INPUT_BEGIN_BEGIN
 
 #define INPUT_R_OFFSET 0
 #define INPUT_TYPE_OFFSET 1
@@ -65,16 +87,8 @@
 #define INPUT_RMAX_OFFSET 5
 #define INPUT_MAXVAL_OFFSET 6
 
-#define INPUT_SETTINGS_SIZE 7 //input fields count
-
-#define INPUT_0 GENERAL_SETTINGS_SIZE
-#define INPUT_1 INPUT_0 + INPUT_SETTINGS_SIZE * 1
-#define INPUT_2 INPUT_0 + INPUT_SETTINGS_SIZE * 2
-#define INPUT_3 INPUT_0 + INPUT_SETTINGS_SIZE * 3
-#define INPUT_4 INPUT_0 + INPUT_SETTINGS_SIZE * 4
-#define INPUT_5 INPUT_0 + INPUT_SETTINGS_SIZE * 5
-
-#define INPUT_SIZE 6 //number of inputs
+#define INPUT_SETTINGS_SIZE (INPUT_0_END - INPUT_BEGIN_BEGIN + 1) //input fields count
+#define INPUT_SIZE (INPUT_END_END - INPUT_BEGIN_BEGIN + 1)/INPUT_SETTINGS_SIZE //number of inputs
 
 #define DATA_ENABLE_OFFSET 0
 #define DATA_NAME_OFFSET 1
@@ -84,13 +98,10 @@
 #define DATA_PRECISION_OFFSET 5
 #define DATA_VALUE_OFFSET 6
 
-#define DATA_SETTINGS_SIZE 7 //data fields count
+#define DATA_SETTINGS_SIZE (DATA_0_END - DATA_BEGIN_BEGIN + 1) //data fields count
+#define DATA_SIZE (DATA_END_END - DATA_BEGIN_BEGIN + 1)/DATA_SETTINGS_SIZE //number of data
 
-#define DATA_0 INPUT_0 + INPUT_SIZE * INPUT_SETTINGS_SIZE
-
-#define DATA_SIZE 12
-
-#define SETTINGS_SIZE DATA_0 + DATA_SIZE * DATA_SETTINGS_SIZE //all settings count
+#define SETTINGS_SIZE SETTINGS_LAST //all settings count
 
 
 typedef struct DataDisplaySettings {
@@ -236,6 +247,8 @@ class Settings {
             volatile float _valueFloat;
             float _defaultFloat;
             float _step;
+            float _min;
+            float _max;
 
             std::string _valueString;
             std::string _defaultString;
@@ -247,6 +260,8 @@ class Settings {
                 _valueFloat = d;
                 _defaultFloat = d;
                 _step = 1.0f;
+                _min = 0.0f;
+                _max = 0.0f;
             }
 
             Field(const char* c, const char* d, bool configurable = true) {
@@ -272,6 +287,12 @@ class Settings {
 
             Field* setStep(float s) {
                 _step = s;
+                return this;
+            }
+
+            Field* setBounds(float min, float max) {
+                _min = min;
+                _max = max;
                 return this;
             }
 
@@ -312,15 +333,26 @@ class Settings {
 
             std::string getHTMLInput(int id) {
                 std::stringstream ss;
+                ss << "<div>";
+                ss << "<label for='" << id << "'>" << _name << "</label>";
                 switch (_type) {
                     case FLOAT: {
-                        ss << "<input value='";
-                        ss << _valueFloat;
-                        ss << "' type='number' step='";
-                        ss << _step;
-                        ss << "' id='";
-                        ss << id;
-                        ss << "'>";
+                        if(_min != _max) {
+                            ss << "<input value='" << _valueFloat <<"'";
+                            ss << " type='range'";
+                            ss << " step='" << _step << "'";
+                            ss << " min='" << _min << "' max='" << _max << "'";
+                            ss << " id='" << id << "'";
+                            ss << " oninput='this.nextElementSibling.value = this.value'";
+                            ss << " onchange='send()'>";
+                            ss << "<output>" << _valueFloat << "</output>";
+                        } else {
+                            ss << "<input value='" << _valueFloat <<"'";
+                            ss << " type='number'";
+                            ss << " step='" << _step << "'";
+                            ss << " id='" << id << "'";
+                            ss << "<";
+                        }
                         break;
                     }
                     case STRING: {
@@ -343,10 +375,10 @@ class Settings {
                         break;
                     }
                     case CHECKBOX: {
-                        ss << "<input type='checkbox' id='";
-                        ss << id;
-                        ss << "' ";
-                        ss << (_valueFloat == 1 ? "checked" : "");
+                        ss << "<input type='checkbox' id='" << id << "'";
+                        ss << (_valueFloat == 1 ? " checked" : "");
+                        if(id < GENERAL_SETTINGS_SIZE)
+                            ss << " onchange='send()'";
                         ss << ">";
                         break;
                     }
@@ -362,6 +394,7 @@ class Settings {
                         break;
                     }
                 }
+                ss << "</div>";
                 return ss.str();
             }
         };
