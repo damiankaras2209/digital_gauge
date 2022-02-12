@@ -407,6 +407,7 @@ class Settings {
 		void loadDefault();
 		void load();
 		void save();
+		void clear();
 		void loadSelected(DataSource *selected);
 		void saveSelected(DataSource *selected);
 

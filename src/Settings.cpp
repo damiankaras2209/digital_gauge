@@ -228,6 +228,11 @@ void Settings::save() {
     file.close();
 }
 
+void Settings::clear() {
+    if(SPIFFS.exists("/settings.json"))
+        SPIFFS.remove("/settings.json");
+}
+
 void Settings::loadSelected(Settings::DataSource *selected) {
     Log.log("Loading selected");
     if(SPIFFS.exists("/selected.json")) {
