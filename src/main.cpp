@@ -24,7 +24,6 @@ bool proceed = true;
 bool updateChecked = false;
 
 TFT_eSPI tft = TFT_eSPI();
-Networking networking;
 UpdaterClass updater;
 
 void print_reset_reason(esp_reset_reason_t reason)
@@ -196,7 +195,7 @@ void setup(void) {
         "\"",
         4, true);
 
-        networking.connectWiFi(TIME_INFINITY, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
+        Networking.connectWiFi(TIME_INFINITY, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
         while(WiFi.status() != WL_CONNECTED){
             delay(50);
         }
@@ -206,7 +205,7 @@ void setup(void) {
 
     if(proceed) {
 
-         networking.connectWiFi(CONNECTING_TIME, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
+         Networking.connectWiFi(CONNECTING_TIME, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
 
          Data.POST();
          Data.init();
@@ -249,7 +248,7 @@ void loop() {
 
         std::stringstream ss;
         ss << millis()-t15;
-        networking.sendEvent("frametime", ss.str());
+        Networking.sendEvent("frametime", ss.str());
     } else
         delay(1);
 }

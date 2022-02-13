@@ -1,9 +1,8 @@
-//#include <AsyncElegantOTA.h>
 #include "Networking.h"
 
 const char* host = "esp32";
 
-
+NetworkingClass Networking;
 
 AsyncWebServer server(80);
 
@@ -12,33 +11,18 @@ AsyncEventSource events("/events");
 Settings* settings = Settings::getInstance();
 Screen* screen = Screen::getInstance();
 
-void Networking::sendEvent(const char * event, std::string str) {
+void NetworkingClass::sendEvent(const char * event, std::string str) {
     events.send(str.c_str(), event, millis());
 }
 
-void Networking::f(std::string str) {
+void NetworkingClass::f(std::string str) {
     events.send(str.c_str(), "myevent", millis());
 }
 
-
-[[noreturn]] void Networking::WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info)
+[[noreturn]] void NetworkingClass::WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 {
-    Log.logf("Connected to %s\n", WiFi.SSID().c_str());
-//    Log.log(WiFi.SSID());
-//    Log.log("IP address: ");
-//    Log.log(IPAddress(info.ap_staipassigned.ip.addr));
-//    Log.log(WiFi.localIP());
 
-//  UpdaterClass updater;
-//  updater.checkForUpdate();
-
-
-}
-
-[[noreturn]] void Networking::WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
-{
-    Log.logf("IP address: %s\n", IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
-//    Log.log(IPAddress(info.ap_staipassigned.ip.addr).toString());
+    Log.logf("Connected to %s,IP: %s\n ", WiFi.SSID().c_str(),IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
 
     if (!MDNS.begin(host)) { //http://esp32.local
         Log.log("Error setting up MDNS responder!");
@@ -48,19 +32,16 @@ void Networking::f(std::string str) {
     }
 
     Log.logf("mDNS responder started, hostname: http://%s.local\n", host);
-//    Log.log("http://esp32.local");
 
     Data.adjustTime(&Data.data);
-
     serverSetup();
 }
 
-int Networking::connectWiFi(int wait, const char* ssid, const char* pass) {
+int NetworkingClass::connectWiFi(int wait, const char* ssid, const char* pass) {
 
     if(WiFi.status() == WL_CONNECTED)
         return WiFi.status();
 
-    WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
     WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
 
     events.onConnect([](AsyncEventSourceClient *client){
@@ -79,12 +60,7 @@ int Networking::connectWiFi(int wait, const char* ssid, const char* pass) {
     WiFi.begin(ssid, pass);
 }
 
-boolean Networking::isWiFiConnected() {
-    return WiFi.status() == WL_CONNECTED;
-}
-
 String processor(const String& var){
-//    Log.log(var);
     char c[10];
 
     if(var == "settings"){
@@ -207,7 +183,7 @@ String processor(const String& var){
     return String("2137");
 }
 
-void Networking::serverSetup() {
+void NetworkingClass::serverSetup() {
     TaskHandle_t handle;
     if(!xTaskCreatePinnedToCore(serverSetupTask,
                 "setupServer",
@@ -218,9 +194,7 @@ void Networking::serverSetup() {
                 1)) Log.log("Failed to start setupServer task");
 }
 
-
-/* setup function */
-void Networking::serverSetupTask(void * pvParameters) {
+void NetworkingClass::serverSetupTask(void * pvParameters) {
 
 
     while (WiFi.status() != WL_CONNECTED) {
@@ -238,10 +212,6 @@ void Networking::serverSetupTask(void * pvParameters) {
     });
 
     server.on("/settingsSet", HTTP_POST, [](AsyncWebServerRequest *request){
-//        setSettings();
-//        while(screen->isBusy) {
-//
-//        }
         int params = request->params();
         for(int i=0;i<params;i++){
             AsyncWebParameter* p = request->getParam(i);
@@ -278,9 +248,7 @@ void Networking::serverSetupTask(void * pvParameters) {
         }
 
         settings->save();
-//        screen->reset();
         screen->reset();
-//        request->send(SPIFFS, "/settings.html", String(), false, processor);
     });
 
     server.on("/time", HTTP_POST, [](AsyncWebServerRequest *request){

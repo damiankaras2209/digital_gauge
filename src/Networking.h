@@ -19,19 +19,18 @@
 #define TIME_INFINITY -1
 
 
-class Networking {
+class NetworkingClass {
 
     public:
         int connectWiFi(int = CONNECTING_TIME, const char* ssid = "", const char* pass = "");
         static void serverSetup();
-        static boolean isWiFiConnected();
         void sendEvent(const char *, std::string);
     private:
         static void f(std::string);
-        [[noreturn]] static void WiFiStationConnected(WiFiEvent_t, WiFiEventInfo_t);
         [[noreturn]] static void WiFiGotIP(WiFiEvent_t, WiFiEventInfo_t);
-        static void connectWiFiTask(void *);
         static void serverSetupTask(void *);
 };
+
+extern NetworkingClass Networking;
 
 #endif
