@@ -109,6 +109,7 @@
         <form onsubmit='return send()'>
             <h1>Ustawienia</h1><p id='frametime'>frametime: </p>
             <button type="button" onclick='post("reset"); window.location.reload(true);'>Przywróć domyślne</button>
+            <button type="button" onclick='post("time"); window.location.reload(true);'>Wymuś synchrunizację czasu</button>
             %settings%
             <h2>Wejścia analogowe</h2>
             %input_table%

@@ -26,7 +26,6 @@ bool updateChecked = false;
 TFT_eSPI tft = TFT_eSPI();
 Networking networking;
 UpdaterClass updater;
-Data data;
 
 void print_reset_reason(esp_reset_reason_t reason)
 {
@@ -171,7 +170,7 @@ void setup(void) {
     Settings::DataSource selected[SIDE_LAST];
     Settings::getInstance()->loadSelected(selected);
 
-    Screen::getInstance()->init(&tft, &data);
+    Screen::getInstance()->init(&tft);
     Screen::getInstance()->setSelected(selected);
 
     ledcSetup(ledChannel, freq, resolution);
@@ -209,10 +208,10 @@ void setup(void) {
 
          networking.connectWiFi(CONNECTING_TIME, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
 
-         data.POST();
-         data.init();
+         Data.POST();
+         Data.init();
 
-         data.touch.onEvent(action);
+         Data.touch.onEvent(action);
 
     //  tft.fillScreen(TFT_BLUE);
 

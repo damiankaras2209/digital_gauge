@@ -44,7 +44,7 @@ enum Device {
 
 const String deviceName[] = {"FT5436", "DS3231", "MCP2515", "ADS1115", "MCP23008"};
 
-class Data {
+class DataClass {
 
 public:
 
@@ -62,7 +62,7 @@ public:
             volatile bool i2cBusy = false;
         } DataStruct;
 
-        Data();
+        DataClass();
         void init();
         void POST();
         bool status[D_LAST];
@@ -76,16 +76,18 @@ public:
         DateTime getTime();
         DataStruct data;
 
+        static void adjustTime(DataStruct *);
+
 private:
 //        static void IRAM_ATTR touchStart();
 
 //        [[noreturn]] static void test(void *);
         static void canReset(MCP2515*);
-        static void adjustRTCTask(void *);
         _Noreturn  static void adcLoop(void *);
         _Noreturn  static void canLoop(void *);
 
 };
 
+extern DataClass Data;
 
 #endif

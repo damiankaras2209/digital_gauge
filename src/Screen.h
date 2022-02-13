@@ -41,7 +41,7 @@ class Screen {
 		Screen();
 		volatile boolean isBusy;
 		static Screen *getInstance();
-		void init(TFT_eSPI*, Data*);
+		void init(TFT_eSPI*);
 		void setSelected(Settings::DataSource*);
 		void setSelected(Side, Settings::DataSource);
 		void getSelected(Settings::DataSource*);
@@ -55,7 +55,6 @@ class Screen {
 
 	private:
 		TFT_eSPI *tft;
-        Data *data;
         Settings *settings;
         Settings::DataSource selected[3];
         Settings::Field** gen;

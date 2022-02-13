@@ -6,12 +6,14 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;
 const int   daylightOffset_sec = 3600;
 
+DataClass Data;
 
-Data::Data() {
+
+DataClass::DataClass() {
 
 }
 
-void Data::canReset(MCP2515* mcp) {
+void DataClass::canReset(MCP2515* mcp) {
     MCP2515::ERROR error = mcp->reset();
     if(error == MCP2515::ERROR_OK) {
 //        Log.log("MCP2515 good");
@@ -22,7 +24,7 @@ void Data::canReset(MCP2515* mcp) {
     }
 }
 
-void Data::POST() {
+void DataClass::POST() {
     std::fill(status, status + D_LAST - 1, false);
 
     Log.log("POST start");
@@ -40,7 +42,7 @@ void Data::POST() {
     Log.log("POST completed");
 }
 
-void Data::init() {
+void DataClass::init() {
 
     data = DataStruct();
     //    data.dataDisplaySettings = Settings::getInstance()->dataDisplay;
@@ -58,7 +60,7 @@ void Data::init() {
         data.lastRTC = millis();
         if(rtc.lostPower()) {
             Log.log("RTC lost power");
-            rtc.adjust(DateTime(22, 2, 22, 22, 22, 22));
+            rtc.adjust(DateTime(2222, 2, 22, 22, 22, 22));
         }
     }
 
@@ -76,18 +78,6 @@ void Data::init() {
 
 
     touch.enableInterrupt(33, &(data.i2cBusy), 1, 0);
-
-    if(status[D_DS3231]) {
-        TaskHandle_t rtcAdjustHandle;
-        if(!xTaskCreatePinnedToCore(adjustRTCTask,
-             "adjustRTC",
-             4*1024,
-             &data,
-             3,
-             &rtcAdjustHandle,
-             0))
-                 Log.log("Failed to start rtc adjust task");
-    }
 
     TaskHandle_t adcHandle;
     if(!xTaskCreatePinnedToCore(adcLoop,
@@ -113,7 +103,7 @@ void Data::init() {
 
 }
 
-_Noreturn void Data::adcLoop(void * pvParameters) {
+_Noreturn void DataClass::adcLoop(void * pvParameters) {
     Log.logf("%s started on core %d\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
 //    Log.log(" started on core ");
 //    Log.log(xPortGetCoreID());
@@ -230,7 +220,7 @@ _Noreturn void Data::adcLoop(void * pvParameters) {
 
 ulong lastFrame = 0;
 ulong lastCanInit = 0;
-_Noreturn void Data::canLoop(void * pvParameters) {
+_Noreturn void DataClass::canLoop(void * pvParameters) {
     Log.logf("%s started on core %\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
 //    Log.log(" started on core ");
 //    Log.log(xPortGetCoreID());
@@ -372,20 +362,19 @@ _Noreturn void Data::canLoop(void * pvParameters) {
 }
 
 
-DateTime Data::getTime() {
+DateTime DataClass::getTime() {
     return data.now;
 }
 
-void Data::adjustRTCTask(void * pvParameters) {
+void DataClass::adjustTime(DataStruct *params) {
     Log.logf("%s started on core %d\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
-//    Log.log(" started on core ");
-//    Log.log(xPortGetCoreID());
+    //    Log.log(" started on core ");
+    //    Log.log(xPortGetCoreID());
 
     while(WiFi.status() != WL_CONNECTED) {
         delay(100);
     }
 
-    auto params = (DataStruct*)pvParameters;
     while(params->i2cBusy)
         delay(1);
     params->i2cBusy = true;
@@ -396,16 +385,15 @@ void Data::adjustRTCTask(void * pvParameters) {
     if(!getLocalTime(&timeinfo)){
         Log.log("Failed to obtain time from server");
     } else {
-        Log.log("Success ");
-//        Log.log(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-//        Log.logf("%d.%d.%d %d:%d:%d\n", timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-        ((DataStruct*)pvParameters)->rtcPtr->adjust(DateTime(timeinfo.tm_year, timeinfo.tm_mon+1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec));
-//        DateTime now  = ((DataStruct*)pvParameters)->rtcPtr->now();
-//        Log.logf("Adjusted to: %d:%d\n", now.hour(), now.minute());
+        timeinfo.tm_mon += 1;
+        timeinfo.tm_year += 1900;
+        params->rtcPtr->adjust(DateTime(timeinfo.tm_year, timeinfo.tm_mon, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec));
+        DateTime now  = params->rtcPtr->now();
+        params->lastRTC = millis();
+        Log.logf("Got: %d.%d.%d %d:%d:%d, adjusted to: %d.%d.%d %d:%d:%d\n",
+                 timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec,
+                 now.day(), now.month(), now.year(), now.hour(), now.minute(), now.second());
     }
 
     params->i2cBusy = false;
-    vTaskDelete(NULL);
 }
-
-

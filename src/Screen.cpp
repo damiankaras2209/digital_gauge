@@ -121,9 +121,8 @@ void Screen::createScaleSprites(Side side) {
 //    Log.logf("Sprites creation time: %lu", millis()-t4);
 }
 
-void Screen::init(TFT_eSPI *t, Data *d) {
+void Screen::init(TFT_eSPI *t) {
 	tft = t;
-	data = d;
 	for(int i=0; i<2; i++) {
 	    for(int j=0; j<5; j++) {
 	        scaleSprite[i][j] = new TFT_eSprite(tft);
@@ -561,7 +560,7 @@ int pMinute = -1, pDay = -1;
 ulong t5;
 void Screen::updateText(boolean force, int fps) {
     t5 = millis();
-	DateTime now = data->getTime();
+	DateTime now = Data.getTime();
 
 	if(	(now.month() > 3 && now.month() < 10) ||
 		(now.month() == 3 && now.day() > 28))

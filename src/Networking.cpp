@@ -50,6 +50,8 @@ void Networking::f(std::string str) {
     Log.logf("mDNS responder started, hostname: http://%s.local\n", host);
 //    Log.log("http://esp32.local");
 
+    Data.adjustTime(&Data.data);
+
     serverSetup();
 }
 
@@ -281,11 +283,9 @@ void Networking::serverSetupTask(void * pvParameters) {
 //        request->send(SPIFFS, "/settings.html", String(), false, processor);
     });
 
-//  server.on("/settingsSet", HTTP_POST, []() {
-//    setSettings();
-//  });
-
-//    AsyncElegantOTA.begin(&server);
+    server.on("/time", HTTP_POST, [](AsyncWebServerRequest *request){
+        Data.adjustTime(&Data.data);
+    });
 
     server.on("/reset", HTTP_POST, [](AsyncWebServerRequest *request){
         settings->loadDefault();
