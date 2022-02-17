@@ -6,12 +6,7 @@
         <link rel="stylesheet" href="style.css">
         <script>
 
-        const INPUT_0 = %INPUT_0%;
-        const INPUT_SETTINGS_SIZE = %INPUT_SETTINGS_SIZE%;
-        const INPUT_SIZE = %INPUT_SIZE%;
-        const DATA_0 = %DATA_0%;
-        const DATA_SETTINGS_SIZE = %DATA_SETTINGS_SIZE%;
-        const DATA_SIZE = %DATA_SIZE%;
+            %CONSTS%
 
         function send(){
           let data = new FormData();
@@ -36,43 +31,46 @@
 
             switch (preset) {
                 case -1:
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 0).value = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 1).selectedIndex = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 2).value = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 3).value = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 4).value = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 5).value = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 6).value = 0;
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 1).value = "";
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 2).value = "u";
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 3).value = 0;
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 4).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 0).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 1).selectedIndex = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 2).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 3).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 4).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 5).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 6).value = 0;
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 1).value = "";
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 2).value = "u";
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 3).value = 0;
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 4).value = 0;
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 5).value = 0;
                     break;
                 case 0:
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 0).value = 101.5;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 1).selectedIndex = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 2).value = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 3).value = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 4).value = 3.0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 5).value = 160.0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE + 6).value = 10.0;
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 1).value = "Oil press";
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 2).value = "bar";
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 3).value = 0;
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  + 4).value = 12;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 0).value = 101.5;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 1).selectedIndex = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 2).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 3).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 4).value = 3.0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 5).value = 160.0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 6).value = 10.0;
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 1).value = "Oil press";
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 2).value = "bar";
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 3).value = 0;
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 4).value = 12;
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 5).value = 1;
                     break;
                 case 1:
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  0).value = 10110.0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  1).selectedIndex = 1;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  2).value = 3800.0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  3).value = 58000.0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  4).value = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  5).value = 0;
-                    document.getElementById(INPUT_0 + i * INPUT_SETTINGS_SIZE +  6).value = 0;
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  +  1).value = "Oil temp";
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  +  2).value = "°C";
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  +  3).value = 30;
-                    document.getElementById(DATA_0  + i * DATA_SETTINGS_SIZE  +  4).value = 150;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 0).value = 10110.0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 1).selectedIndex = 1;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 2).value = 3800.0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 3).value = 58000.0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 4).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 5).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 6).value = 0;
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 1).value = "Oil temp";
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 2).value = "°C";
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 3).value = 30;
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 4).value = 150;
+                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 5).value = 1;
                     break;
             }
         }

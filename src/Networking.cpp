@@ -103,26 +103,20 @@ String processor(const String& var){
 
         return String(ss.str().c_str());
 
-    } else if(var == "dataDisplayLength") {
-        return itoa(SettingsClass::LAST, c, 10);
+    } else if(var == "CONSTS") {
 
-    } else if(var == "INPUT_BEGIN_BEGIN") {
-        return itoa(INPUT_BEGIN_BEGIN, c, 10);
+        std::stringstream ss;
 
-    } else if(var == "INPUT_SETTINGS_SIZE") {
-        return itoa(INPUT_SETTINGS_SIZE, c, 10);
+        ss << "const GENERAL_SETTINGS_SIZE = " << GENERAL_SETTINGS_SIZE << ";";
+        ss << "const INPUT_SETTINGS_SIZE = " << INPUT_SETTINGS_SIZE << ";";
+        ss << "const INPUT_SIZE = " << INPUT_SIZE << ";";
+        ss << "const INPUT_BEGIN_BEGIN = " << INPUT_BEGIN_BEGIN << ";";
+        ss << "const DATA_SETTINGS_SIZE = " << DATA_SETTINGS_SIZE << ";";
+        ss << "const DATA_SIZE = " << DATA_SIZE << ";";
+        ss << "const DATA_BEGIN_BEGIN = " << DATA_BEGIN_BEGIN << ";";
+        ss << "const SETTINGS_SIZE = " << SETTINGS_SIZE << ";";
 
-    } else if(var == "INPUT_SIZE") {
-        return itoa(INPUT_SIZE, c, 10);
-
-    } else if(var == "DATA_BEGIN_BEGIN") {
-        return itoa(DATA_BEGIN_BEGIN, c, 10);
-
-    } else if(var == "DATA_SETTINGS_SIZE") {
-        return itoa(DATA_SETTINGS_SIZE, c, 10);
-
-    } else if(var == "DATA_SIZE") {
-        return itoa(DATA_SIZE, c, 10);
+        return String(ss.str().c_str());
 
     } else if(var == "input_table") {
 
