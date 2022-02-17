@@ -15,76 +15,43 @@
 #include "RTClib.h"
 #include "TFT_eSPI.h"
 #include "ADS1X15.h"
+#include "Gauges.h"
+#include "Lock.h"
 
 #define SCALE_SPRITE_Y_OFFSET_12 2
 #define SCALE_SPRITE_Y_OFFSET_16 3
 #define LINE_SPACING 10
 
-float calcX(int16_t, int16_t, int16_t);
-float calcY(int16_t, int16_t, int16_t);
-double rad(int16_t);
-
-enum Side {
-    LEFT, RIGHT, MID, SIDE_LAST
-};
-
 enum View {
-    GAUGES, CLOCK, PROMPT
+	GAUGES, CLOCK, PROMPT
 };
 
-class Screen {
-
-	protected:
-		static Screen* screen;
+class ScreenClass {
 
 	public:
-		Screen();
-		volatile boolean isBusy;
-		static Screen *getInstance();
-		void init(TFT_eSPI*);
-		void setSelected(Settings::DataSource*);
-		void setSelected(Side, Settings::DataSource);
-		void getSelected(Settings::DataSource*);
+        void init();
 		void reset();
 		void showPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
 		void appendToPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
 		void setClockMode();
 		void setGaugeMode();
-        View getView();
+		View getView();
 		void tick();
+
+		Gauges *gauges;
 
 	private:
 		TFT_eSPI *tft;
-        Settings *settings;
-        Settings::DataSource selected[3];
-        Settings::Field** gen;
-		double arrR[91], arrOffset[91], arrX[91], arrY[91];
-		TFT_eSprite* scaleSprite[2][5];
-		TFT_eSprite* needleUpdate;
-		TFT_eSprite* textUpdate;
+		SettingsClass::Field **gen;
+		Lock *lock;
+        volatile View currentView;
 		int lines = 0;
-		volatile View currentView;
-		boolean drawWhole[2];
-		int16_t selectedInfoCoords[4]; // x, y, w, h;
-		bool selectedInfoVisible;
-		ulong selectedInfoTimestamp;
 		uint16_t c24to16(int);
-		void drawScalePiece(TFT_eSprite*, int, int, int, int, int, int, uint16_t);
-		void drawScale(TFT_eSprite*, int, int, int, int, int, int);
-		void updateNeedle(int);
-		void updateText(boolean, int fps);
-		void drawSelectedInfo();
-		void clearSelectedInfo();
-		void fillTables();
-		void createScaleSprites(Side);
+
 		void switchView(View);
-		void lock();
-		void release();
-
-
-
-	//void readSettings();
 
 };
+
+extern ScreenClass Screen;
 
 #endif

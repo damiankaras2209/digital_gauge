@@ -174,20 +174,15 @@ typedef struct DataDisplaySettings {
 //    INPUT_FIELDS_SIZE
 //};
 
+enum InputType {
+    Linear, Logarithmic, Voltage, InputTypeSize
+};
 
+const String inputTypeString[InputTypeSize] = {"Linear", "Logarithmic", "Voltage"};
 
-class Settings {
-
-    protected:
-        static Settings* settings;
+class SettingsClass {
 
     public:
-
-        enum InputType {
-            Linear, Logarithmic, Voltage, InputTypeSize
-        };
-
-        const String inputTypeString[InputTypeSize] = {"Linear", "Logarithmic", "Voltage"};
 
         typedef struct InputSettings {
             float r;
@@ -369,7 +364,7 @@ class Settings {
                         ss << id;
                         ss << "'>";
                         for(int i=0; i<InputType::InputTypeSize; i++) {
-                            ss << "<option value='" << i <<"' " << ((int)_valueFloat == i ? "selected" : "") << ">" << settings->inputTypeString[i].c_str() << "</option>";
+                            ss << "<option value='" << i <<"' " << ((int)_valueFloat == i ? "selected" : "") << ">" << inputTypeString[i].c_str() << "</option>";
                         }
                         ss << "</select>";
                         break;
@@ -401,8 +396,6 @@ class Settings {
 
 
 	public:
-		Settings();
-		static Settings *getInstance();
 		void init();
 		void loadDefault();
 		void load();
@@ -416,5 +409,7 @@ class Settings {
         Field* general[SETTINGS_SIZE];
 
 };
+
+extern SettingsClass Settings;
 
 #endif

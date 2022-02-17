@@ -23,7 +23,6 @@ int brightness = 255;
 bool proceed = true;
 bool updateChecked = false;
 
-TFT_eSPI tft = TFT_eSPI();
 UpdaterClass updater;
 
 void print_reset_reason(esp_reset_reason_t reason)
@@ -48,7 +47,7 @@ void f(t_httpUpdate_return status) {
     switch (status) {
         case HTTP_UPDATE_FAILED:
             Log.logf("HTTP_UPDATE_FAILD Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
-            Screen::getInstance()->appendToPrompt("Update failed " + (String) httpUpdate.getLastError() + ": " +
+            Screen.appendToPrompt("Update failed " + (String) httpUpdate.getLastError() + ": " +
                                                   httpUpdate.getLastErrorString().c_str() + "\nReboot to try again", 4, true);
             break;
 
@@ -58,8 +57,8 @@ void f(t_httpUpdate_return status) {
 
         case HTTP_UPDATE_OK:
             Log.log("HTTP_UPDATE_OK");
-            Settings::getInstance()->save();
-            Screen::getInstance()->appendToPrompt("Update successful\n Restarting in 3 seconds", 4, true);
+            Settings.save();
+            Screen.appendToPrompt("Update successful\n Restarting in 3 seconds", 4, true);
             delay(3000);
             esp_restart();
     }
@@ -67,7 +66,7 @@ void f(t_httpUpdate_return status) {
 
 }
 
-static void action(GxFT5436::Event event) {
+static void onEvent(GxFT5436::Event event) {
 
     if(event.type == GxFT5436::SINGLE_CLICK) {
 
@@ -76,45 +75,45 @@ static void action(GxFT5436::Event event) {
 
         Log.logf("Single touch at %d,%d\n", x, y);
 
-        View view = Screen::getInstance()->getView();
+        View view = Screen.getView();
 
         switch (view) {
             case PROMPT: {
                 //dismiss menu
-                Screen::getInstance()->setGaugeMode();
+                Screen.setGaugeMode();
                 break;
             }
             case GAUGES: {
                 //show menu
-                if(Screen::getInstance()->getView() != PROMPT && x > Settings::getInstance()->general[WIDTH]->get<int>()/2 - Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>() && x < Settings::getInstance()->general[WIDTH]->get<int>()/2 + Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>() && y < Settings::getInstance()->general[HEIGHT]->get<int>()/2) {
-                    Screen::getInstance()->showPrompt("SSID: " + String((char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
+                if(Screen.getView() != PROMPT && x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() && x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() && y < Settings.general[HEIGHT]->get<int>() / 2) {
+                    Screen.showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
                 }
 
                 //change gauge
 
                 Side side = SIDE_LAST;
-                if(x < Settings::getInstance()->general[WIDTH]->get<int>()/2-Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>())
+                if(x < Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
                     side = LEFT;
-                else if(x > Settings::getInstance()->general[WIDTH]->get<int>()/2+Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>())
+                else if(x > Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
                     side = RIGHT;
-                else if(x > Settings::getInstance()->general[WIDTH]->get<int>()/2-Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>() &&
-                        x < Settings::getInstance()->general[WIDTH]->get<int>()/2+Settings::getInstance()->general[NEEDLE_CENTER_OFFSET]->get<int>() &&
-                        y > Settings::getInstance()->general[HEIGHT]->get<int>()/2)
+                else if(x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
+                        x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
+                        y > Settings.general[HEIGHT]->get<int>() / 2)
                     side = MID;
 
                 if(side != SIDE_LAST) {
-                    Settings::DataSource selected[3];
-                    Screen::getInstance()->getSelected(selected);
+                    SettingsClass::DataSource selected[3];
+                    Screen.gauges->getSelected(selected);
 
-                    Log.logf("Current data: %s\n", Settings::getInstance()->dataSourceString[selected[side]].c_str());
+                    Log.logf("Current data: %s\n", Settings.dataSourceString[selected[side]].c_str());
                     do {
-                        selected[side] = static_cast<Settings::DataSource>(selected[side]+1);
-                        if(selected[side] == Settings::LAST)
-                            selected[side] = static_cast<Settings::DataSource>(0);
-                    } while (!Settings::getInstance()->general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
-                    Log.logf("Changing to: %s\n", Settings::getInstance()->dataSourceString[selected[side]].c_str());
-                    Screen::getInstance()->setSelected(side, selected[side]);
-                    Settings::getInstance()->saveSelected(selected);
+                        selected[side] = static_cast<SettingsClass::DataSource>(selected[side] + 1);
+                        if(selected[side] == SettingsClass::LAST)
+                            selected[side] = static_cast<SettingsClass::DataSource>(0);
+                    } while (!Settings.general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
+                    Log.logf("Changing to: %s\n", Settings.dataSourceString[selected[side]].c_str());
+                    Screen.gauges->setSelected(side, selected[side]);
+                    Settings.saveSelected(selected);
                 }
 
             }
@@ -156,21 +155,17 @@ void setup(void) {
     print_reset_reason(esp_reset_reason());
 
     if(esp_reset_reason() != ESP_RST_POWERON && esp_reset_reason() != ESP_RST_UNKNOWN && esp_reset_reason() != ESP_RST_SW)
-        Settings::getInstance()->clear();
+        Settings.clear();
 
-    tft.init();
-    tft.setRotation(3);
-    tft.invertDisplay(1);
+    Settings.init();
 
-    Settings::getInstance()->init();
+    Settings.loadDefault();
+    Settings.load();
+    SettingsClass::DataSource selected[SIDE_LAST];
+    Settings.loadSelected(selected);
 
-    Settings::getInstance()->loadDefault();
-    Settings::getInstance()->load();
-    Settings::DataSource selected[SIDE_LAST];
-    Settings::getInstance()->loadSelected(selected);
-
-    Screen::getInstance()->init(&tft);
-    Screen::getInstance()->setSelected(selected);
+    Screen.init();
+    Screen.gauges->setSelected(selected);
 
     ledcSetup(ledChannel, freq, resolution);
     ledcAttachPin(ledPin, ledChannel);
@@ -184,35 +179,33 @@ void setup(void) {
         proceed = false;
         Log.log("Filesystem version does not match target version. Trying to update");
 
-        Screen::getInstance()->showPrompt("Filesystem version does not match target version\ncurrent: " +
-        getCurrentFilesystemVersionString() +
-        ", target: " +
-        getTargetFilesystemVersionString() +
-        "\nCreate an AP with following credentials:\nSSID: \"" +
-        (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str() +
-        "\", pass: \"" +
-        (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str() +
-        "\"",
+        Screen.showPrompt("Filesystem version does not match target version\ncurrent: " +
+                          getCurrentFilesystemVersionString() +
+                          ", target: " +
+                          getTargetFilesystemVersionString() +
+                          "\nCreate an AP with following credentials:\nSSID: \"" +
+                          (char *)Settings.general[WIFI_SSID]->getString().c_str() +
+                          "\", pass: \"" +
+                          (char *)Settings.general[WIFI_PASS]->getString().c_str() +
+                          "\"",
         4, true);
 
-        Networking.connectWiFi(TIME_INFINITY, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
+        Networking.connectWiFi(TIME_INFINITY, (char *)Settings.general[WIFI_SSID]->getString().c_str(), (char *)Settings.general[WIFI_PASS]->getString().c_str());
         while(WiFi.status() != WL_CONNECTED){
             delay(50);
         }
-        Screen::getInstance()->appendToPrompt("WiFi connected, updating... this may take a while", 4, true);
+        Screen.appendToPrompt("WiFi connected, updating... this may take a while", 4, true);
         updater.updateFS(getTargetFilesystemVersionString(), f);
     }
 
     if(proceed) {
 
-         Networking.connectWiFi(CONNECTING_TIME, (char *)Settings::getInstance()->general[WIFI_SSID]->getString().c_str(), (char *)Settings::getInstance()->general[WIFI_PASS]->getString().c_str());
+         Networking.connectWiFi(CONNECTING_TIME, (char *)Settings.general[WIFI_SSID]->getString().c_str(), (char *)Settings.general[WIFI_PASS]->getString().c_str());
 
          Data.POST();
          Data.init();
 
-         Data.touch.onEvent(action);
-
-    //  tft.fillScreen(TFT_BLUE);
+        Data.touch.onEvent(onEvent);
 
     //  TwoWire twoWire(1);
     //  twoWire.setPins(21, 22);
@@ -225,8 +218,8 @@ void setup(void) {
 
 
 
-        Screen::getInstance()->reset();
-        Screen::getInstance()->setGaugeMode();
+        Screen.reset();
+        Screen.setGaugeMode();
 
         ledcWrite(0, 255);
   }
@@ -243,7 +236,7 @@ void loop() {
 
     if(proceed) {
         t15 = millis();
-        Screen::getInstance()->tick();
+        Screen.tick();
 //        delay(1);
 
         std::stringstream ss;

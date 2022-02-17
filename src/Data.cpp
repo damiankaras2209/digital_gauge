@@ -109,17 +109,16 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 //    Log.log(xPortGetCoreID());
 
     DataStruct *params = (DataStruct*)pvParameters;
-    Settings *settings = Settings::getInstance();
 
     for(;;) {
         while(params->i2cBusy)
            delay(1);
         params->i2cBusy = true;
 
-        uint32_t readings[Settings::VOLTAGE+1][SAMPLES_ADC];
+        uint32_t readings[SettingsClass::VOLTAGE + 1][SAMPLES_ADC];
 
-        for(int i=0; i<=Settings::VOLTAGE && params->adsPtr->isConnected(); i++) {
-            if(settings->general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>()) {
+        for(int i=0; i <= SettingsClass::VOLTAGE && params->adsPtr->isConnected(); i++) {
+            if(Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>()) {
 
                 for(int j= SAMPLES_ADC - 1; j > 0; j--)
                     readings[i][j] = readings[i][j - 1];
@@ -130,7 +129,7 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
                     readings[i][0] = analogReadMilliVolts(36);
                 else if(i==5)
                     readings[i][0] = analogReadMilliVolts(39);
-                else if(i==Settings::VOLTAGE)
+                else if(i == SettingsClass::VOLTAGE)
                     readings[i][0] = analogReadMilliVolts(34);
 
 //                Serial.print("Raw voltage: ");
@@ -163,10 +162,10 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 //                    Log.logf(", voltage: %f", voltage);
 //                }
 
-                if(i<Settings::VOLTAGE) {
+                if(i < SettingsClass::VOLTAGE) {
 
 
-                    Settings::Field** input = &(settings->general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE]);
+                    SettingsClass::Field** input = &(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE]);
                     float res = input[INPUT_R_OFFSET]->get<float>() * voltage / (3.3 - voltage);
 
 //                    Log.logf("%s - voltage: %f", settings->dataSourceString[i].c_str(), voltage);
@@ -175,17 +174,17 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 //                    Log.logf(", R: %f\n", res);
 
                     switch(input[INPUT_TYPE_OFFSET]->get<int>()){
-                        case Settings::Logarithmic: settings->general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(input[INPUT_BETA_OFFSET]->get<float>() * (25.0 + 273.15) / (input[INPUT_BETA_OFFSET]->get<float>() + ((25.0 + 273.15) * log(res / input[INPUT_R25_OFFSET]->get<float>()))) - 273.15); break;
-                        case Settings::Linear:      settings->general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((res - input[INPUT_RMIN_OFFSET]->get<float>()) / (input[INPUT_RMAX_OFFSET]->get<float>() - input[INPUT_RMIN_OFFSET]->get<float>()) * input[INPUT_MAXVAL_OFFSET]->get<float>()); break;
-                        case Settings::Voltage:     settings->general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage); break;
+                        case Logarithmic: Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(input[INPUT_BETA_OFFSET]->get<float>() * (25.0 + 273.15) / (input[INPUT_BETA_OFFSET]->get<float>() + ((25.0 + 273.15) * log(res / input[INPUT_R25_OFFSET]->get<float>()))) - 273.15); break;
+                        case Linear:      Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((res - input[INPUT_RMIN_OFFSET]->get<float>()) / (input[INPUT_RMAX_OFFSET]->get<float>() - input[INPUT_RMIN_OFFSET]->get<float>()) * input[INPUT_MAXVAL_OFFSET]->get<float>()); break;
+                        case Voltage:     Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage); break;
                     }
 
 //                    if(i==Settings::ADS1115_1) {
 //                        Log.logf(", value: %f\n", settings->dataDisplay[i].value);
 //                    }
 
-                } else if(i == Settings::VOLTAGE)
-                    settings->general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage * 5.7);
+                } else if(i == SettingsClass::VOLTAGE)
+                    Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage * 5.7);
 
 //                Log.logf(", inputValue: %f\n", params->inputValue[i]);
             }
@@ -227,7 +226,6 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 
     struct can_frame canMsg{};
     DataStruct *params = (DataStruct*)pvParameters;
-    Settings *settings = Settings::getInstance();
 
     uint32_t samplesRPM[SAMPLES_CAN];
     uint32_t samplesGas[SAMPLES_CAN];
@@ -291,7 +289,7 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
                     int sign = raw > 0x8888 ? 1 : -1;
                     int val = sign==1 ? 0xffff - raw : raw;
 
-                    settings->general[DATA_BEGIN_BEGIN + Settings::DataSource::CAN_STEERING_ANGLE * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float) sign * val / 10); //checked
+                    Settings.general[DATA_BEGIN_BEGIN + SettingsClass::DataSource::CAN_STEERING_ANGLE * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float) sign * val / 10); //checked
 //                    Serial.println(settings->dataDisplay[Settings::CAN_STEERING_ANGLE].value);
                     break;
                 }
@@ -323,9 +321,9 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
                         sumSpeed += samplesSpeed[j];
                     }
 
-                    settings->general[DATA_BEGIN_BEGIN + Settings::DataSource::CAN_RPM * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float) sumRPM / SAMPLES_CAN / 4); //checked
-                    settings->general[DATA_BEGIN_BEGIN + Settings::DataSource::CAN_SPEED * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float)  sumSpeed / SAMPLES_CAN * 2); //checked
-                    settings->general[DATA_BEGIN_BEGIN + Settings::DataSource::CAN_GAS * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float) sumGas / SAMPLES_CAN / 51200 * 100); //checked
+                    Settings.general[DATA_BEGIN_BEGIN + SettingsClass::DataSource::CAN_RPM * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float) sumRPM / SAMPLES_CAN / 4); //checked
+                    Settings.general[DATA_BEGIN_BEGIN + SettingsClass::DataSource::CAN_SPEED * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float)  sumSpeed / SAMPLES_CAN * 2); //checked
+                    Settings.general[DATA_BEGIN_BEGIN + SettingsClass::DataSource::CAN_GAS * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float) sumGas / SAMPLES_CAN / 51200 * 100); //checked
 //                    Serial.printf("rpm: %f", settings->dataDisplay[Settings::CAN_RPM].value);
 //                    Serial.printf("speed: %f", settings->dataDisplay[Settings::CAN_SPEED].value);
 //                    Serial.printf("gas: %f", settings->dataDisplay[Settings::CAN_GAS].value);
@@ -343,7 +341,7 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
                     int raw = canMsg.data[0] << 16 | canMsg.data[1] << 8 | canMsg.data[2];
 
                     if(raw != 0x0) {
-                        settings->general[DATA_BEGIN_BEGIN + Settings::DataSource::CAN_HB * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((canMsg.data[6] & 0x20) >> 5);
+                        Settings.general[DATA_BEGIN_BEGIN + SettingsClass::DataSource::CAN_HB * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((canMsg.data[6] & 0x20) >> 5);
 //                        Serial.printf(" HB: %f\n", settings->dataDisplay[Settings::CAN_HB].value);
                     }
 

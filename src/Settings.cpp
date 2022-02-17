@@ -1,26 +1,13 @@
 #include "Settings.h"
 
-Settings* Settings::settings = NULL;
+SettingsClass Settings;
 
-Settings::Settings() {
-
-}
-
-Settings* Settings::getInstance()
-{
-    if(settings==nullptr)
-        settings = new Settings();
-    return settings;
-}
-
-
-
-void Settings::loadDefault() {
+void SettingsClass::loadDefault() {
     for(int i=0; i<SETTINGS_SIZE; i++)
-        settings->general[i]->setDefault();
+        general[i]->setDefault();
 }
 
-void Settings::init() {
+void SettingsClass::init() {
 
 #ifdef LOG_SETTINGS
     Log.logf("GENERAL_SETTINGS_SIZE: %d\n", GENERAL_SETTINGS_SIZE);
@@ -146,7 +133,7 @@ void Settings::init() {
 
 }
 
-void Settings::load() {
+void SettingsClass::load() {
 
     Log.log("Loading settings");
     if(SPIFFS.exists("/settings.json")) {
@@ -158,7 +145,7 @@ void Settings::load() {
             loadDefault();
         } else {
             for(int i=0; i<SETTINGS_SIZE; i++) {
-                if(settings->general[i]->isConfigurable()) {
+                if(Settings.general[i]->isConfigurable()) {
                     switch (general[i]->getType()) {
                         case STRING: {
                             char c[64] = "";
@@ -192,7 +179,7 @@ void Settings::load() {
 
 }
 
-void Settings::save() {
+void SettingsClass::save() {
     Log.log("Saving settings");
     if(SPIFFS.exists("/settings.json"))
         SPIFFS.remove("/settings.json");
@@ -200,7 +187,7 @@ void Settings::save() {
     StaticJsonDocument<4*1024> doc;
 
     for(int i=0; i<SETTINGS_SIZE; i++) {
-        if(settings->general[i]->isConfigurable()) {
+        if(Settings.general[i]->isConfigurable()) {
             switch (general[i]->getType()) {
                 case STRING: {
                     doc[i] = (String)general[i]->getString().c_str();
@@ -228,12 +215,12 @@ void Settings::save() {
     file.close();
 }
 
-void Settings::clear() {
+void SettingsClass::clear() {
     if(SPIFFS.exists("/settings.json"))
         SPIFFS.remove("/settings.json");
 }
 
-void Settings::loadSelected(Settings::DataSource *selected) {
+void SettingsClass::loadSelected(SettingsClass::DataSource *selected) {
     Log.log("Loading selected");
     if(SPIFFS.exists("/selected.json")) {
         StaticJsonDocument<128> doc;
@@ -253,7 +240,7 @@ void Settings::loadSelected(Settings::DataSource *selected) {
     }
 }
 
-void Settings::saveSelected(Settings::DataSource *selected) {
+void SettingsClass::saveSelected(SettingsClass::DataSource *selected) {
     if(SPIFFS.exists("/selected.json"))
         SPIFFS.remove("/selected.json");
     fs::File file = SPIFFS.open("/selected.json", "w");

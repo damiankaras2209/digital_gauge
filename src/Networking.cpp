@@ -8,8 +8,6 @@ AsyncWebServer server(80);
 
 //AsyncWebSocket ws("/ws");
 AsyncEventSource events("/events");
-Settings* settings = Settings::getInstance();
-Screen* screen = Screen::getInstance();
 
 void NetworkingClass::sendEvent(const char * event, std::string str) {
     events.send(str.c_str(), event, millis());
@@ -68,8 +66,8 @@ String processor(const String& var){
         std::stringstream ss;
 
         for(int i=0; i<GENERAL_SETTINGS_SIZE; i++) {
-            if(settings->general[i]->isConfigurable()) {
-                ss << settings->general[i]->getHTMLInput(i);
+            if(Settings.general[i]->isConfigurable()) {
+                ss << Settings.general[i]->getHTMLInput(i);
             }
         }
 
@@ -80,9 +78,9 @@ String processor(const String& var){
         std::stringstream ss;
 
         for(int i=0; i<SETTINGS_SIZE; i++) {
-            if(settings->general[i]->isConfigurable()) {
-                switch(settings->general[i]->getType()) {
-                    case Settings::CHECKBOX: {
+            if(Settings.general[i]->isConfigurable()) {
+                switch(Settings.general[i]->getType()) {
+                    case SettingsClass::CHECKBOX: {
                         ss << "data.append('";
                         ss << i;
                         ss << "', document.getElementById('";
@@ -106,7 +104,7 @@ String processor(const String& var){
         return String(ss.str().c_str());
 
     } else if(var == "dataDisplayLength") {
-        return itoa(Settings::LAST, c, 10);
+        return itoa(SettingsClass::LAST, c, 10);
 
     } else if(var == "INPUT_BEGIN_BEGIN") {
         return itoa(INPUT_BEGIN_BEGIN, c, 10);
@@ -146,8 +144,8 @@ String processor(const String& var){
             ss << "<tr>";
             for(int j=0; j<INPUT_SIZE; j++) {
                 int ind = INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * j + i;
-                if(settings->general[ind]->isConfigurable())
-                    ss << "<td>" << settings->general[ind]->getHTMLInput(ind) << "</td>";
+                if(Settings.general[ind]->isConfigurable())
+                    ss << "<td>" << Settings.general[ind]->getHTMLInput(ind) << "</td>";
             }
             ss << "</tr>\n";
         }
@@ -162,15 +160,15 @@ String processor(const String& var){
 
         ss << "<table>\n<tr>";
         for(int i=0; i<DATA_SIZE; i++)
-            ss << "<td>" << settings->dataSourceString[i].c_str() << "</td>";
+            ss << "<td>" << Settings.dataSourceString[i].c_str() << "</td>";
         ss << "</tr>\n<tr>";
 
         for(int i=0; i<DATA_SETTINGS_SIZE; i++) {
             ss << "<tr>";
             for(int j=0; j<DATA_SIZE; j++) {
                 int ind = DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * j + i;
-                if(settings->general[ind]->isConfigurable())
-                    ss << "<td>" << settings->general[ind]->getHTMLInput(ind) << "</td>";
+                if(Settings.general[ind]->isConfigurable())
+                    ss << "<td>" << Settings.general[ind]->getHTMLInput(ind) << "</td>";
             }
             ss << "</tr>\n";
         }
@@ -220,11 +218,11 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
 
                 for(int i=0; i<SETTINGS_SIZE; i++) {
                     if((String)i == p->name().c_str()) {
-                        switch (settings->general[i]->getType()) {
-                            case Settings::Type::STRING: {
-                                settings->general[i]->set(p->value().c_str()); break;
+                        switch (Settings.general[i]->getType()) {
+                            case SettingsClass::Type::STRING: {
+                                Settings.general[i]->set(p->value().c_str()); break;
                             }
-                            case Settings::Type::COLOR: {
+                            case SettingsClass::Type::COLOR: {
                                 String str = p->value().substring(1);
 
                                 char *p;
@@ -233,11 +231,11 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
                                 uint16_t g = (color888 >> 5) & 0x07E0;
                                 uint16_t b = (color888 >> 3) & 0x001F;
 
-                                settings->general[i]->set((r | g | b));
+                                Settings.general[i]->set((r | g | b));
                                 break;
                             }
                             default: {
-                                settings->general[i]->set(strtof(p->value().c_str(), nullptr)); break;
+                                Settings.general[i]->set(strtof(p->value().c_str(), nullptr)); break;
                             }
                         }
                     }
@@ -247,8 +245,8 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
             }
         }
 
-        settings->save();
-        screen->reset();
+        Settings.save();
+        Screen.reset();
     });
 
     server.on("/time", HTTP_POST, [](AsyncWebServerRequest *request){
@@ -256,9 +254,9 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
     });
 
     server.on("/reset", HTTP_POST, [](AsyncWebServerRequest *request){
-        settings->loadDefault();
-        settings->save();
-        screen->reset();
+        Settings.loadDefault();
+        Settings.save();
+        Screen.reset();
     });
 
   server.begin();
