@@ -16,14 +16,14 @@
 #include "TFT_eSPI.h"
 #include "ADS1X15.h"
 #include "Gauges.h"
+#include "Menu.h"
 #include "Lock.h"
 
 #define SCALE_SPRITE_Y_OFFSET_12 2
 #define SCALE_SPRITE_Y_OFFSET_16 3
-#define LINE_SPACING 10
 
 enum View {
-	GAUGES, CLOCK, PROMPT
+	GAUGES, CLOCK, PROMPT, MENU
 };
 
 class ScreenClass {
@@ -35,10 +35,12 @@ class ScreenClass {
 		void appendToPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
 		void setClockMode();
 		void setGaugeMode();
+		void showMenu();
 		View getView();
 		void tick();
 
 		Gauges *gauges;
+		Menu *menu;
 
 	private:
 		TFT_eSPI *tft;
@@ -49,6 +51,9 @@ class ScreenClass {
 		uint16_t c24to16(int);
 
 		void switchView(View);
+
+		static void processEvent(GxFT5436::Event, void*);
+
 
 };
 

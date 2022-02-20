@@ -18,6 +18,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <functional>
+#include <sstream>
 
 // defines taken from ft5x06.c of https://github.com/focaltech-systems/drivers-input-touchscreen-FTS_driver
 /*
@@ -114,6 +115,14 @@
 #define FT_FW_MAX_SIZE    (54 * 1024)
 // end of defines taken from ft5x06.c of https://github.com/focaltech-systems/drivers-input-touchscreen-FTS_driver
 
+enum EventType {
+    TOUCH_DOWN, TOUCH_UP, SINGLE_CLICK
+};
+
+static String EventTypeString[3] = {
+        "TOUCH_DOWN", "TOUCH_UP", "SINGLE_CLICK"
+};
+
 class GxFT5436
 {
   public:
@@ -129,17 +138,36 @@ class GxFT5436
       bool operator==(TouchInfo);
     };
 
-    enum EventType {
-        SINGLE_CLICK, SLIDE_LEFT
-    };
+
+
     typedef struct Event {
         EventType type;
-        uint16_t startX, endX;
-        uint16_t startY, endY;
+        uint16_t id;
+        uint16_t x, y;
+        String toString() {
+            std::stringstream ss;
+            ss << "[" << id << "] event " << EventTypeString[type].c_str() << " at " << x << ", " << y;
+            return {ss.str().c_str()};
+        }
     } Event;
-    typedef std::function<void(Event event)> Callback;
-    Callback action;
-    void onEvent(Callback);
+
+    typedef struct Change {
+        uint16_t id;
+        uint16_t x, y;
+        int16_t diffX, diffY;
+        String toString() {
+            std::stringstream ss;
+            ss << "[" << id << "] moved " << diffX << ", " << diffY << " to " << x << ", " << y;
+            return {ss.str().c_str()};
+        }
+    } Change;
+
+    typedef std::function<void(Event event, void*)> onEventCallback;
+    typedef std::function<void(Change change, void*)> onChangeCallback;
+    void addOnEvent(onEventCallback, void* = nullptr);
+    void addOnChange(onChangeCallback, void* = nullptr);
+    static void dispatchOnEvent(std::vector<onEventCallback> *arr, std::vector<void*> *params, Event event);
+    static void dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<void*> *params, Change change);
 
   public:
     GxFT5436(int8_t rst, int8_t sda = SDA, int8_t scl = SCL);
@@ -152,7 +180,10 @@ class GxFT5436
         Stream* diagOut;
         GxFT5436* touch;
         volatile bool* i2cBusy;
-        Callback action = nullptr;
+        std::vector<onEventCallback> actionCallbacks;
+        std::vector<void*> actionCallbacksParam;
+        std::vector<onChangeCallback> changeCallbacks;
+        std::vector<void*> changeCallbacksParam;
     } LoopData;
     LoopData _loopData;
 

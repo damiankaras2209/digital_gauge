@@ -124,11 +124,28 @@ bool GxFT5436::enableInterrupt(int8_t interrupt, volatile bool* i2cBusy, int8_t 
                                 &touchHandle, core);
 }
 
-void GxFT5436::onEvent(GxFT5436::Callback callback) {
-    _loopData.action = callback;
+void GxFT5436::addOnEvent(GxFT5436::onEventCallback callback, void* param) {
+    _loopData.actionCallbacks.push_back(callback);
+    _loopData.actionCallbacksParam.push_back(param);
 }
 
-#define SINGLE_POINT_DISTANCE 10
+void GxFT5436::addOnChange(GxFT5436::onChangeCallback callback, void* param) {
+    _loopData.changeCallbacks.push_back(callback);
+    _loopData.changeCallbacksParam.push_back(param);
+}
+
+void GxFT5436::dispatchOnEvent(std::vector<onEventCallback> *arr, std::vector<void*> *params, Event event) {
+    for(int i=0; i<arr->size(); i++)
+        arr->at(i)(event, params->at(i));
+}
+
+void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<void*> *params, Change change) {
+    for(int i=0; i<arr->size(); i++)
+        arr->at(i)(change, params->at(i));
+}
+
+
+#define SINGLE_POINT_DISTANCE 1
 #define SLIDE_ALONG_DISTANCE 40
 #define SLIDE_ACROSS_DISTANCE 15
 
@@ -143,12 +160,17 @@ void GxFT5436::onEvent(GxFT5436::Callback callback) {
     bool down[5] = {false, false, false, false, false};
     uint16_t startX[5], startY[5];
     uint16_t endX[5], endY[5];
+    int16_t prevX[5], prevY[5];
 
+    for(int i=0; i<5; i++) {
+        prevX[i] = -1;
+        prevY[i] = -1;
+    }
 
     while(1) {
 //        data->diagOut->print("millis() - touchDetectedTime: ");
 //        data->diagOut->print (millis() - touchDetectedTime);
-        if(millis() - touchDetectedTime < 10 && data->action != nullptr) {
+        if(millis() - touchDetectedTime < 100) {
             while(*(data->i2cBusy)) {
                 delay(1);
             }
@@ -169,51 +191,72 @@ void GxFT5436::onEvent(GxFT5436::Callback callback) {
                 uint8_t id = touchInfo.id[i];
                 if(!down[id]) {
                     down[id] = true;
-                    data->diagOut->printf("Touch down (%d)", id);
+//                    data->diagOut->print("Touch down (%d)", id);
+                    dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam, Event{TOUCH_DOWN, id, touchInfo.x[i], touchInfo.y[i]});
                     startX[id] = touchInfo.x[i];
                     startY[id] = touchInfo.y[i];
+                    for(int id=0; id<5; id++) {
+                        prevX[id] = -1;
+                        prevY[id] = -1;
+                    }
                 }
                 detected[id] = true;
                 endX[id] = touchInfo.x[i];
                 endY[id] = touchInfo.y[i];
 
-                data->diagOut->printf("touch id: %d, last: %lu (%d,%d)", touchInfo.id[i], millis() - last[id], touchInfo.x[i], touchInfo.y[i]);
+                if(prevX[id] != -1 && prevY[id] != -1 && (prevX[id] != touchInfo.x[i] || prevY[id] != touchInfo.y[i])) {
+                    dispatchOnChange(&data->changeCallbacks, &data->changeCallbacksParam,  Change{id,
+                                                 touchInfo.x[i],
+                                                 touchInfo.y[i],
+                                                 (int16_t)(touchInfo.x[i] - prevX[id]),
+                                                 (int16_t)(touchInfo.y[i] - prevY[id])});
+                }
+
+                prevX[id] = touchInfo.x[i];
+                prevY[id] = touchInfo.y[i];
+
+//                data->diagOut->printf("touch id: %d, last: %lu (%d,%d)\n", touchInfo.id[i], millis() - last[id], touchInfo.x[i], touchInfo.y[i]);
             }
 
-            for (uint8_t i = 0; i < 5; i++) {
-                if(!detected[i] && down[i]) {
-                    down[i] = false;
-                    data->diagOut->printf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu) ", i, startX[i], startY[i], endX[i], endY[i]);
+//            for (uint8_t id = 0; id < 5; id++) {
+//                data->diagOut->printf("detected: %d, down: %d", detected[id], down[id]);
+//            }
+//            data->diagOut->printf("\n");
 
-                    Event event;
-                    event.startX = startX[i];
-                    event.startY = startY[i];
-                    event.endX = endX[i];
-                    event.endY = endY[i];
+            for (uint8_t id = 0; id < 5; id++) {
+                if(!detected[id] && down[id]) {
+                    down[id] = false;
+//                    data->diagOut->printf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu)\n", id, startX[id], startY[id], endX[id], endY[id]);
+                    dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam, Event{TOUCH_UP, id, endX[id], endY[id]});
+
+//                    Event event;
+//                    event.startX = startX[id];
+//                    event.startY = startY[id];
+//                    event.endX = endX[id];
+//                    event.endY = endY[id];
 
                     //Single touch
-                    if((abs(startX[i]-endX[i]) < SINGLE_POINT_DISTANCE) && (abs(startY[i]-endY[i]) < SINGLE_POINT_DISTANCE)) {
-                        data->diagOut->printf("Single touch at %d,%d", endX[i], endY[i]);
-                        event.type = SINGLE_CLICK;
+                    if((abs(startX[id] - endX[id]) < SINGLE_POINT_DISTANCE) && (abs(startY[id] - endY[id]) < SINGLE_POINT_DISTANCE)) {
+//                        data->diagOut->printf("Single touch at %d,%d", endX[id], endY[id]);
+                        dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam, Event{SINGLE_CLICK, id, startX[id], startY[id]});
                     }
                     //Slide right
-                    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] > startX[i])) {
-                        data->diagOut->printf("Slide right from %d,%d", startX[i], endY[i]);
-                        event.type = SLIDE_LEFT;
+                    else if((abs(startX[id] - endX[id]) > SLIDE_ALONG_DISTANCE) && (abs(startY[id] - endY[id]) < SLIDE_ACROSS_DISTANCE) && (endX[id] > startX[id])) {
+//                        data->diagOut->printf("Slide right from %d,%d", startX[id], endY[id]);
+//                        event.type = SLIDE_LEFT;
                     }
                     //Slide left
-                    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] < startX[i])) {
-                        data->diagOut->printf("Slide left from %d,%d", startX[i], endY[i]);
+                    else if((abs(startX[id] - endX[id]) > SLIDE_ALONG_DISTANCE) && (abs(startY[id] - endY[id]) < SLIDE_ACROSS_DISTANCE) && (endX[id] < startX[id])) {
+//                        data->diagOut->printf("Slide left from %d,%d", startX[id], endY[id]);
                     }
                     //Slide down
-                    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] > startY[i])) {
-                        data->diagOut->printf("Slide down from %d,%d", startX[i], endY[i]);
+                    else if((abs(startX[id] - endX[id]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[id] - endY[id]) > SLIDE_ALONG_DISTANCE) && (endY[id] > startY[id])) {
+//                        data->diagOut->printf("Slide down from %d,%d", startX[id], endY[id]);
                     }
                     //Slide up
-                    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] < startY[i])) {
-                        data->diagOut->printf("Slide up from %d,%d", startX[i], endY[i]);
+                    else if((abs(startX[id] - endX[id]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[id] - endY[id]) > SLIDE_ALONG_DISTANCE) && (endY[id] < startY[id])) {
+//                        data->diagOut->printf("Slide up from %d,%d", startX[id], endY[id]);
                     }
-                    data->action(event);
                 }
             }
 

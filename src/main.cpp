@@ -66,86 +66,87 @@ void f(t_httpUpdate_return status) {
 
 }
 
-static void onEvent(GxFT5436::Event event) {
+//static void onEvent(GxFT5436::Event event, void* param) {
+//
+//    Serial.println(event.toString());
+//
+//    if(event.type == SINGLE_CLICK) {
+//
+//
+//        Log.log(ESP.getFreeHeap());
+//
+//        int16_t x = event.x;
+//        int16_t y = event.y;
+//
+////        Log.logf("Single touch at %d,%d\n", x, y);
+//
+//        View view = Screen.getView();
+//
+//        switch (view) {
+//            case PROMPT: {
+//                //dismiss menu
+//                Screen.setGaugeMode();
+//                break;
+//            }
+//            case GAUGES: {
+//                //show menu
+//                if(Screen.getView() != PROMPT && x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() && x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() && y < Settings.general[HEIGHT]->get<int>() / 2) {
+//                    Screen.showMenu();
+////                    Screen.showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
+//                }
+//
+//                //change gauge
+//
+//                Side side = SIDE_LAST;
+//                if(x < Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
+//                    side = LEFT;
+//                else if(x > Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
+//                    side = RIGHT;
+//                else if(x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
+//                        x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
+//                        y > Settings.general[HEIGHT]->get<int>() / 2)
+//                    side = MID;
+//
+//                if(side != SIDE_LAST) {
+//                    SettingsClass::DataSource selected[3];
+//                    Screen.gauges->getSelected(selected);
+//
+//                    Log.logf("Current data: %s\n", Settings.dataSourceString[selected[side]].c_str());
+//                    do {
+//                        selected[side] = static_cast<SettingsClass::DataSource>(selected[side] + 1);
+//                        if(selected[side] == SettingsClass::LAST)
+//                            selected[side] = static_cast<SettingsClass::DataSource>(0);
+//                    } while (!Settings.general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
+//                    Log.logf("Changing to: %s\n", Settings.dataSourceString[selected[side]].c_str());
+//                    Screen.gauges->setSelected(side, selected[side]);
+//                    Settings.saveSelected(selected);
+//                }
+//
+//            }
+//        }
+//
+//    }
+//}
 
-    if(event.type == GxFT5436::SINGLE_CLICK) {
+static void onChange(GxFT5436::Change change, void* param) {
 
-        int16_t x = event.startX;
-        int16_t y = event.startY;
+//    Log.log(change.toString());
 
-        Log.logf("Single touch at %d,%d\n", x, y);
+    View view = Screen.getView();
 
-        View view = Screen.getView();
-
-        switch (view) {
-            case PROMPT: {
-                //dismiss menu
-                Screen.setGaugeMode();
-                break;
-            }
-            case GAUGES: {
-                //show menu
-                if(Screen.getView() != PROMPT && x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() && x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() && y < Settings.general[HEIGHT]->get<int>() / 2) {
-                    Screen.showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
-                }
-
-                //change gauge
-
-                Side side = SIDE_LAST;
-                if(x < Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
-                    side = LEFT;
-                else if(x > Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
-                    side = RIGHT;
-                else if(x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
-                        x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
-                        y > Settings.general[HEIGHT]->get<int>() / 2)
-                    side = MID;
-
-                if(side != SIDE_LAST) {
-                    SettingsClass::DataSource selected[3];
-                    Screen.gauges->getSelected(selected);
-
-                    Log.logf("Current data: %s\n", Settings.dataSourceString[selected[side]].c_str());
-                    do {
-                        selected[side] = static_cast<SettingsClass::DataSource>(selected[side] + 1);
-                        if(selected[side] == SettingsClass::LAST)
-                            selected[side] = static_cast<SettingsClass::DataSource>(0);
-                    } while (!Settings.general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
-                    Log.logf("Changing to: %s\n", Settings.dataSourceString[selected[side]].c_str());
-                    Screen.gauges->setSelected(side, selected[side]);
-                    Settings.saveSelected(selected);
-                }
-
-            }
+    switch (view) {
+        case MENU: {
+            Screen.menu->scroll(change.diffY);
         }
-
-
-
-
-
-
     }
-//    //Slide right
-//    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] > startX[i])) {
-//        Log.logf("Slide right from %d,%d", startX[i], endY[i]);
-//    }
-//    //Slide left
-//    else if((abs(startX[i]-endX[i]) > SLIDE_ALONG_DISTANCE) && (abs(startY[i]-endY[i]) < SLIDE_ACROSS_DISTANCE) && (endX[i] < startX[i])) {
-//        Log.logf("Slide left from %d,%d", startX[i], endY[i]);
-//    }
-//    //Slide down
-//    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] > startY[i])) {
-//        Log.logf("Slide down from %d,%d", startX[i], endY[i]);
-//    }
-//    //Slide up
-//    else if((abs(startX[i]-endX[i]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[i]-endY[i]) > SLIDE_ALONG_DISTANCE) && (endY[i] < startY[i])) {
-//        Log.logf("Slide up from %d,%d", startX[i], endY[i]);
-//    }
 
 }
 
+
 void setup(void) {
     Serial.begin(115200);
+
+    Log.log(ESP.getFreeHeap());
 
     if (!SPIFFS.begin()) {
         Log.log("SPIFFS initialisation failed!");
@@ -154,11 +155,10 @@ void setup(void) {
     Serial.println("ESP32 reset reason: ");
     print_reset_reason(esp_reset_reason());
 
-    if(esp_reset_reason() != ESP_RST_POWERON && esp_reset_reason() != ESP_RST_UNKNOWN && esp_reset_reason() != ESP_RST_SW)
-        Settings.clear();
+//    if(esp_reset_reason() != ESP_RST_POWERON && esp_reset_reason() != ESP_RST_UNKNOWN && esp_reset_reason() != ESP_RST_SW)
+//        Settings.clear();
 
     Settings.init();
-
     Settings.loadDefault();
     Settings.load();
     SettingsClass::DataSource selected[SIDE_LAST];
@@ -205,7 +205,8 @@ void setup(void) {
          Data.POST();
          Data.init();
 
-        Data.touch.onEvent(onEvent);
+//        Data.touch.addOnEvent(onEvent);
+        Data.touch.addOnChange(onChange);
 
     //  TwoWire twoWire(1);
     //  twoWire.setPins(21, 22);
@@ -230,7 +231,7 @@ unsigned  long t15;
 void loop() {
 
     if(!updateChecked && WiFi.status() == WL_CONNECTED) {
-        updater.checkForUpdate();
+//        updater.checkForUpdate();
         updateChecked = true;
     }
 
