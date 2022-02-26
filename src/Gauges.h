@@ -12,6 +12,7 @@
 
 #include "TFT_eSPI.h"
 #include "Lock.h"
+#include "Clickable.h"
 
 #define SCALE_SPRITE_Y_OFFSET_12 2
 #define SCALE_SPRITE_Y_OFFSET_16 3
@@ -22,7 +23,7 @@ float calcY(int16_t, int16_t, int16_t);
 double rad(int16_t);
 
 enum Side {
-    LEFT, RIGHT, MID, SIDE_LAST
+    LEFT, RIGHT, MID, TIME, SIDE_LAST
 };
 
 class Gauges {
@@ -58,7 +59,13 @@ public:
         void setSelected(SettingsClass::DataSource*);
         void setSelected(Side, SettingsClass::DataSource);
         void getSelected(SettingsClass::DataSource*);
+        void cycleData(Side);
 
+        Clickable *leftGauge, *rightGauge, *midGauge, *date;
+        std::vector<Clickable*> clickables;
+        std::vector<Clickable*>* getClickables();
+
+        static void processEvent(GxFT5436::Event, void*);
 
 };
 

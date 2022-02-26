@@ -66,68 +66,6 @@ void f(t_httpUpdate_return status) {
 
 }
 
-//static void onEvent(GxFT5436::Event event, void* param) {
-//
-//    Serial.println(event.toString());
-//
-//    if(event.type == SINGLE_CLICK) {
-//
-//
-//        Log.log(ESP.getFreeHeap());
-//
-//        int16_t x = event.x;
-//        int16_t y = event.y;
-//
-////        Log.logf("Single touch at %d,%d\n", x, y);
-//
-//        View view = Screen.getView();
-//
-//        switch (view) {
-//            case PROMPT: {
-//                //dismiss menu
-//                Screen.setGaugeMode();
-//                break;
-//            }
-//            case GAUGES: {
-//                //show menu
-//                if(Screen.getView() != PROMPT && x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() && x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() && y < Settings.general[HEIGHT]->get<int>() / 2) {
-//                    Screen.showMenu();
-////                    Screen.showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
-//                }
-//
-//                //change gauge
-//
-//                Side side = SIDE_LAST;
-//                if(x < Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
-//                    side = LEFT;
-//                else if(x > Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
-//                    side = RIGHT;
-//                else if(x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
-//                        x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
-//                        y > Settings.general[HEIGHT]->get<int>() / 2)
-//                    side = MID;
-//
-//                if(side != SIDE_LAST) {
-//                    SettingsClass::DataSource selected[3];
-//                    Screen.gauges->getSelected(selected);
-//
-//                    Log.logf("Current data: %s\n", Settings.dataSourceString[selected[side]].c_str());
-//                    do {
-//                        selected[side] = static_cast<SettingsClass::DataSource>(selected[side] + 1);
-//                        if(selected[side] == SettingsClass::LAST)
-//                            selected[side] = static_cast<SettingsClass::DataSource>(0);
-//                    } while (!Settings.general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
-//                    Log.logf("Changing to: %s\n", Settings.dataSourceString[selected[side]].c_str());
-//                    Screen.gauges->setSelected(side, selected[side]);
-//                    Settings.saveSelected(selected);
-//                }
-//
-//            }
-//        }
-//
-//    }
-//}
-
 static void onChange(GxFT5436::Change change, void* param) {
 
 //    Log.log(change.toString());
@@ -220,7 +158,7 @@ void setup(void) {
 
 
         Screen.reset();
-        Screen.setGaugeMode();
+        Screen.switchView(GAUGES);
 
         ledcWrite(0, 255);
   }

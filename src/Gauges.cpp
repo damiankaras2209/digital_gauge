@@ -25,6 +25,39 @@ void Gauges::init(TFT_eSPI *t, Lock *l) {
     needleUpdate->loadFont("GaugeHeavyNumbers12");
     textUpdate = new TFT_eSprite(tft);
     textUpdate->loadFont("GaugeHeavy16");
+
+    for(int i=0; i<SIDE_LAST; i++)
+        clickables.push_back(new Clickable);
+
+    clickables.at(LEFT)->setPos(gen[WIDTH]->get<int>()/2 - gen[ELLIPSE_A]->get<int>(),
+                      gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>());
+    clickables.at(LEFT)->setSize(gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>(),
+                       gen[ELLIPSE_B]->get<int>()*2);
+    clickables.at(LEFT)->setOnClick([this]() {
+        Log.log("Left");
+    });
+    clickables.at(RIGHT)->setPos(gen[WIDTH]->get<int>()/2 + gen[NEEDLE_CENTER_OFFSET]->get<int>(),
+                       gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>());
+    clickables.at(RIGHT)->setSize(gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>(),
+                        gen[ELLIPSE_B]->get<int>()*2);
+    clickables.at(RIGHT)->setOnClick([this]() {
+        Log.log("Right");
+    });
+    clickables.at(MID)->setPos(gen[WIDTH]->get<int>()/2 - gen[NEEDLE_CENTER_OFFSET]->get<int>(),
+                                      gen[HEIGHT]->get<int>()/2);
+    clickables.at(MID)->setSize(gen[NEEDLE_CENTER_OFFSET]->get<int>()*2,
+                                gen[ELLIPSE_B]->get<int>());
+    clickables.at(MID)->setOnClick([this]() {
+        Log.log("Mid");
+    });
+    clickables.at(TIME)->setPos(gen[WIDTH]->get<int>()/2 - gen[NEEDLE_CENTER_OFFSET]->get<int>(),
+                 gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>());
+    clickables.at(TIME)->setSize(gen[NEEDLE_CENTER_OFFSET]->get<int>()*2,
+                  gen[ELLIPSE_B]->get<int>());
+    clickables.at(TIME)->setOnClick([this]() {
+        Log.log("Date");
+    });
+
 }
 
 void Gauges::reset() {
@@ -58,12 +91,29 @@ void Gauges::setSelected(Side side, SettingsClass::DataSource s) {
         }
         drawSelectedInfo();
         lock->release();
+        Settings.saveSelected(selected);
     }
 }
 
 void Gauges::getSelected(SettingsClass::DataSource* s) {
     for(int i=LEFT; i<SIDE_LAST; i++)
         s[i] = selected[i];
+}
+
+
+
+void Gauges::cycleData(Side side) {
+    if(side != SIDE_LAST && side != TIME) {
+        SettingsClass::DataSource s = selected[side];
+        Log.logf("Current data: %s\n", Settings.dataSourceString[selected[side]].c_str());
+        do {
+            s = static_cast<SettingsClass::DataSource>(s + 1);
+            if(s == SettingsClass::LAST)
+                s = static_cast<SettingsClass::DataSource>(0);
+        } while (!Settings.general[DATA_BEGIN_BEGIN + s * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
+        Log.logf("Changing to: %s\n", Settings.dataSourceString[s].c_str());
+        setSelected(side, s);
+    }
 }
 
 void Gauges::fillTables() {
@@ -558,4 +608,41 @@ void Gauges::clearSelectedInfo() {
                   selectedInfoCoords[3],
                   gen[BACKGROUND_COLOR]->get<int>());
     selectedInfoVisible = false;
+}
+
+void Gauges::processEvent(GxFT5436::Event event, void *param) {
+
+    int16_t x = event.x;
+    int16_t y = event.y;
+
+    //change gauge
+
+    Side side = SIDE_LAST;
+    if(x < Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
+        side = LEFT;
+    else if(x > Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
+        side = RIGHT;
+    else if(x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
+    x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
+    y > Settings.general[HEIGHT]->get<int>() / 2)
+        side = MID;
+
+    if(side != SIDE_LAST) {
+        SettingsClass::DataSource selected[3];
+        ((Gauges*)param)->getSelected(selected);
+
+        Log.logf("Current data: %s\n", Settings.dataSourceString[selected[side]].c_str());
+        do {
+            selected[side] = static_cast<SettingsClass::DataSource>(selected[side] + 1);
+            if(selected[side] == SettingsClass::LAST)
+                selected[side] = static_cast<SettingsClass::DataSource>(0);
+        } while (!Settings.general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
+        Log.logf("Changing to: %s\n", Settings.dataSourceString[selected[side]].c_str());
+        ((Gauges*)param)->setSelected(side, selected[side]);
+        Settings.saveSelected(selected);
+    }
+}
+
+std::vector<Clickable *> *Gauges::getClickables() {
+    return &clickables;
 }

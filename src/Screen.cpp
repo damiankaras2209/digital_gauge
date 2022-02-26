@@ -2,92 +2,80 @@
 
 ScreenClass Screen;
 
-uint16_t ScreenClass::c24to16(int i) {
-    return tft->color24to16(i);
-}
-
 void ScreenClass::processEvent(GxFT5436::Event event, void* param) {
 
     Serial.println(event.toString());
 
     if(event.type == SINGLE_CLICK) {
 
-        int16_t x = event.x;
-        int16_t y = event.y;
+        auto clickables = (std::vector<Clickable*>*)param;
 
-        //        Log.logf("Single touch at %d,%d\n", x, y);
-
-        switch (Screen.getView()) {
-            case PROMPT: {
-                //dismiss menu
-                Screen.setGaugeMode();
+        for(auto clickable : *clickables)
+            if(clickable->isVisible() && clickable->isInBoundaries(event.x, event.y)) {
+                clickable->onClick();
                 break;
             }
-            case GAUGES: {
-                //show menu
-                if(Screen.getView() != PROMPT && x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() && x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() && y < Settings.general[HEIGHT]->get<int>() / 2) {
-                    Screen.showMenu();
-                    //                    Screen.showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
-                }
 
-                //change gauge
-
-                Side side = SIDE_LAST;
-                if(x < Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
-                    side = LEFT;
-                else if(x > Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
-                    side = RIGHT;
-                else if(x > Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
-                x < Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>() &&
-                y > Settings.general[HEIGHT]->get<int>() / 2)
-                    side = MID;
-
-                if(side != SIDE_LAST) {
-                    SettingsClass::DataSource selected[3];
-                    Screen.gauges->getSelected(selected);
-
-                    Log.logf("Current data: %s\n", Settings.dataSourceString[selected[side]].c_str());
-                    do {
-                        selected[side] = static_cast<SettingsClass::DataSource>(selected[side] + 1);
-                        if(selected[side] == SettingsClass::LAST)
-                            selected[side] = static_cast<SettingsClass::DataSource>(0);
-                    } while (!Settings.general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
-                    Log.logf("Changing to: %s\n", Settings.dataSourceString[selected[side]].c_str());
-                    Screen.gauges->setSelected(side, selected[side]);
-                    Settings.saveSelected(selected);
-                }
-                break;
-            }
-            case MENU: {
-                Menu::processEvent(event, Screen.menu);
-                break;
-            }
-        }
     }
 
 };
 
 void ScreenClass::init() {
+    gen = Settings.general;
     tft = new TFT_eSPI;
     tft->init();
     tft->setRotation(3);
     tft->invertDisplay(1);
     lock = new Lock;
     gauges = new Gauges;
+    gauges->init(tft, lock);
+    auto gaugesClickables = gauges->getClickables();
+    for(auto v : *gaugesClickables) {
+        clickables.push_back(v);
+    }
+
+    gaugesClickables->at(LEFT)->setOnClick([this]() {
+        gauges->cycleData(LEFT);
+    });
+    gaugesClickables->at(RIGHT)->setOnClick([this]() {
+        gauges->cycleData(RIGHT);
+    });
+    gaugesClickables->at(MID)->setOnClick([this]() {
+        gauges->cycleData(MID);
+    });
+    gaugesClickables->at(TIME)->setOnClick([this]() {
+        switchView(MENU);
+    });
+
+
+//    clickables.insert(gauges->getClickables()->end(), gauges->getClickables()->begin(), gauges->getClickables()->end());
+    prompt = new Prompt;
+    prompt->init(tft, lock);
+    prompt->setOnClick([this]() {
+        switchView(MENU);
+    });
+    clickables.push_back(prompt);
     menu = new Menu();
     menu->init(tft, lock);
     std::vector<Menu::Entry*> entries;
-    entries.push_back(new Menu::Entry("ENTRY 1", []() {Log.logf("Fired entry %d\n", 1);}));
-    entries.push_back(new Menu::Entry("ENTRY 2", []() {Log.logf("Fired entry %d\n", 2);}));
+    entries.push_back(new Menu::Entry("BACK", [this]() {
+        Log.logf("Fired entry %d\n", 1);
+        switchView(GAUGES);
+    }));
+    entries.push_back(new Menu::Entry("SHOW INFO", [this]() {
+        Log.logf("Fired entry %d\n", 2);
+        showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
+    }));
     entries.push_back(new Menu::Entry("ENTRY 3", []() {Log.logf("Fired entry %d\n", 3);}));
     entries.push_back(new Menu::Entry("ENTRY 4", []() {Log.logf("Fired entry %d\n", 4);}));
     entries.push_back(new Menu::Entry("ENTRY 5", []() {Log.logf("Fired entry %d\n", 5);}));
     entries.push_back(new Menu::Entry("ENTRY 6", []() {Log.logf("Fired entry %d\n", 6);}));
     entries.push_back(new Menu::Entry("ENTRY 7", []() {Log.logf("Fired entry %d\n", 7);}));
     menu->setEntries(entries);
-    Data.touch.addOnEvent(processEvent, (void*)menu);
-    gauges->init(tft, lock);
-    gen = Settings.general;
+    for (auto clickable: entries) {
+        clickables.push_back(clickable);
+    }
+    Data.touch.addOnEvent(processEvent, (void*)&clickables);
 }
 
 void ScreenClass::reset() {
@@ -97,39 +85,30 @@ void ScreenClass::reset() {
 	lock->release();
 }
 
-void ScreenClass::setClockMode() {
-    lock->lock();
-    switchView(CLOCK);
-    lock->release();
-}
-
-void ScreenClass::setGaugeMode() {
-    lock->lock();
-    switchView(GAUGES);
-    lock->release();
-}
-
-void ScreenClass::showMenu() {
-    lock->lock();
-    switchView(MENU);
-    lock->release();
-}
 
 View ScreenClass::getView() {
     return currentView;
 }
 
 void ScreenClass::switchView(View view) {
+    lock->lock();
 //    if(currentView == GAUGES && view != GAUGES)
 //        needleUpdate->unloadFont();
+    for(auto clickable : clickables)
+        clickable->setVisibility(false);
+
     if(currentView == MENU && view != MENU) {
         menu->clean();
     }
+
     switch(view) {
         case GAUGES:  {
             tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
             gauges->drawWhole[0] = true;
             gauges->drawWhole[1] = true;
+            for(auto v : *gauges->getClickables()) {
+                v->setVisibility(true);
+            }
             gauges->updateText(true, 0);
             break;
         }
@@ -138,24 +117,21 @@ void ScreenClass::switchView(View view) {
         }
         case PROMPT:  {
             tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
-            tft->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
-            tft->drawRect(gen[WIDTH]->get<int>()/2 - gen[PROMPT_WIDTH]->get<int>()/2,
-                          gen[HEIGHT]->get<int>()/2 - gen[PROMPT_HEIGHT]->get<int>()/2,
-                          gen[PROMPT_WIDTH]->get<int>(),
-                          gen[PROMPT_HEIGHT]->get<int>(),
-                          gen[FONT_COLOR]->get<int>());
-            tft->setTextDatum(CC_DATUM);
+            prompt->setVisibility(true);
             break;
         }
         case MENU:  {
             tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
             menu->prepare();
             menu->resetPosition();
+            for(auto clickable : menu->entries)
+                clickable->setVisibility(true);
             break;
         }
     }
     currentView = view;
-    Log.logf("Current view: %d", currentView);
+    Log.logf("Current view: %d\n", currentView);
+    lock->release();
 }
 
 unsigned long t, t1;
@@ -188,6 +164,7 @@ void ScreenClass::tick() {
             break;
         }
         case PROMPT:  {
+            prompt->draw();
             break;
         }
         case MENU:  {
@@ -205,27 +182,11 @@ void ScreenClass::tick() {
 
 
 void ScreenClass::showPrompt(String text, int lineSpacing, boolean useDefaultFont) {
-    lock->lock();
     switchView(PROMPT);
-
-    if(!useDefaultFont)
-        tft->loadFont("GaugeHeavy12");
-
-    std::string str = text.c_str();
-//    Log.log(str.c_str());
-
-    std::size_t nextLine = 0;
-    lines = 0;
-
-    while(nextLine != std::string::npos) {
-
-//        Log.log(str.c_str());
-//        Log.log(nextLine);
-
-        nextLine = str.find_first_of('\n');
-        tft->drawString(str.substr(0, nextLine).c_str(), gen[WIDTH]->get<int>()/2, gen[HEIGHT]->get<int>()/2-40+(lines++)*(tft->fontHeight()+lineSpacing));
-        str = str.substr(nextLine+1);
-    }
+    lock->lock();
+    prompt->setText(text);
+    prompt->setLineSpacing(lineSpacing);
+    prompt->setUseDefaultFont(useDefaultFont);
     lock->release();
 }
 
@@ -235,12 +196,6 @@ void ScreenClass::appendToPrompt(String text, int lineSpacing, boolean useDefaul
         Log.log("appendToPrompt() called without showPrompt()");
         return;
     }
-    std::string str = text.c_str();
-    std::size_t nextLine = 0;
-    while(nextLine != std::string::npos) {
-        nextLine = str.find_first_of('\n');
-        tft->drawString(str.substr(0, nextLine).c_str(), gen[WIDTH]->get<int>()/2, gen[HEIGHT]->get<int>()/2-40+(lines++)*(tft->fontHeight()+lineSpacing));
-        str = str.substr(nextLine+1);
-    }
+    prompt->appendToPrompt(text);
     lock->release();
 }

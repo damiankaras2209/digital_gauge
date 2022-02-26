@@ -18,6 +18,8 @@
 #include "Gauges.h"
 #include "Menu.h"
 #include "Lock.h"
+#include "Updater.h"
+#include "Prompt.h"
 
 #define SCALE_SPRITE_Y_OFFSET_12 2
 #define SCALE_SPRITE_Y_OFFSET_16 3
@@ -31,11 +33,9 @@ class ScreenClass {
 	public:
         void init();
 		void reset();
+		void switchView(View);
 		void showPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
 		void appendToPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
-		void setClockMode();
-		void setGaugeMode();
-		void showMenu();
 		View getView();
 		void tick();
 
@@ -47,10 +47,10 @@ class ScreenClass {
 		SettingsClass::Field **gen;
 		Lock *lock;
         volatile View currentView;
-		int lines = 0;
-		uint16_t c24to16(int);
 
-		void switchView(View);
+
+		std::vector<Clickable*> clickables;
+		Prompt *prompt;
 
 		static void processEvent(GxFT5436::Event, void*);
 
