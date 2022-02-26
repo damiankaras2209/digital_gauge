@@ -43,29 +43,6 @@ void print_reset_reason(esp_reset_reason_t reason)
     }
 }
 
-void f(t_httpUpdate_return status) {
-    switch (status) {
-        case HTTP_UPDATE_FAILED:
-            Log.logf("HTTP_UPDATE_FAILD Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
-            Screen.appendToPrompt("Update failed " + (String) httpUpdate.getLastError() + ": " +
-                                                  httpUpdate.getLastErrorString().c_str() + "\nReboot to try again", 4, true);
-            break;
-
-        case HTTP_UPDATE_NO_UPDATES:
-            Log.log("HTTP_UPDATE_NO_UPDATES");
-            break;
-
-        case HTTP_UPDATE_OK:
-            Log.log("HTTP_UPDATE_OK");
-            Settings.save();
-            Screen.appendToPrompt("Update successful\n Restarting in 3 seconds", 4, true);
-            delay(3000);
-            esp_restart();
-    }
-
-
-}
-
 static void onChange(GxFT5436::Change change, void* param) {
 
 //    Log.log(change.toString());
@@ -132,11 +109,43 @@ void setup(void) {
         while(WiFi.status() != WL_CONNECTED){
             delay(50);
         }
-        Screen.appendToPrompt("WiFi connected, updating... this may take a while", 4, true);
-        updater.updateFS(getTargetFilesystemVersionString(), f);
+        Screen.appendToPrompt("\nWiFi connected, updating... this may take a while");
+        updater.updateFS(getTargetFilesystemVersionString(), [](t_httpUpdate_return status) {
+            switch (status) {
+                case HTTP_UPDATE_FAILED:
+                    Log.logf("HTTP_UPDATE_FAILD Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+                    Screen.appendToPrompt("\nUpdate failed " + (String) httpUpdate.getLastError() + ": " +
+                        httpUpdate.getLastErrorString().c_str() + "\nReboot to try again");
+                    break;
+                case HTTP_UPDATE_NO_UPDATES:
+                    Log.log("HTTP_UPDATE_NO_UPDATES");
+                    break;
+
+                case HTTP_UPDATE_OK:
+                    Log.log("HTTP_UPDATE_OK");
+                    Settings.save();
+                    Screen.appendToPrompt("\nUpdate successful\n Restarting in 3 seconds");
+                    delay(3000);
+                    esp_restart();
+            }
+        });
     }
 
     if(proceed) {
+
+
+        WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
+            Log.logf("Connected to %s,IP: %s\n ", WiFi.SSID().c_str(),IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
+
+            if (!MDNS.begin(HOSTNAME)) { //http://esp32.local
+                Log.log("Error setting up MDNS responder!");
+            }
+
+            Log.logf("mDNS responder started, hostname: http://%s.local\n", HOSTNAME);
+
+            Data.adjustTime(&Data.data);
+            Networking.serverSetup();
+            }, SYSTEM_EVENT_STA_GOT_IP);
 
          Networking.connectWiFi(CONNECTING_TIME, (char *)Settings.general[WIFI_SSID]->getString().c_str(), (char *)Settings.general[WIFI_PASS]->getString().c_str());
 
@@ -173,9 +182,11 @@ void loop() {
         updateChecked = true;
     }
 
+
+    Screen.tick();
+
     if(proceed) {
         t15 = millis();
-        Screen.tick();
 //        delay(1);
 
         std::stringstream ss;

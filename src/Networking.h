@@ -18,17 +18,20 @@
 #define TIME_NO_WAIT 0
 #define TIME_INFINITY -1
 
+#define HOSTNAME "esp32"
 
 class NetworkingClass {
+
+    private:
+
+        static void f(std::string);
+        [[noreturn]] static void WiFiGotIP(WiFiEvent_t, WiFiEventInfo_t);
+        static void serverSetupTask(void *);
 
     public:
         int connectWiFi(int = CONNECTING_TIME, const char* ssid = "", const char* pass = "");
         static void serverSetup();
         void sendEvent(const char *, std::string);
-    private:
-        static void f(std::string);
-        [[noreturn]] static void WiFiGotIP(WiFiEvent_t, WiFiEventInfo_t);
-        static void serverSetupTask(void *);
 };
 
 extern NetworkingClass Networking;

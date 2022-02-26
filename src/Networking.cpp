@@ -1,7 +1,5 @@
 #include "Networking.h"
 
-const char* host = "esp32";
-
 NetworkingClass Networking;
 
 AsyncWebServer server(80);
@@ -17,30 +15,30 @@ void NetworkingClass::f(std::string str) {
     events.send(str.c_str(), "myevent", millis());
 }
 
-[[noreturn]] void NetworkingClass::WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
-{
-
-    Log.logf("Connected to %s,IP: %s\n ", WiFi.SSID().c_str(),IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
-
-    if (!MDNS.begin(host)) { //http://esp32.local
-        Log.log("Error setting up MDNS responder!");
-        while (1) {
-            delay(100);
-        }
-    }
-
-    Log.logf("mDNS responder started, hostname: http://%s.local\n", host);
-
-    Data.adjustTime(&Data.data);
-    serverSetup();
-}
+//[[noreturn]] void NetworkingClass::WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
+//{
+//
+//    Log.logf("Connected to %s,IP: %s\n ", WiFi.SSID().c_str(),IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
+//
+//    if (!MDNS.begin(host)) { //http://esp32.local
+//        Log.log("Error setting up MDNS responder!");
+//        while (1) {
+//            delay(100);
+//        }
+//    }
+//
+//    Log.logf("mDNS responder started, hostname: http://%s.local\n", host);
+//
+//    Data.adjustTime(&Data.data);
+//    serverSetup();
+//}
 
 int NetworkingClass::connectWiFi(int wait, const char* ssid, const char* pass) {
 
     if(WiFi.status() == WL_CONNECTED)
         return WiFi.status();
 
-    WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
+//    WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
 
     events.onConnect([](AsyncEventSourceClient *client){
         if(client->lastId()){

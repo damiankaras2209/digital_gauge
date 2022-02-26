@@ -23,12 +23,19 @@ void Prompt::setText(String t) {
     _hasChanged = true;
 }
 
+void Prompt::appendText(String t) {
+    _text += t;
+    _hasChanged = true;
+}
+
 void Prompt::setLineSpacing(int i) {
     _lineSpacing = i;
+    _hasChanged = true;
 }
 
 void Prompt::setUseDefaultFont(bool b) {
     _useDefaultFont = b;
+    _hasChanged = true;
 }
 
 void Prompt:: draw() {
@@ -60,28 +67,4 @@ void Prompt:: draw() {
         sprite->pushSprite(_x, _y);
         sprite->deleteSprite();
     }
-}
-
-void Prompt::appendToPrompt(String text) {
-    lock->lock();
-//    if(currentView != PROMPT) {
-//        Log.log("appendToPrompt() called without showPrompt()");
-//        return;
-//    }
-    std::string str = text.c_str();
-    std::size_t nextLine = 0;
-
-    sprite->createSprite(_w, _h, 1);
-    sprite->drawRect(0, 0, _w, _h, gen[FONT_COLOR]->get<int>());
-
-    while(nextLine != std::string::npos) {
-        nextLine = str.find_first_of('\n');
-        sprite->drawString(str.substr(0, nextLine).c_str(), _w/2, (_lines++) * (tft->fontHeight() + _lineSpacing));
-        str = str.substr(nextLine+1);
-    }
-
-    sprite->pushSprite(_x, _y);
-    sprite->deleteSprite();
-
-    lock->release();
 }

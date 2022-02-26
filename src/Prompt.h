@@ -16,7 +16,7 @@ class Prompt : public Clickable {
 
     String _text;
     int _lines = 0;
-    int _lineSpacing;
+    int _lineSpacing = LINE_SPACING;
     bool _hasChanged = false;
     bool _useDefaultFont = false;
     TFT_eSprite *sprite;
@@ -28,7 +28,7 @@ public:
     void setLineSpacing(int);
     void setUseDefaultFont(bool);
     void draw();
-    void appendToPrompt(String text);
+    void appendText(String text);
 
 };
 

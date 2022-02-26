@@ -64,7 +64,7 @@ void ScreenClass::init() {
     }));
     entries.push_back(new Menu::Entry("SHOW INFO", [this]() {
         Log.logf("Fired entry %d\n", 2);
-        showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString());
+        showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString() + " FS: " + getCurrentFilesystemVersionString());
     }));
     entries.push_back(new Menu::Entry("ENTRY 3", []() {Log.logf("Fired entry %d\n", 3);}));
     entries.push_back(new Menu::Entry("ENTRY 4", []() {Log.logf("Fired entry %d\n", 4);}));
@@ -187,15 +187,13 @@ void ScreenClass::showPrompt(String text, int lineSpacing, boolean useDefaultFon
     prompt->setText(text);
     prompt->setLineSpacing(lineSpacing);
     prompt->setUseDefaultFont(useDefaultFont);
+//    prompt->draw();
     lock->release();
 }
 
-void ScreenClass::appendToPrompt(String text, int lineSpacing, boolean useDefaultFont) {
+void ScreenClass::appendToPrompt(String text) {
     lock->lock();
-    if(currentView != PROMPT) {
-        Log.log("appendToPrompt() called without showPrompt()");
-        return;
-    }
-    prompt->appendToPrompt(text);
+    prompt->appendText(text);
+//    draw()
     lock->release();
 }

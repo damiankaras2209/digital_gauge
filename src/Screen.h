@@ -35,7 +35,7 @@ class ScreenClass {
 		void reset();
 		void switchView(View);
 		void showPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
-		void appendToPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
+		void appendToPrompt(String text);
 		View getView();
 		void tick();
 
