@@ -36,6 +36,6 @@ class UpdaterClass {
 
 };
 
-//UpdaterClass Updater;
+extern UpdaterClass Updater;
 
 #endif

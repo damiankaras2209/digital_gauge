@@ -364,34 +364,35 @@ DateTime DataClass::getTime() {
     return data.now;
 }
 
-void DataClass::adjustTime(DataStruct *params) {
-    Log.logf("%s started on core %d\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
-    //    Log.log(" started on core ");
-    //    Log.log(xPortGetCoreID());
-
-    while(WiFi.status() != WL_CONNECTED) {
-        delay(100);
-    }
-
-    while(params->i2cBusy)
-        delay(1);
-    params->i2cBusy = true;
+int DataClass::adjustTime(DataStruct *params) {
 
     Log.log("Getting time from server");
     struct tm timeinfo;
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     if(!getLocalTime(&timeinfo)){
         Log.log("Failed to obtain time from server");
-    } else {
-        timeinfo.tm_mon += 1;
-        timeinfo.tm_year += 1900;
-        params->rtcPtr->adjust(DateTime(timeinfo.tm_year, timeinfo.tm_mon, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec));
-        DateTime now  = params->rtcPtr->now();
-        params->lastRTC = millis();
-        Log.logf("Got: %d.%d.%d %d:%d:%d, adjusted to: %d.%d.%d %d:%d:%d\n",
-                 timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec,
-                 now.day(), now.month(), now.year(), now.hour(), now.minute(), now.second());
+        return D_FAIL;
     }
 
+
+    Log.log("ree");
+
+    while(params->i2cBusy)
+        delay(1);
+    params->i2cBusy = true;
+
+
+    Log.log("reee2");
+
+    timeinfo.tm_mon += 1;
+    timeinfo.tm_year += 1900;
+    params->rtcPtr->adjust(DateTime(timeinfo.tm_year, timeinfo.tm_mon, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec));
+    DateTime now  = params->rtcPtr->now();
+    params->lastRTC = millis();
+    Log.logf("Got: %d.%d.%d %d:%d:%d, adjusted to: %d.%d.%d %d:%d:%d\n",
+             timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec,
+             now.day(), now.month(), now.year(), now.hour(), now.minute(), now.second());
+
     params->i2cBusy = false;
+    return D_SUCCESS;
 }

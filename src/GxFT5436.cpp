@@ -176,8 +176,9 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
             }
             *(data->i2cBusy) = true;
 
-
             GxFT5436::TouchInfo touchInfo = data->touch->scan();
+
+            *(data->i2cBusy) = false;
 
             bool detected[5] = {false, false, false, false, false};
 
@@ -259,8 +260,6 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
                     }
                 }
             }
-
-            *(data->i2cBusy) = false;
         }
         delay(7);
     }

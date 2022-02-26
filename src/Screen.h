@@ -12,6 +12,7 @@
 #include "Settings.h"
 #include "Data.h"
 
+#include "Wifi.h"
 #include "RTClib.h"
 #include "TFT_eSPI.h"
 #include "ADS1X15.h"

@@ -104,12 +104,14 @@ void setup(void) {
                           (char *)Settings.general[WIFI_PASS]->getString().c_str() +
                           "\"",
         4, true);
+        Screen.tick();
 
         Networking.connectWiFi(TIME_INFINITY, (char *)Settings.general[WIFI_SSID]->getString().c_str(), (char *)Settings.general[WIFI_PASS]->getString().c_str());
         while(WiFi.status() != WL_CONNECTED){
             delay(50);
         }
         Screen.appendToPrompt("\nWiFi connected, updating... this may take a while");
+        Screen.tick();
         updater.updateFS(getTargetFilesystemVersionString(), [](t_httpUpdate_return status) {
             switch (status) {
                 case HTTP_UPDATE_FAILED:
@@ -135,7 +137,7 @@ void setup(void) {
 
 
         WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
-            Log.logf("Connected to %s,IP: %s\n ", WiFi.SSID().c_str(),IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
+            Log.logf("Connected to %s, IP: %s\n", WiFi.SSID().c_str(),IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
 
             if (!MDNS.begin(HOSTNAME)) { //http://esp32.local
                 Log.log("Error setting up MDNS responder!");
@@ -143,7 +145,6 @@ void setup(void) {
 
             Log.logf("mDNS responder started, hostname: http://%s.local\n", HOSTNAME);
 
-            Data.adjustTime(&Data.data);
             Networking.serverSetup();
             }, SYSTEM_EVENT_STA_GOT_IP);
 
@@ -177,10 +178,10 @@ void setup(void) {
 unsigned  long t15;
 void loop() {
 
-    if(!updateChecked && WiFi.status() == WL_CONNECTED) {
-//        updater.checkForUpdate();
-        updateChecked = true;
-    }
+//    if(!updateChecked && WiFi.status() == WL_CONNECTED) {
+////        updater.checkForUpdate();
+//        updateChecked = true;
+//    }
 
 
     Screen.tick();

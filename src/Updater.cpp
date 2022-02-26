@@ -1,6 +1,8 @@
 #include "Updater.h"
 #include "Cert.h"
 
+UpdaterClass Updater;
+
 const char* url = "https://firebasestorage.googleapis.com/v0/b/gauge-7c5b4.appspot.com/o/";
 
 const char* FIRMWARE = "firmware";

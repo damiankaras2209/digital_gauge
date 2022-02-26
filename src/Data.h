@@ -44,6 +44,10 @@ enum Device {
 
 const String deviceName[] = {"FT5436", "DS3231", "MCP2515", "ADS1115", "MCP23008"};
 
+enum Result {
+    D_SUCCESS, D_FAIL
+};
+
 class DataClass {
 
 public:
@@ -76,7 +80,7 @@ public:
         DateTime getTime();
         DataStruct data;
 
-        static void adjustTime(DataStruct *);
+        static int adjustTime(DataStruct *);
 
 private:
 //        static void IRAM_ATTR touchStart();

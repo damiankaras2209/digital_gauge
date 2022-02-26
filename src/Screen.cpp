@@ -66,11 +66,23 @@ void ScreenClass::init() {
         Log.logf("Fired entry %d\n", 2);
         showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString() + " FS: " + getCurrentFilesystemVersionString());
     }));
-    entries.push_back(new Menu::Entry("ENTRY 3", []() {Log.logf("Fired entry %d\n", 3);}));
-    entries.push_back(new Menu::Entry("ENTRY 4", []() {Log.logf("Fired entry %d\n", 4);}));
-    entries.push_back(new Menu::Entry("ENTRY 5", []() {Log.logf("Fired entry %d\n", 5);}));
-    entries.push_back(new Menu::Entry("ENTRY 6", []() {Log.logf("Fired entry %d\n", 6);}));
-    entries.push_back(new Menu::Entry("ENTRY 7", []() {Log.logf("Fired entry %d\n", 7);}));
+    entries.push_back(new Menu::Entry("SYNC TIME", [this]() {
+        Log.logf("Fired entry %d\n", 3);
+        showPrompt("Getting time from server... ");
+        if(WiFi.status() == WL_CONNECTED) {
+            switch (Data.adjustTime(&Data.data)) {
+                case  D_SUCCESS: appendToPrompt("\nSuccess"); break;
+                case  D_FAIL: appendToPrompt("\nFail"); break;
+            }
+        } else {
+            appendToPrompt("\nNo connection");
+        }
+
+    }));
+    entries.push_back(new Menu::Entry("CHECK FOR UPDATE", [this]() {
+        Log.logf("Fired entry %d\n", 4);
+        Updater.checkForUpdate();
+    }));
     menu->setEntries(entries);
     for (auto clickable: entries) {
         clickables.push_back(clickable);
@@ -182,7 +194,8 @@ void ScreenClass::tick() {
 
 
 void ScreenClass::showPrompt(String text, int lineSpacing, boolean useDefaultFont) {
-    switchView(PROMPT);
+    if(currentView != PROMPT)
+        switchView(PROMPT);
     lock->lock();
     prompt->setText(text);
     prompt->setLineSpacing(lineSpacing);
