@@ -1,34 +1,26 @@
 #include "Updater.h"
-#include "Cert.h"
 
 UpdaterClass Updater;
 
-const char* url = "https://firebasestorage.googleapis.com/v0/b/gauge-7c5b4.appspot.com/o/";
+const char* FIRMWARE_FILENAME = "firmware";
+const char* FILESYSTEM_FILENAME = "spiffs";
 
-const char* FIRMWARE = "firmware";
-const uint8_t version_fw[] = {1, 0, 0};
-
-const char* FILESYSTEM = "spiffs";
-const uint8_t target_fs[] = {1, 0, 0};
-
-
-uint32_t getCurrentFirmwareVersion() {
-    return version_fw[0] << 16 | version_fw[1] << 8 | version_fw[2];
+void UpdaterClass::init() {
+    firmware = Version{FIRMWARE};
+    filesystemTarget = Version{FILESYSTEM};
+    readFilesystemVersion(&filesystemCurrent);
+    httpUpdate.rebootOnUpdate(false);
 }
 
-String getCurrentFirmwareVersionString() {
-    return version_fw[0] + (String)"." + version_fw[1] + (String)"." + version_fw[2];
+void UpdaterClass::setOnFinnish(OnFinnishCallback f) {
+    _onFinnish = std::move(f);
 }
 
-uint32_t getTargetFilesystemVersion() {
-    return target_fs[0] << 16 | target_fs[1] << 8 | target_fs[2];
+void UpdaterClass::setOnSuccessCallback(OnSuccessCallback f) {
+    _onSuccess = std::move(f);
 }
 
-String getTargetFilesystemVersionString() {
-    return target_fs[0] + (String)"." + target_fs[1] + (String)"." + target_fs[2];
-}
-
-uint32_t getCurrentFilesystemVersion() {
+void UpdaterClass::readFilesystemVersion(Version *v) {
     if(SPIFFS.exists("/version.txt")) {
 
         fs::File file = SPIFFS.open("/version.txt", "r");
@@ -38,74 +30,69 @@ uint32_t getCurrentFilesystemVersion() {
         for(int i=0; i<20; i++) {
             if(buf[i] != 13/*CR*/) {
                 line[i] = (char)buf[i];
-//                Log.log(" ");
-//                Log.log(buf[i]);
+                //                Log.log(" ");
+                //                Log.log(buf[i]);
             } else {
                 line[i] = '\0';
                 break;
             }
         }
-//        Log.log("");
-//        Log.log("Line: ");
-//        Log.log(line);
-
-        uint8_t fs_current[] = {0, 0, 0};
+        //        Log.log("");
+        //        Log.log("Line: ");
+        //        Log.log(line);
 
         char* p = line;
 
-        fs_current[0] = std::strtol(p, &p, 10);
-        fs_current[1] = std::strtol(p+1, &p, 10);
-        fs_current[2] = std::strtol(p+1, &p, 10);
+        v->major = std::strtol(p, &p, 10);
+        v->minor = std::strtol(p+1, &p, 10);
+        v->patch = std::strtol(p+1, &p, 10);
         free(line);
 
-        return fs_current[0] << 16 | fs_current[1] << 8 | fs_current[2];
-
-    } else
-        return 0;
-}
-
-String getCurrentFilesystemVersionString() {
-    uint32_t version = getCurrentFilesystemVersion();
-    return (String)(version >> 16) + "." + (String)((version >> 8) & 0xff) + "." + (String)(version & 0xff);
+    } else {
+        Log.log("Version.txt does not exist");
+    }
 }
 
 void UpdaterClass::updateFW(String url) {
-    WiFiClientSecure client;
-    client.setCACert(rootCACertificate);
-    Log.log(url);
+    WiFiClient client;
+    Log.logf("Updating to: %s\n", url.c_str());
+    Log.logf("Free heap: %d\n", ESP.getFreeHeap());
     t_httpUpdate_return ret = httpUpdate.update(client, url);
-
-    switch (ret) {
-        case HTTP_UPDATE_FAILED:
-            Log.logf("HTTP_UPDATE_FAILD Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
-            break;
-
-            case HTTP_UPDATE_NO_UPDATES:
-                Log.log("HTTP_UPDATE_NO_UPDATES");
-                break;
-
-                case HTTP_UPDATE_OK:
-                    Log.log("HTTP_UPDATE_OK");
-                    break;
-    }
-
-
-}
-
-void UpdaterClass::updateFS(String version, Callback onFinish) {
-    WiFiClientSecure client;
-    client.setCACert(rootCACertificate);
 
     std::stringstream ss;
 
-    ss << url;
-    ss << FILESYSTEM;
+    switch (ret) {
+        case HTTP_UPDATE_FAILED:
+            ss << "HTTP_UPDATE_FAILD Error (" << httpUpdate.getLastError() << "): " << httpUpdate.getLastErrorString().c_str();
+            break;
+        case HTTP_UPDATE_NO_UPDATES:
+            ss << "HTTP_UPDATE_NO_UPDATES";
+            break;
+        case HTTP_UPDATE_OK:
+            ss << "Success";
+            break;
+    }
+    Log.log(ss.str().c_str());
+    _log("\n");
+    _log(ss.str().c_str());
+    if(ret == HTTP_UPDATE_OK)
+        if(_onSuccess != nullptr)
+            _onSuccess();
+}
+
+void UpdaterClass::updateFS(String version, Callback onFinish) {
+    WiFiClient client;
+
+    std::stringstream ss;
+
+    ss << URL;
+    ss << "files/";
+    ss << FILESYSTEM_FILENAME;
     ss << "_v";
     ss << version.c_str();
-    ss << ".bin?alt=media";
+    ss << ".bin";
 
-
-    Log.log(ss.str().c_str());
+    Log.logf("SPIFFS url: %s\n", ss.str().c_str());
 
     t_httpUpdate_return ret = httpUpdate.updateSpiffs(client, ss.str().c_str());
 
@@ -113,116 +100,94 @@ void UpdaterClass::updateFS(String version, Callback onFinish) {
 }
 
 
-void UpdaterClass::checkForUpdate() {
+void UpdaterClass::checkForUpdate(LogCallback log) {
+    _log = std::move(log);
+    _check = true;
+}
 
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(50);
-//        Log.log(".");
-    }
+void UpdaterClass::loop() {
+    if(_check) {
 
+        HTTPClient http;
+        http.begin(URL);
+        int httpResponseCode = http.GET();
 
-    uint32_t fw_current = getCurrentFirmwareVersion();
-    uint32_t fs_current = getCurrentFilesystemVersion();
-    uint32_t fs_target = getTargetFilesystemVersion();
-
-
-    HTTPClient http;
-    http.begin(url);
-    int httpResponseCode = http.GET();
-
-    if (httpResponseCode>0) {
-        Log.logf("HTTP Response code: %d\n", httpResponseCode);
-        String payload = http.getString();
-
-        DynamicJsonDocument doc(8*1024);
-        deserializeJson(doc, payload);
-//
-//        String s = doc[0]["name"];
-//        int size = doc.size();
-//        Log.log(s.c_str());
-
-        JsonArray arr = doc["items"].as<JsonArray>();
-        for (JsonVariant value : arr) {
-            std::string filename = value["name"];
-
-            size_t start = filename.find_last_of("_v") + 1;
-            size_t end = filename.find_last_of('.');
-
-            std::string name = filename.substr(0, start - 2);
-            std::string version = filename.substr(start, end-start).c_str();
-            char* p = const_cast<char *> (version.c_str());
-
-            uint8_t ver[] = {0, 0, 0};
-
-            ver[0] = std::strtol(p, &p, 10);
-            ver[1] = std::strtol(p+1, &p, 10);
-            ver[2] = std::strtol(p+1, &p, 10);
-
-            Log.logf("%s %s %d.%d.%d\n", filename.c_str(), name.c_str(), ver[0], ver[1], ver[2]);
-
-//            Log.log(filename.c_str());
-//            Log.log(" ");
-//            Log.log(name.c_str());
-//            for(uint8_t i=0; i<3; i++) {
-//                Log.log(" ");
-//                Log.log(ver[i]);
-//            }
-//            Log.log("");
+        if (httpResponseCode>0) {
+            Log.logf("HTTP Response code: %d\n", httpResponseCode);
+            std::string payload = http.getString().c_str();
 
 
-            uint32_t found = ver[0] << 16 | ver[1] << 8 | ver[2];
-            if(name == FIRMWARE) {
-                Log.logf("Firmware current version: %d, found: %\n", fw_current, found);
-//                Log.log(fw_current);
-//                Log.log(", found: ");
-//                Log.log(found);
-                if(found > fw_current) {
-                    Log.log("New firmware version found!");
+            std::string latestFilename;
+            Version latestFound = Version{0,0,0};
+            Log.logf("Firmware current version: %s(%d)\n", firmware.toString().c_str(), firmware.toInt());
 
-                    std::stringstream ss;
+            std::size_t nextLine = 0;
 
-                    ss << url;
-                    ss << filename;
-                    ss << "?alt=media";
+            while(nextLine != std::string::npos) {
+                nextLine = payload.find_first_of('\n');
 
-                    updateFW(ss.str().c_str());
-//                     updateFW(value["download_url"]);
-                    break;
-                } else {
-                    Log.log("Firmware is up to date!");
+                std::string line = payload.substr(0, nextLine);
+                payload = payload.substr(nextLine+1);
+
+//                Log.logf("Line length: %d\n", line.length());
+
+                if(line.length() == 0)
+                    continue;
+
+                std::string filename = line.substr(line.find_last_of('/') + 1);
+
+                size_t start = filename.find_last_of("_v") + 1;
+                size_t end = filename.find_last_of('.');
+
+                std::string name = filename.substr(0, start - 2);
+                std::string version = filename.substr(start, end-start).c_str();
+                char* p = const_cast<char *> (version.c_str());
+
+                Version found;
+                found.major = std::strtol(p, &p, 10);
+                found.minor = std::strtol(p + 1, &p, 10);
+                found.patch = std::strtol(p + 1, &p, 10);
+
+                Log.logf("Found file: %s %s %d.%d.%d(%d)\n", filename.c_str(), name.c_str(), found.major, found.minor, found.patch, found.toInt());
+
+                if(name == FIRMWARE_FILENAME) {
+                    if(found > latestFound) {
+                        latestFilename = filename;
+                        latestFound = found;
+                    }
                 }
-//            } else if(name == FILESYSTEM) {
-//                Log.log("Filesystem current version: ");
-//                Log.log(fs_current);
-//                Log.log(", target: ");
-//                Log.log(fs_target);
-//                Log.log(", found: ");
-//                Log.log(found);
-//                if(found == fs_target) {
-//                    Log.log("New filesystem  found!");
-////                    updateFS(value["download_url"]);
-//                    break;
-//                } else {
-//                    Log.log("Found filesystem does not match target");
-//                }
             }
 
-
-//            uint8_t major = version.at(0) - 48;
-//            uint8_t minor = version.at(2) - 48;
-//            uint8_t patch = version.at(4) - 48;
-//            Log.log(str.c_str());
-//            Log.log(name.c_str());
-//            Log.log(" ");
+            if(latestFound > firmware) {
+                std::stringstream ss;
+                ss << URL;
+                ss << "files/";
+                ss << latestFilename;
+                _log("\nUpdating to " + latestFound.toString());
+                _log("\nThis may take a few minutes...");
+                updateFW(ss.str().c_str());
+            } else if (latestFound == firmware){
+                Log.log("Firmware is up to date!");
+                _log("\nFirmware is up to date!");
+            } else {
+                Log.log("No files found");
+                _log("\nNo files found");
+            }
+        } else {
+            Log.logf("Error code: %d\n", httpResponseCode);
+            _log("\nError code: " + (String)httpResponseCode);
         }
-
-
-//        Log.log(size);
-//        Log.log(str);
-    } else {
-        Log.logf("Error code: %d\n", httpResponseCode);
-//        Log.log(httpResponseCode);
+        http.end();
+        if(_onFinnish != nullptr)
+            _onFinnish();
+        _check = false;
     }
-    http.end();
+}
 
+String UpdaterClass::getMac() {
+    uint64_t chipid = ESP.getEfuseMac();
+    uint16_t chip = (uint16_t)(chipid >> 32);
+    char mac[13];
+    snprintf(mac, 13, "%04X%08X", chip, (uint32_t)chipid);
+    return mac;
 }

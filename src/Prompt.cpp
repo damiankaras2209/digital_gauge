@@ -38,6 +38,14 @@ void Prompt::setUseDefaultFont(bool b) {
     _hasChanged = true;
 }
 
+void Prompt::setDismissible(bool b ) {
+    _dismissible = b;
+}
+
+bool Prompt::isDismissible() {
+    return _dismissible;
+}
+
 void Prompt:: draw() {
     if(_hasChanged) {
         _hasChanged = false;

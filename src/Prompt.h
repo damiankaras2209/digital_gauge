@@ -19,16 +19,19 @@ class Prompt : public Clickable {
     int _lineSpacing = LINE_SPACING;
     bool _hasChanged = false;
     bool _useDefaultFont = false;
+    bool _dismissible = true;
     TFT_eSprite *sprite;
 
 public:
 
     void init(TFT_eSPI *, Lock *);
     void setText(String);
+    void appendText(String text);
     void setLineSpacing(int);
     void setUseDefaultFont(bool);
+    void setDismissible(bool);
+    bool isDismissible();
     void draw();
-    void appendText(String text);
 
 };
 

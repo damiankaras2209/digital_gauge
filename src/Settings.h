@@ -9,8 +9,15 @@
 #include <TFT_eSPI.h>
 #include <iomanip>
 #include "ArduinoJson.h"
+#include "Updater.h"
+
+enum S_STATUS {
+    S_SUCCESS, S_FAIL
+};
 
 enum Field : uint16_t{
+
+    VERSION,
 
     DEMO,
     WIFI_SSID,
@@ -398,7 +405,7 @@ class SettingsClass {
 	public:
 		void init();
 		void loadDefault();
-		void load();
+		S_STATUS load();
 		void save();
 		void clear();
 		void loadSelected(DataSource *selected);

@@ -39,6 +39,7 @@ class ScreenClass {
 		void appendToPrompt(String text);
 		View getView();
 		void tick();
+		void setBrightness(uint8_t x);
 
 		Gauges *gauges;
 		Menu *menu;
@@ -47,7 +48,9 @@ class ScreenClass {
 		TFT_eSPI *tft;
 		SettingsClass::Field **gen;
 		Lock *lock;
+        volatile View previousView;
         volatile View currentView;
+        uint8_t _brightness;
 
 
 		std::vector<Clickable*> clickables;

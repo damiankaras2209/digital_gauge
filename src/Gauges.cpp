@@ -22,9 +22,7 @@ void Gauges::init(TFT_eSPI *t, Lock *l) {
         }
     }
     needleUpdate = new TFT_eSprite(tft);
-    needleUpdate->loadFont("GaugeHeavyNumbers12");
     textUpdate = new TFT_eSprite(tft);
-    textUpdate->loadFont("GaugeHeavy16");
 
     for(int i=0; i<SIDE_LAST; i++)
         clickables.push_back(new Clickable);
@@ -62,8 +60,7 @@ void Gauges::init(TFT_eSPI *t, Lock *l) {
 
 void Gauges::reset() {
     fillTables();
-    createScaleSprites(LEFT);
-    createScaleSprites(RIGHT);
+    prepare();
     selectedInfoCoords[2] = (gen[NEEDLE_CENTER_OFFSET]->get<int>() - gen[NEEDLE_CENTER_RADIUS]->get<int>()) * 2; //width
     selectedInfoCoords[3] = (textUpdate->fontHeight()+LINE_SPACING)*4 - LINE_SPACING + SCALE_SPRITE_Y_OFFSET_16; //height
     selectedInfoCoords[0] = gen[WIDTH]->get<int>()/2 + gen[OFFSET_X]->get<int>() - selectedInfoCoords[2]/2; //x
@@ -73,7 +70,20 @@ void Gauges::reset() {
     updateText(true, 0);
 }
 
+void Gauges::prepare() {
+    needleUpdate->loadFont("GaugeHeavyNumbers12");
+    textUpdate->loadFont("GaugeHeavy16");
+    createScaleSprites(LEFT);
+    createScaleSprites(RIGHT);
+}
 
+void Gauges::clean() {
+    needleUpdate->unloadFont();
+    textUpdate->unloadFont();
+    for(auto & i : scaleSprite)
+        for(auto & j : i)
+            j->deleteSprite();
+}
 
 void Gauges::setSelected(SettingsClass::DataSource *s) {
     for(int i=LEFT; i<SIDE_LAST; i++) {

@@ -47,14 +47,17 @@ public:
 
         void init(TFT_eSPI *, Lock *);
         void reset();
+        void fillTables();
+        void createScaleSprites(Side);
+        void prepare();
+        void clean();
+
         void drawScalePiece(TFT_eSprite*, int, int, int, int, int, int, uint16_t);
         void drawScale(TFT_eSprite*, int, int, int, int, int, int);
         void updateNeedle(int);
         void updateText(boolean, int fps);
         void drawSelectedInfo();
         void clearSelectedInfo();
-        void fillTables();
-        void createScaleSprites(Side);
 
         void setSelected(SettingsClass::DataSource*);
         void setSelected(Side, SettingsClass::DataSource);

@@ -20,6 +20,7 @@ void SettingsClass::init() {
     Log.logf("SETTINGS_SIZE: %d\n", SETTINGS_SIZE);
 #endif
 
+    general[VERSION] = new Field("demo", 1.0f, false);
     general[DEMO] = (new Field("demo", 0.0f))->setType(CHECKBOX);
     general[WIFI_SSID] = new Field("SSID", "dlink-74A1");
     general[WIFI_PASS] = new Field("pass", "fdpqg49953");
@@ -133,7 +134,9 @@ void SettingsClass::init() {
 
 }
 
-void SettingsClass::load() {
+S_STATUS SettingsClass::load() {
+
+    S_STATUS status = S_SUCCESS;
 
     Log.log("Loading settings");
     if(SPIFFS.exists("/settings.json")) {
@@ -141,28 +144,35 @@ void SettingsClass::load() {
         fs::File file = SPIFFS.open("/settings.json", "r");
         DeserializationError error = deserializeJson(doc, file);
         if (error) {
-            Log.log("Failed to read file, using default configuration");
-            loadDefault();
+            Log.log("Failed to read file, using default");
+            status = S_FAIL;
         } else {
-            for(int i=0; i<SETTINGS_SIZE; i++) {
-                if(Settings.general[i]->isConfigurable()) {
-                    switch (general[i]->getType()) {
-                        case STRING: {
-                            char c[64] = "";
-                            strcpy((char *)c, doc[i]);
-                            general[i]->set((const char*)c);
+            int v = doc[VERSION] | 0;
+            general[VERSION]->setDefault();
+            if(v != general[VERSION]->get<int>()) {
+                Log.log("Setting version has changed. Using default");
+                status = S_FAIL;
+            } else {
+                for(int i=1; i<SETTINGS_SIZE; i++) {
+                    if(Settings.general[i]->isConfigurable()) {
+                        switch (general[i]->getType()) {
+                            case STRING: {
+                                char c[64] = "";
+                                strcpy((char *)c, doc[i]);
+                                general[i]->set((const char*)c);
 #ifdef LOG_SETTINGS
-                            Log.logf("%d. %s: %s\n", i, general[i]->getName().c_str(), general[i]->getString().c_str());
+                                Log.logf("%d. %s: %s\n", i, general[i]->getName().c_str(), general[i]->getString().c_str());
 #endif
-                            break;
-                        }
-                        default: {
-                            float f = doc[i].as<float>();
-                            general[i]->set(f);
+                                break;
+                            }
+                            default: {
+                                float f = doc[i].as<float>();
+                                general[i]->set(f);
 #ifdef LOG_SETTINGS
-                            Log.logf("%d. %s: %f\n", i, general[i]->getName().c_str(), general[i]->get<float>());
+                                Log.logf("%d. %s: %f\n", i, general[i]->getName().c_str(), general[i]->get<float>());
 #endif
-                            break;
+                                break;
+                            }
                         }
                     }
                 }
@@ -171,12 +181,11 @@ void SettingsClass::load() {
 
         file.close();
 
-
     } else {
-        Log.log("File not found. Loading defaults");
-        loadDefault();
+        Log.log("File not found, using defaults");
+        status = S_FAIL;
     }
-
+    return status;
 }
 
 void SettingsClass::save() {
@@ -185,7 +194,7 @@ void SettingsClass::save() {
         SPIFFS.remove("/settings.json");
     fs::File file = SPIFFS.open("/settings.json", "w");
     StaticJsonDocument<4*1024> doc;
-
+    doc[VERSION] = general[VERSION]->get<int>();
     for(int i=0; i<SETTINGS_SIZE; i++) {
         if(Settings.general[i]->isConfigurable()) {
             switch (general[i]->getType()) {

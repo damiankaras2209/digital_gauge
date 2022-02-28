@@ -1,5 +1,7 @@
 #include "Screen.h"
 
+#include <utility>
+
 ScreenClass Screen;
 
 void ScreenClass::processEvent(GxFT5436::Event event, void* param) {
@@ -21,6 +23,9 @@ void ScreenClass::processEvent(GxFT5436::Event event, void* param) {
 };
 
 void ScreenClass::init() {
+    ledcSetup(0, 5000, 8);
+    ledcAttachPin(32, 0);
+    ledcWrite(0, 0);
     gen = Settings.general;
     tft = new TFT_eSPI;
     tft->init();
@@ -52,7 +57,8 @@ void ScreenClass::init() {
     prompt = new Prompt;
     prompt->init(tft, lock);
     prompt->setOnClick([this]() {
-        switchView(MENU);
+        if(prompt->isDismissible())
+            switchView(previousView);
     });
     clickables.push_back(prompt);
     menu = new Menu();
@@ -64,10 +70,15 @@ void ScreenClass::init() {
     }));
     entries.push_back(new Menu::Entry("SHOW INFO", [this]() {
         Log.logf("Fired entry %d\n", 2);
-        showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) + "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) + "\nIP: " + WiFi.localIP().toString() + "\nFW: " + getCurrentFirmwareVersionString() + " FS: " + getCurrentFilesystemVersionString());
+        showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) +
+        "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) +
+        "\nIP: " + WiFi.localIP().toString() +
+        "\nFW: " + Updater.firmware.toString() +" FS: " + Updater.filesystemCurrent.toString() +
+        "\nMAC: " + Updater.getMac());
     }));
     entries.push_back(new Menu::Entry("SYNC TIME", [this]() {
         Log.logf("Fired entry %d\n", 3);
+        prompt->setDismissible(false);
         showPrompt("Getting time from server... ");
         if(WiFi.status() == WL_CONNECTED) {
             switch (Data.adjustTime(&Data.data)) {
@@ -76,12 +87,34 @@ void ScreenClass::init() {
             }
         } else {
             appendToPrompt("\nNo connection");
+            prompt->setDismissible(true);
         }
-
+        prompt->setDismissible(true);
     }));
     entries.push_back(new Menu::Entry("CHECK FOR UPDATE", [this]() {
         Log.logf("Fired entry %d\n", 4);
-        Updater.checkForUpdate();
+        showPrompt("Checking for updates... ");
+        prompt->setDismissible(false);
+        if(WiFi.status() == WL_CONNECTED) {
+            Updater.setOnSuccessCallback([this]() {
+                Log.log("Restarting in 5 seconds");
+                appendToPrompt("\nRestarting in 5 seconds");
+                Screen.tick();
+                delay(5000);
+                setBrightness(0);
+                esp_restart();
+            });
+            Updater.setOnFinnish([this]() {
+                prompt->setDismissible(true);
+            });
+            Updater.checkForUpdate([this](String str) {
+                appendToPrompt(std::move(str));
+                Screen.tick();
+            });
+        } else {
+            appendToPrompt("\nNo connection");
+            prompt->setDismissible(true);
+        }
     }));
     menu->setEntries(entries);
     for (auto clickable: entries) {
@@ -104,18 +137,25 @@ View ScreenClass::getView() {
 
 void ScreenClass::switchView(View view) {
     lock->lock();
-//    if(currentView == GAUGES && view != GAUGES)
-//        needleUpdate->unloadFont();
+
+    previousView = currentView;
+    currentView = view;
+
     for(auto clickable : clickables)
         clickable->setVisibility(false);
 
-    if(currentView == MENU && view != MENU) {
+    if(previousView == MENU && currentView != MENU) {
         menu->clean();
     }
 
-    switch(view) {
+    if(previousView == GAUGES && currentView != GAUGES) {
+        gauges->clean();
+    }
+
+    switch(currentView) {
         case GAUGES:  {
             tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
+            gauges->prepare();
             gauges->drawWhole[0] = true;
             gauges->drawWhole[1] = true;
             for(auto v : *gauges->getClickables()) {
@@ -141,7 +181,7 @@ void ScreenClass::switchView(View view) {
             break;
         }
     }
-    currentView = view;
+
     Log.logf("Current view: %d\n", currentView);
     lock->release();
 }
@@ -209,4 +249,9 @@ void ScreenClass::appendToPrompt(String text) {
     prompt->appendText(text);
 //    draw()
     lock->release();
+}
+
+void ScreenClass::setBrightness(uint8_t x) {
+    _brightness = x;
+    ledcWrite(0, x);
 }

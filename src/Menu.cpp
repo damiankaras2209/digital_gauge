@@ -35,7 +35,6 @@ void Menu::prepare() {
 
 void Menu::clean() {
     menuSprite->unloadFont();
-    menuSprite->deleteSprite();
 }
 
 void Menu::resetPosition() {
