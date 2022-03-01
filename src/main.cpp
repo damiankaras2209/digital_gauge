@@ -127,8 +127,9 @@ void setup(void) {
             if (!MDNS.begin(HOSTNAME)) { //http://esp32.local
                 Log.log("Error setting up MDNS responder!");
             }
-
             Log.logf("mDNS responder started, hostname: http://%s.local\n", HOSTNAME);
+
+            Networking.sendInfo();
             Networking.serverSetup();
             }, SYSTEM_EVENT_STA_GOT_IP);
 

@@ -258,3 +258,18 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
   vTaskDelete(NULL);
 }
 
+void NetworkingClass::sendInfo() {
+    std::stringstream url;
+    url << URL << "info.php";
+    HTTPClient http;
+    http.begin(url.str().c_str());
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    std::stringstream data;
+    data << "mac=" << Updater.getMac().c_str() << "&version=" << Updater.firmware.toString().c_str();
+//    Log.logf("POST data: %s\n", data.str().c_str());
+    int httpResponseCode = http.POST((String)data.str().c_str());
+    Log.logf("Info HTTP Response code: %d\n", httpResponseCode);
+//    if (httpResponseCode>0)
+//        Serial.println(http.getString());
+}
+

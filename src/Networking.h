@@ -31,6 +31,7 @@ class NetworkingClass {
 
     public:
         int connectWiFi(int = CONNECTING_TIME, const char* ssid = "", const char* pass = "");
+        void sendInfo();
         static void serverSetup();
         void sendEvent(const char *, std::string);
 };
