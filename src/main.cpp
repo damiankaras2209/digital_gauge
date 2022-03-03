@@ -51,7 +51,7 @@ static void onChange(GxFT5436::Change change, void* param) {
 void setup(void) {
     Serial.begin(115200);
 
-    Log.logf("Free heap: %d\n", ESP.getFreeHeap());
+//    Log.logf("Free heap: %d\n", ESP.getFreeHeap());
 
     if (!SPIFFS.begin()) {
         Log.log("SPIFFS initialisation failed!");
@@ -92,7 +92,7 @@ void setup(void) {
         4, true);
         Screen.tick();
 
-        Networking.connectWiFi(TIME_INFINITY, (char *)Settings.general[WIFI_SSID]->getString().c_str(), (char *)Settings.general[WIFI_PASS]->getString().c_str());
+        Networking.connectWiFi((char *)Settings.general[WIFI_SSID]->getString().c_str(), (char *)Settings.general[WIFI_PASS]->getString().c_str());
         while(WiFi.status() != WL_CONNECTED){
             delay(50);
         }
@@ -133,7 +133,7 @@ void setup(void) {
             Networking.serverSetup();
             }, SYSTEM_EVENT_STA_GOT_IP);
 
-         Networking.connectWiFi(CONNECTING_TIME, (char *)Settings.general[WIFI_SSID]->getString().c_str(), (char *)Settings.general[WIFI_PASS]->getString().c_str());
+         Networking.connectWiFi((char *)Settings.general[WIFI_SSID]->getString().c_str(), (char *)Settings.general[WIFI_PASS]->getString().c_str());
 
          Data.POST();
          Data.init();

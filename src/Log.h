@@ -12,7 +12,6 @@
 //#define LOG_FRAMETIME
 //#define LOG_DETAILED_FRAMETIME
 
-//#define ENABLE_SERVER_LOG
 #define MAX_MESSAGES 256
 
 
@@ -23,16 +22,18 @@ class LogClass {
 
         typedef struct Data {
             std::vector<std::string> messages;
+            std::function<size_t()> countClients;
             Send _send;
-            boolean busy = false;
+            int _sent = 0;
+            bool busy = false;
             unsigned long time = 0;
         } Data;
 
         Data _data;
+        bool _enabled = false;
 
         void _log(std::string str);
 
-#ifdef ENABLE_SERVER_LOG
 
     private:
         [[noreturn]] static void sendMessages(void *);
@@ -40,11 +41,12 @@ class LogClass {
         void lock();
         void release();
 
-#endif
 
     public:
         void setEvent(Send send);
+        void setCountClients(std::function<size_t()>);
         void enable();
+        void onConnect();
 
         template<typename ... Args>
         void logf(const char* format, Args ... args)

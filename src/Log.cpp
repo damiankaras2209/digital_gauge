@@ -1,21 +1,16 @@
 #include <iomanip>
+#include <utility>
 #include "Log.h"
 
 LogClass Log;
 
 void LogClass::_log(std::string str) {
-#ifdef ENABLE_SERVER_LOG
-    Serial.printf("message %d: %s\n", _data.messages.size() , str.c_str());
+    Serial.printf("%d: %s", _data.messages.size() , str.c_str());
     lock();
     if(_data.messages.size() < MAX_MESSAGES)
         _data.messages.push_back(str);
     release();
-#else
-    Serial.print(str.c_str());
-#endif
 }
-
-#ifdef ENABLE_SERVER_LOG
 
 void LogClass::sendMessages(void *params) {
     auto data = (Data*)params;
@@ -23,13 +18,22 @@ void LogClass::sendMessages(void *params) {
         while(data->busy)
             delay(1);
         data->busy = true;
-        if(!data->messages.empty()) {
-            Serial.printf("Sending: %s\n", data->messages.front().c_str());
-            data->_send(data->messages.front());
-            data->messages.erase(data->messages.begin());
+//        Serial.print("Connected clients: ");
+//        Serial.println(data->countClients());
+        if(data->countClients() > 0) {
+            for(int i=data->_sent; i<data->messages.size();i++) {
+                Serial.printf("Sending: %s", data->messages.at(i).c_str());
+                data->_send(data->messages.at(i));
+                data->_sent++;
+            }
         }
+//        if(!data->messages.empty()) {
+//            Serial.printf("Sending: %s\n", data->messages.front().c_str());
+//            data->_send(data->messages.front());
+//            data->messages.erase(data->messages.begin());
+//        }
         data->busy = false;
-        delay(1);
+        delay(10);
     }
 }
 
@@ -43,24 +47,31 @@ void LogClass::release() {
     _data.busy = false;
 }
 
-#endif
-
 void LogClass::setEvent(Send send) {
-    _data._send = send;
+    _data._send = std::move(send);
+}
+
+void LogClass::setCountClients(std::function<size_t()> f) {
+    _data.countClients = std::move(f);
 }
 
 void LogClass::enable() {
-#ifdef ENABLE_SERVER_LOG
-    TaskHandle_t handle;
-    if(!xTaskCreatePinnedToCore(sendMessages,
-                                "sendMessagesTask",
-                                4*1024,
-                                &_data,
-                                1,
-                                &handle,
-                                0))
-        log("Failed to start canLoop task");
-#endif
+    if(!_enabled) {
+        TaskHandle_t handle;
+        if(!xTaskCreatePinnedToCore(sendMessages,
+                                    "sendMessagesTask",
+                                    4*1024,
+                                    &_data,
+                                    1,
+                                    &handle,
+                                    0))
+            log("Failed to start canLoop task");
+        _enabled = true;
+    }
+}
+
+void LogClass::onConnect() {
+    _data._sent = 0;
 }
 
 void LogClass::log(const char* str) {

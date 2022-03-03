@@ -1,55 +1,31 @@
 #include "Networking.h"
 
+#include <utility>
+
 NetworkingClass Networking;
 
 AsyncWebServer server(80);
-
-//AsyncWebSocket ws("/ws");
 AsyncEventSource events("/events");
+//AsyncWebSocket ws("/ws");
 
 void NetworkingClass::sendEvent(const char * event, std::string str) {
     events.send(str.c_str(), event, millis());
 }
 
-void NetworkingClass::f(std::string str) {
-    events.send(str.c_str(), "myevent", millis());
-}
-
-//[[noreturn]] void NetworkingClass::WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
-//{
-//
-//    Log.logf("Connected to %s,IP: %s\n ", WiFi.SSID().c_str(),IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
-//
-//    if (!MDNS.begin(host)) { //http://esp32.local
-//        Log.log("Error setting up MDNS responder!");
-//        while (1) {
-//            delay(100);
-//        }
-//    }
-//
-//    Log.logf("mDNS responder started, hostname: http://%s.local\n", host);
-//
-//    Data.adjustTime(&Data.data);
-//    serverSetup();
-//}
-
-int NetworkingClass::connectWiFi(int wait, const char* ssid, const char* pass) {
+int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
 
     if(WiFi.status() == WL_CONNECTED)
         return WiFi.status();
-
-//    WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);
-
     events.onConnect([](AsyncEventSourceClient *client){
-        if(client->lastId()){
-            Log.logf("Client reconnected! Last message ID that it gat is: %u\n", client->lastId());
-        }
-        client->send("hello!",NULL,millis(),1000);
+//        Log.log("Client connected");
+//        Log.logf("Connected clients: %d", (int)events.count());
+        Log.setCountClients([](){return events.count();});
+        Log.onConnect();
         Log.enable();
     });
 
     server.addHandler(&events);
-    Log.setEvent(f);
+    Log.setEvent([this](std::string str){ sendEvent( "log", std::move(str));});
 
     Log.logf("Connecting to WiFi network: \"%s\"\n", ssid);
 
@@ -193,8 +169,12 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
     }
 
 
-    server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request){
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(SPIFFS, "/settings.html", String(), false, processor);
+    });
+
+    server.on("/log", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(SPIFFS, "/log.html", String(), false, nullptr);
     });
 
     server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){

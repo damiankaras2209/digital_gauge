@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+<head>
+    <meta charset="UTF-8">
+    <title>Log</title>
+    <script>
+        if (!!window.EventSource) {
+            var source = new EventSource('/events');
+            var x = 0;
+            var last = "";
+            source.addEventListener('log', function (e) {
+                if(e.data.localeCompare(last) != 0) {
+                    document.getElementById("log").innerHTML += (x++ + ": " +  e.data + "</br>");
+                    last = e.data;
+                }
+            }, false);
+        }
+    </script>
+</head>
+<body>
+    <h1>Log</h1>
+    <hr>
+    <div id="log">
+
+    </div>
+</body>
