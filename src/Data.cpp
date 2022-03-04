@@ -103,12 +103,28 @@ void DataClass::init() {
 
 }
 
+
+double MySqr(double a_fVal) {  return a_fVal*a_fVal; }
+
 _Noreturn void DataClass::adcLoop(void * pvParameters) {
     Log.logf("%s started on core %d\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
-//    Log.log(" started on core ");
-//    Log.log(xPortGetCoreID());
 
-    DataStruct *params = (DataStruct*)pvParameters;
+    auto *params = (DataStruct*)pvParameters;
+
+
+    mu::Parser p[SettingsClass::VOLTAGE-1];
+    double voltage[SettingsClass::VOLTAGE-1];
+    double res[SettingsClass::VOLTAGE-1];
+
+    try {
+        for (int i = 0; i < SettingsClass::VOLTAGE; i++) {
+            p[i].DefineVar("v", &voltage[i]);
+            p[i].DefineVar("r", &res[i]);
+            p[i].SetExpr(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + INPUT_EXPRESSION_OFFSET]->getString());
+        }
+    } catch (mu::Parser::exception_type &e) {
+        Log.log(e.GetMsg().c_str());
+    }
 
     for(;;) {
         while(params->i2cBusy)
@@ -151,11 +167,11 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
                 double avg = (double)sum / SAMPLES_ADC;
 
-                double voltage;
+
                 if(i<4)
-                    voltage = params->adsPtr->toVoltage((int16_t)lround(avg));
+                    voltage[i] = params->adsPtr->toVoltage((int16_t)lround(avg));
                 else
-                    voltage = avg/1000.0;
+                    voltage[i] = avg/1000.0;
 
 //                if(i==Settings::ADS1115_1) {
 //                    Log.logf("%s - avg: %f", settings->dataSourceString[i].c_str(), avg);
@@ -166,25 +182,32 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
 
                     SettingsClass::Field** input = &(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE]);
-                    float res = input[INPUT_R_OFFSET]->get<float>() * voltage / (3.3 - voltage);
+                    res[i] = input[INPUT_R_OFFSET]->get<float>() * voltage[i] / (3.3 - voltage[i]);
 
-//                    Log.logf("%s - voltage: %f", settings->dataSourceString[i].c_str(), voltage);
+//                    Log.logf("%s - voltage: %f", Settings.dataSourceString[i].c_str(), voltage);
 //                    Log.logf(", R: %f", res);
 
-//                    Log.logf(", R: %f\n", res);
 
-                    switch(input[INPUT_TYPE_OFFSET]->get<int>()){
-                        case Logarithmic: Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(input[INPUT_BETA_OFFSET]->get<float>() * (25.0 + 273.15) / (input[INPUT_BETA_OFFSET]->get<float>() + ((25.0 + 273.15) * log(res / input[INPUT_R25_OFFSET]->get<float>()))) - 273.15); break;
-                        case Linear:      Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((res - input[INPUT_RMIN_OFFSET]->get<float>()) / (input[INPUT_RMAX_OFFSET]->get<float>() - input[INPUT_RMIN_OFFSET]->get<float>()) * input[INPUT_MAXVAL_OFFSET]->get<float>()); break;
-                        case Voltage:     Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage); break;
-                    }
-
-//                    if(i==Settings::ADS1115_1) {
-//                        Log.logf(", value: %f\n", settings->dataDisplay[i].value);
+//                    switch(input[INPUT_TYPE_OFFSET]->get<int>()){
+//                        case Logarithmic: Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(input[INPUT_BETA_OFFSET]->get<float>() * (25.0 + 273.15) / (input[INPUT_BETA_OFFSET]->get<float>() + ((25.0 + 273.15) * log(res / input[INPUT_R25_OFFSET]->get<float>()))) - 273.15); break;
+//                        case Linear:      Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((res - input[INPUT_RMIN_OFFSET]->get<float>()) / (input[INPUT_RMAX_OFFSET]->get<float>() - input[INPUT_RMIN_OFFSET]->get<float>()) * input[INPUT_MAXVAL_OFFSET]->get<float>()); break;
+//                        case Voltage:     Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage); break;
 //                    }
 
+
+
+                    try {
+                        Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(p[i].Eval());
+                    }
+                    catch (mu::Parser::exception_type &e) {
+                        Log.log(e.GetMsg().c_str());
+                    }
+
+//                    Log.logf(", value: %f", Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>());
+//
+
                 } else if(i == SettingsClass::VOLTAGE)
-                    Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage * 5.7);
+                    Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage[i] * 5.7);
 
 //                Log.logf(", inputValue: %f\n", params->inputValue[i]);
             }

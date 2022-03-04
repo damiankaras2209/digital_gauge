@@ -72,6 +72,7 @@ void SettingsClass::init() {
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_RMIN_OFFSET] = (new Field("r_min_" + (String)i + "_" + INPUT_RMIN_OFFSET, "r_min", 0.0f))->setStep(0.1f);
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_RMAX_OFFSET] = (new Field("r_max_" + (String)i + "_" + INPUT_RMAX_OFFSET, "r_max", 0.0f))->setStep(0.1f);
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_MAXVAL_OFFSET] = (new Field("max_val_" + (String)i + "_" + INPUT_MAXVAL_OFFSET, "max_val", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_EXPRESSION_OFFSET] = new Field("exp_" + (String)i + "_" + INPUT_EXPRESSION_OFFSET, "expression", "");
     }
 
     for(int i=ADS1115_0; i<=ADC_6; i++) {
