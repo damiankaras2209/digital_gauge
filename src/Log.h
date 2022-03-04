@@ -8,7 +8,7 @@
 #include <AsyncEventSource.h>
 #include <sstream>
 
-#define LOG_SETTINGS
+//#define LOG_SETTINGS
 //#define LOG_FRAMETIME
 //#define LOG_DETAILED_FRAMETIME
 

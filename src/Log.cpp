@@ -22,7 +22,7 @@ void LogClass::sendMessages(void *params) {
 //        Serial.println(data->countClients());
         if(data->countClients() > 0) {
             for(int i=data->_sent; i<data->messages.size();i++) {
-                Serial.printf("Sending: %s", data->messages.at(i).c_str());
+//                Serial.printf("Sending: %s", data->messages.at(i).c_str());
                 data->_send(data->messages.at(i));
                 data->_sent++;
             }
