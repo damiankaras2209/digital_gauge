@@ -12,7 +12,7 @@
 #include "Updater.h"
 
 enum S_STATUS {
-    S_SUCCESS, S_FAIL
+    S_SUCCESS, S_FAIL, S_MISSING
 };
 
 enum Field : uint16_t{
@@ -39,10 +39,10 @@ enum Field : uint16_t{
     NEEDLE_BOTTOM_WIDTH,
 
     TIME_POS_Y,
-    TIME_SIZE,
+//    TIME_SIZE,
     DATE_POS_Y,
-    DATE_SIZE,
-    SCALE_SIZE,
+//    DATE_SIZE,
+//    SCALE_SIZE,
 
     SCALE_LARGE_WIDTH,
     SCALE_SMALL_WIDTH,
@@ -121,65 +121,6 @@ typedef struct DataDisplaySettings {
     float value = 0;
 } DataDisplaySettings;
 
-//enum Fields : unsigned int {
-//    SSID,
-//    PASS,
-//
-//    WIDTH,
-//    HEIGHT,
-//    OFFSET_Y,
-//    OFFSET_X,
-//    ELLIPSE_A, //half of ellipse width (x-axis)
-//    ELLIPSE_B, //half of ellipse height (y-axis)
-//    PROMPT_WIDTH,
-//    PROMPT_HEIGHT,
-//
-//    NEEDLE_CENTER_RADIUS,
-//    NEEDLE_CENTER_OFFSET,
-//    NEEDLE_LENGTH,
-//    NEEDLE_TOP_WIDTH, //in degrees
-//    NEEDLE_BOTTOM_WIDTH, //in pixles
-//
-//    TIME_POS_Y,
-//    TIME_SIZE,
-//    DATE_POS_Y,
-//    DATE_SIZE,
-//    SCALE_SIZE,
-//
-//    SCALE_MAIN_WIDTH,
-//    SCALE_LARGE_WIDTH,
-//    SCALE_SMALL_WIDTH,
-//    SCALE_LARGE_LENGTH,
-//    SCALE_SMALL_LENGTH,
-//    SCALE_LARGE_STEPS,
-//    SCALE_SMALL_STEPS,
-//    SCALE_ACC_COLOR_EVERY,
-//    SCALE_TEXT_STEPS,
-//    SCALE_TEXT_OFFSET,
-////    SCALE_ANTIALIASING,
-////    INTERNAL_ELLIPSE_DISTANCE,
-//
-//    BACKGROUND_COLOR,
-//    SCALE_COLOR,
-//    SCALE_ACC_COLOR,
-//    NEEDLE_CENTER_COLOR,
-//    FONT_COLOR,
-//    ICON_COLOR,
-//    NEEDLE_COLOR,
-//    FIELDS_SIZE
-//
-//};
-
-//enum InputFields {
-//    R,
-//    TYPE,
-//    BETA,
-//    R25,
-//    RMIN,
-//    RMAX,
-//    MAX_VAL,
-//    INPUT_FIELDS_SIZE
-//};
 
 enum InputType {
     Linear, Logarithmic, Voltage, InputTypeSize
@@ -244,6 +185,7 @@ class SettingsClass {
         struct Field {
             Type _type;
             bool _configurable;
+            std::string _id;
             std::string _name;
 
             volatile float _valueFloat;
@@ -255,23 +197,25 @@ class SettingsClass {
             std::string _valueString;
             std::string _defaultString;
 
-            Field(const char* c, float d, bool configurable = true) {
+            Field(String id, String name, float defaultValue, bool configurable = true) {
                 _type = FLOAT;
                 _configurable = configurable;
-                _name = std::string(c);
-                _valueFloat = d;
-                _defaultFloat = d;
+                _id = std::string(id.c_str());
+                _name = std::string(name.c_str());
+                _valueFloat = defaultValue;
+                _defaultFloat = defaultValue;
                 _step = 1.0f;
                 _min = 0.0f;
                 _max = 0.0f;
             }
 
-            Field(const char* c, const char* d, bool configurable = true) {
+            Field(String id, String name, std::string defaultString, bool configurable = true) {
                 _type = STRING;
                 _configurable = configurable;
-                _name = std::string(c);
-                _defaultString = std::string(d);
-                _valueString = std::string(d);
+                _id = std::string(id.c_str());
+                _name = std::string(name.c_str());
+                _defaultString = std::string(defaultString);
+                _valueString = std::string(defaultString);
             }
 
             void set(float v) {
@@ -301,6 +245,10 @@ class SettingsClass {
             void setDefault() {
                 _valueFloat = _defaultFloat;
                 _valueString = std::string(_defaultString);
+            }
+
+            std::string getId() {
+                return _id;
             }
 
             std::string getName() {

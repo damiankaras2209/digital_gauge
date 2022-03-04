@@ -24,8 +24,8 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
         Log.enable();
     });
 
-    server.addHandler(&events);
-    Log.setEvent([this](std::string str){ sendEvent( "log", std::move(str));});
+//    server.addHandler(&events);
+//    Log.setEvent([this](std::string str){ sendEvent( "log", std::move(str));});
 
     Log.logf("Connecting to WiFi network: \"%s\"\n", ssid);
 

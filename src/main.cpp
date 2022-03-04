@@ -155,10 +155,18 @@ void setup(void) {
         Screen.reset();
         Screen.switchView(GAUGES);
 
-        if(settingsStatus == S_FAIL) {
-            Settings.save();
-            Screen.showPrompt("Unable to load settings\nUsing default");
+        switch (settingsStatus) {
+            case S_FAIL: {
+                Settings.save();
+                Screen.showPrompt("Unable to load settings\nUsing default");
+                break;
+            }
+            case S_MISSING: {
+                Settings.save();
+                Screen.showPrompt("Some settings are missing\nThose have been set to default");
+            }
         }
+
         Screen.setBrightness(255);
     }
   Log.log("setup() complete");

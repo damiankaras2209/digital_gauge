@@ -20,117 +20,117 @@ void SettingsClass::init() {
     Log.logf("SETTINGS_SIZE: %d\n", SETTINGS_SIZE);
 #endif
 
-    general[VERSION] = new Field("demo", 1.0f, false);
-    general[DEMO] = (new Field("demo", 0.0f))->setType(CHECKBOX);
-    general[WIFI_SSID] = new Field("SSID", "dlink-74A1");
-    general[WIFI_PASS] = new Field("pass", "fdpqg49953");
-    general[WIDTH] = new Field("width", 480, false);
-    general[HEIGHT] = new Field("height", 320, false);
-    general[OFFSET_Y] = (new Field("offset_y", -2))->setBounds(-50.0f, 50.0f);
-    general[OFFSET_X] = (new Field("offset_x", -4))->setBounds(-50.0f, 50.0f);
-    general[ELLIPSE_A] = (new Field("ellipse_A", 216))->setBounds(100.0f, general[WIDTH]->get<float>()/2);
-    general[ELLIPSE_B] = (new Field("ellipse_B", 116))->setBounds(100.0f, general[HEIGHT]->get<float>()/2);
-    general[PROMPT_WIDTH] = (new Field("prompt_width", 330))->setBounds(150.0f, general[WIDTH]->get<float>());
-    general[PROMPT_HEIGHT] = (new Field("prompt_height", 120))->setBounds(150.0f, general[HEIGHT]->get<float>());
+    general[VERSION] = new Field("version", "version", 1.0f, false);
+    general[DEMO] = (new Field("demo", "Demo mode", 0.0f))->setType(CHECKBOX);
+    general[WIFI_SSID] = new Field("ssid", "SSID", "dlink-74A1");
+    general[WIFI_PASS] = new Field("pass", "pass", "fdpqg49953");
+    general[WIDTH] = new Field("width", "", 480, false);
+    general[HEIGHT] = new Field("height", "", 320, false);
+    general[OFFSET_Y] = (new Field("offset_y", "Y offset", -2))->setBounds(-50.0f, 50.0f);
+    general[OFFSET_X] = (new Field("offset_x", "X offset", -4))->setBounds(-50.0f, 50.0f);
+    general[ELLIPSE_A] = (new Field("ellipse_A", "Ellipse A", 216))->setBounds(100.0f, general[WIDTH]->get<float>()/2);
+    general[ELLIPSE_B] = (new Field("ellipse_B", "Ellipse B", 116))->setBounds(100.0f, general[HEIGHT]->get<float>()/2);
+    general[PROMPT_WIDTH] = (new Field("prompt_width", "Prompt width", 330))->setBounds(150.0f, general[WIDTH]->get<float>());
+    general[PROMPT_HEIGHT] = (new Field("prompt_height", "Prompt height", 120))->setBounds(150.0f, general[HEIGHT]->get<float>());
 
-    general[NEEDLE_CENTER_RADIUS] = (new Field("needle_center_radius", 20))->setBounds(10.0f, 50.0f);
-    general[NEEDLE_CENTER_OFFSET] = (new Field("needle_center_offset", 75))->setBounds(30.0f, 150.0f);
-    general[NEEDLE_LENGTH_ADAPTIVE] = (new Field("needle_length_adaptive", 1))->setType(CHECKBOX);
-    general[NEEDLE_LENGTH] = (new Field("needle_length", 100))->setBounds(0.0f, 150.0f);
-    general[NEEDLE_TOP_WIDTH] = (new Field("needle_top_width", 2))->setBounds(0.0f, 30.0f);
-    general[NEEDLE_BOTTOM_WIDTH] = (new Field("needle_bottom_width", 10))->setBounds(0.0f, 50.0f);
+    general[NEEDLE_CENTER_RADIUS] = (new Field("needle_center_radius", "Needle center radius", 20))->setBounds(10.0f, 50.0f);
+    general[NEEDLE_CENTER_OFFSET] = (new Field("needle_center_offset", "Needle center offset", 75))->setBounds(30.0f, 150.0f);
+    general[NEEDLE_LENGTH_ADAPTIVE] = (new Field("needle_length_adaptive", "Adaptive needle negth", 1))->setType(CHECKBOX);
+    general[NEEDLE_LENGTH] = (new Field("needle_length", "Needle length", 100))->setBounds(0.0f, 150.0f);
+    general[NEEDLE_TOP_WIDTH] = (new Field("needle_top_width", "Needle top width:", 2))->setBounds(0.0f, 30.0f);
+    general[NEEDLE_BOTTOM_WIDTH] = (new Field("needle_bottom_width", "Needle bottom width", 10))->setBounds(0.0f, 50.0f);
 
-    general[TIME_POS_Y] = (new Field("time_pos_Y", -60))->setBounds(-150.0f, 150.0f);
-    general[TIME_SIZE] = (new Field("time_size", 36, false))->setBounds(0.0f, 150.0f);
-    general[DATE_POS_Y] = (new Field("date_pos_Y", -35))->setBounds(-150.0f, 150.0f);
-    general[DATE_SIZE] = (new Field("date_size", 16, false))->setBounds(0.0f, 150.0f);
-    general[SCALE_SIZE] = (new Field("scale_size", 12, false))->setBounds(0.0f, 150.0f);
+    general[TIME_POS_Y] = (new Field("time_pos_Y", "Time position Y", -60))->setBounds(-150.0f, 150.0f);
+//    general[TIME_SIZE] = (new Field("time_size", 36, false))->setBounds(0.0f, 150.0f);
+    general[DATE_POS_Y] = (new Field("date_pos_Y", "Date position Y", -35))->setBounds(-150.0f, 150.0f);
+//    general[DATE_SIZE] = (new Field("date_size", 16, false))->setBounds(0.0f, 150.0f);
+//    general[SCALE_SIZE] = (new Field("scale_size", 12, false))->setBounds(0.0f, 150.0f);
 
-    general[SCALE_LARGE_WIDTH] = (new Field("scale_large_width", 4))->setBounds(0.0f, 30.0f);
-    general[SCALE_SMALL_WIDTH] = (new Field("scale_small_width", 2))->setBounds(0.0f, 30.0f);
-    general[SCALE_LARGE_LENGTH] = (new Field("scale_large_length", 17))->setBounds(0.0f, 50.0f);
-    general[SCALE_SMALL_LENGTH] = (new Field("scale_small_length", 7))->setBounds(0.0f, 50.0f);
-    general[SCALE_LARGE_STEPS] = (new Field("scale_large_steps", 12))->setBounds(1.0f, 15.0f);
-    general[SCALE_SMALL_STEPS] = (new Field("scale_small_steps", 4))->setBounds(1.0f, 15.0f);
-    general[SCALE_ACC_COLOR_EVERY] = (new Field("scale_acc_color_every", 8))->setBounds(1.0f, 15.0f);
-    general[SCALE_TEXT_STEPS] = (new Field("scale_text_steps", 4))->setBounds(1.0f, 15.0f);
-    general[SCALE_TEXT_OFFSET] = (new Field("scale_text_offset", 35))->setBounds(0.0f, 100.0f);
+    general[SCALE_LARGE_WIDTH] = (new Field("scale_large_width", "scale_large_width", 4))->setBounds(0.0f, 30.0f);
+    general[SCALE_SMALL_WIDTH] = (new Field("scale_small_width", "scale_small_width", 2))->setBounds(0.0f, 30.0f);
+    general[SCALE_LARGE_LENGTH] = (new Field("scale_large_length", "scale_large_length", 17))->setBounds(0.0f, 50.0f);
+    general[SCALE_SMALL_LENGTH] = (new Field("scale_small_length", "scale_small_length", 7))->setBounds(0.0f, 50.0f);
+    general[SCALE_LARGE_STEPS] = (new Field("scale_large_steps", "scale_large_steps", 12))->setBounds(1.0f, 15.0f);
+    general[SCALE_SMALL_STEPS] = (new Field("scale_small_steps", "scale_small_steps", 4))->setBounds(1.0f, 15.0f);
+    general[SCALE_ACC_COLOR_EVERY] = (new Field("scale_acc_color_every", "scale_acc_color_every", 8))->setBounds(1.0f, 15.0f);
+    general[SCALE_TEXT_STEPS] = (new Field("scale_text_steps", "scale_text_steps", 4))->setBounds(1.0f, 15.0f);
+    general[SCALE_TEXT_OFFSET] = (new Field("scale_text_offset", "scale_text_offset", 35))->setBounds(0.0f, 100.0f);
 
-    general[BACKGROUND_COLOR] = (new Field("background_color", (float)TFT_BLACK))->setType(COLOR);
-    general[SCALE_COLOR] = (new Field("scale_color", TFT_GREEN))->setType(COLOR);
-    general[SCALE_ACC_COLOR] = (new Field("scale_acc_color", TFT_RED))->setType(COLOR);
-    general[NEEDLE_CENTER_COLOR] = (new Field("needle_center_color", 0x31A6))->setType(COLOR);
-    general[FONT_COLOR] = (new Field("font_color", TFT_GREEN))->setType(COLOR);
-    general[NEEDLE_COLOR] = (new Field("needle_color", TFT_RED))->setType(COLOR);
+    general[BACKGROUND_COLOR] = (new Field("background_color", "background_color", (float)TFT_BLACK))->setType(COLOR);
+    general[SCALE_COLOR] = (new Field("scale_color", "scale_color", TFT_GREEN))->setType(COLOR);
+    general[SCALE_ACC_COLOR] = (new Field("scale_acc_color", "scale_acc_color", TFT_RED))->setType(COLOR);
+    general[NEEDLE_CENTER_COLOR] = (new Field("needle_center_color", "needle_center_color", 0x31A6))->setType(COLOR);
+    general[FONT_COLOR] = (new Field("font_color", "font_color", TFT_GREEN))->setType(COLOR);
+    general[NEEDLE_COLOR] = (new Field("needle_color", "needle_color", TFT_RED))->setType(COLOR);
 
 
     for(int i=0; i<INPUT_SIZE; i++) {
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_R_OFFSET] = (new Field("r", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_TYPE_OFFSET] = (new Field("type", Logarithmic))->setType(LIST);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_BETA_OFFSET] = (new Field("beta", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_R25_OFFSET] = (new Field("r25", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_RMIN_OFFSET] = (new Field("r_min", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_RMAX_OFFSET] = (new Field("r_max", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_MAXVAL_OFFSET] = (new Field("max_val", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_R_OFFSET] = (new Field("r_" + (String)i + "_" + INPUT_R_OFFSET, "r", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_TYPE_OFFSET] = (new Field("type_" + (String)i + "_" + INPUT_TYPE_OFFSET, "type", Logarithmic))->setType(LIST);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_BETA_OFFSET] = (new Field("beta_" + (String)i + "_" + INPUT_BETA_OFFSET, "beta", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_R25_OFFSET] = (new Field("r25_" + (String)i + "_" + INPUT_R25_OFFSET, "r25", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_RMIN_OFFSET] = (new Field("r_min_" + (String)i + "_" + INPUT_RMIN_OFFSET, "r_min", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_RMAX_OFFSET] = (new Field("r_max_" + (String)i + "_" + INPUT_RMAX_OFFSET, "r_max", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_MAXVAL_OFFSET] = (new Field("max_val_" + (String)i + "_" + INPUT_MAXVAL_OFFSET, "max_val", 0.0f))->setStep(0.1f);
     }
 
     for(int i=ADS1115_0; i<=ADC_6; i++) {
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_NAME_OFFSET] = new Field("name", "");
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_UNIT_OFFSET] = new Field("unit", "");
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_SCALE_END_OFFSET] = new Field("scale_end", 0.0f);
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_PRECISION_OFFSET] = new Field("precision", 1);
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_ENABLE_OFFSET] = (new Field("enable_" + (String)i + "_" + DATA_ENABLE_OFFSET, "enable", 0.0f))->setType(CHECKBOX);
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_NAME_OFFSET] = new Field("name_" + (String)i + "_" + DATA_NAME_OFFSET, "name", "");
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_UNIT_OFFSET] = new Field("unit_" + (String)i + "_" + DATA_UNIT_OFFSET, "unit", "");
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_SCALE_START_OFFSET] = new Field("scale_start_" + (String)i + "_" + DATA_SCALE_START_OFFSET, "scale_start", 0.0f);
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_SCALE_END_OFFSET] = new Field("scale_end_" + (String)i + "_" + DATA_SCALE_END_OFFSET, "scale_end", 0.0f);
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_PRECISION_OFFSET] = new Field("precision_" + (String)i + "_" + DATA_PRECISION_OFFSET, "precision", 1);
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_VALUE_OFFSET] = new Field("value_" + (String)i + "_" + DATA_VALUE_OFFSET, "value", 0.0f, false);
     }
 
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_ENABLE_OFFSET] = (new Field("enable", 1))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_NAME_OFFSET] = new Field("name", "Voltage");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_UNIT_OFFSET] = new Field("unit", "V");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_START_OFFSET] = new Field("scale_start", 6);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_END_OFFSET] = new Field("scale_end", 18);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_PRECISION_OFFSET] = new Field("precision", 1);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_ENABLE_OFFSET] = (new Field("voltage_enable", "enable", 1))->setType(CHECKBOX);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_NAME_OFFSET] = new Field("voltage_name", "name", "Voltage");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_UNIT_OFFSET] = new Field("voltage_unit", "unit", "V");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_START_OFFSET] = new Field("voltage_scale_start", "scale_start", 6);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_END_OFFSET] = new Field("voltage_scale_end", "scale_end", 18);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_PRECISION_OFFSET] = new Field("voltage_precision", "precision", 1);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_VALUE_OFFSET] = new Field("voltage_value", "value", 0.0f, false);
 
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_NAME_OFFSET] = new Field("name", "SW");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_UNIT_OFFSET] = new Field("unit", "°");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_START_OFFSET] = new Field("scale_start", -550);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_END_OFFSET] = new Field("scale_end", 550);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_PRECISION_OFFSET] = new Field("precision", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_ENABLE_OFFSET] = (new Field("cam_sw_", "enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_NAME_OFFSET] = new Field("cam_sw_name", "name", "SW");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_UNIT_OFFSET] = new Field("cam_sw_unit", "unit", "°");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_START_OFFSET] = new Field("cam_sw_scale_start", "scale_start", -550);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_END_OFFSET] = new Field("cam_sw_scale_end", "scale_end", 550);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_PRECISION_OFFSET] = new Field("cam_sw_precision", "precision", 0.0f);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_VALUE_OFFSET] = new Field("cam_sw_value", "value", 0.0f, false);
 
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_NAME_OFFSET] = new Field("name", "Speed");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_UNIT_OFFSET] = new Field("unit", "km/h");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_END_OFFSET] = new Field("scale_end", 280);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_PRECISION_OFFSET] = new Field("precision", 1);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_ENABLE_OFFSET] = (new Field("can_speed_enable", "enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_NAME_OFFSET] = new Field("can_speed_name", "name", "Speed");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_UNIT_OFFSET] = new Field("can_speed_unit", "unit", "km/h");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_START_OFFSET] = new Field("can_speed_scale_start", "scale_start", 0.0f);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_END_OFFSET] = new Field("can_speed_scale_end", "scale_end", 280);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_PRECISION_OFFSET] = new Field("can_speed_precision", "precision", 1);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_VALUE_OFFSET] = new Field("can_speed_value", "value", 0.0f, false);
 
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_NAME_OFFSET] = new Field("name", "RPM");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_UNIT_OFFSET] = new Field("unit", "rpm");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_START_OFFSET] = new Field("scale_start", 6);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_END_OFFSET] = new Field("scale_end", 8);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_PRECISION_OFFSET] = new Field("precision", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_ENABLE_OFFSET] = (new Field("can_rpm_enable", "enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_NAME_OFFSET] = new Field("can_rpm_name", "name", "RPM");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_UNIT_OFFSET] = new Field("can_rpm_unit", "unit", "rpm");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_START_OFFSET] = new Field("can_rpm_scale_start", "scale_start", 6);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_END_OFFSET] = new Field("can_rpm_scale_end", "scale_end", 8);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_PRECISION_OFFSET] = new Field("can_rpm_precision", "precision", 0.0f);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_VALUE_OFFSET] = new Field("can_rpm_value", "value", 0.0f, false);
 
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_NAME_OFFSET] = new Field("name", "Throttle");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_UNIT_OFFSET] = new Field("unit", "%");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_END_OFFSET] = new Field("scale_end", 100);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_PRECISION_OFFSET] = new Field("precision", 0.1f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_ENABLE_OFFSET] = (new Field("can_gas_enable", "enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_NAME_OFFSET] = new Field("can_gas_name", "name", "Throttle");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_UNIT_OFFSET] = new Field("can_gas_unit", "unit", "%");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_START_OFFSET] = new Field("can_gas_scale_start", "scale_start", 0.0f);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_END_OFFSET] = new Field("can_gas_scale_end", "scale_end", 100);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_PRECISION_OFFSET] = new Field("can_gas_precision", "precision", 0.1f);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_VALUE_OFFSET] = new Field("can_gas_value", "value", 0.0f, false);
 
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_ENABLE_OFFSET] = (new Field("enable", 0.0f))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_NAME_OFFSET] = new Field("name", "Handbrake");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_UNIT_OFFSET] = new Field("unit", "");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_START_OFFSET] = new Field("scale_start", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_END_OFFSET] = new Field("scale_end", 1);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_PRECISION_OFFSET] = new Field("precision", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_VALUE_OFFSET] = new Field("value", 0.0f, false);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_ENABLE_OFFSET] = (new Field("can_hb_enable", "enable", 0.0f))->setType(CHECKBOX);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_NAME_OFFSET] = new Field("can_hb_name", "name", "Handbrake");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_UNIT_OFFSET] = new Field("can_hb_unit", "unit", "");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_START_OFFSET] = new Field("can_hb_scale_start", "scale_start", 0.0f);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_END_OFFSET] = new Field("can_hb_scale_end", "scale_end", 1);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_PRECISION_OFFSET] = new Field("can_hb_precision", "precision", 0.0f);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_VALUE_OFFSET] = new Field("can_hb_value", "value", 0.0f, false);
 
 }
 
@@ -140,38 +140,45 @@ S_STATUS SettingsClass::load() {
 
     Log.log("Loading settings");
     if(SPIFFS.exists("/settings.json")) {
-        StaticJsonDocument<4*1024> doc;
+        StaticJsonDocument<5*1024> doc;
         fs::File file = SPIFFS.open("/settings.json", "r");
         DeserializationError error = deserializeJson(doc, file);
         if (error) {
             Log.log("Failed to read file, using default");
             status = S_FAIL;
         } else {
-            int v = doc[VERSION] | 0;
+            int v = doc[general[VERSION]->getId()] | 0;
             general[VERSION]->setDefault();
             if(v != general[VERSION]->get<int>()) {
                 Log.log("Setting version has changed. Using default");
                 status = S_FAIL;
             } else {
                 for(int i=1; i<SETTINGS_SIZE; i++) {
-                    if(Settings.general[i]->isConfigurable()) {
-                        switch (general[i]->getType()) {
-                            case STRING: {
-                                char c[64] = "";
-                                strcpy((char *)c, doc[i]);
-                                general[i]->set((const char*)c);
+                    if(general[i]->isConfigurable()) {
+                        if(doc[general[i]->getId()].isNull()) {
+                            Log.logf("Missing: %d: %s\n", i, general[i]->getId().c_str());
+                            status = S_MISSING;
+                        } else {
+                            switch (general[i]->getType()) {
+                                case STRING: {
+                                    char c[64] = "";
+                                    strcpy((char *) c, doc[general[i]->getId().c_str()]);
+                                    general[i]->set((const char *) c);
 #ifdef LOG_SETTINGS
-                                Log.logf("%d. %s: %s\n", i, general[i]->getName().c_str(), general[i]->getString().c_str());
+                                    Log.logf("%d. %s %s %s\n", i, general[i]->getId().c_str(), general[i]->getName().c_str(),
+                                             general[i]->getString().c_str());
 #endif
-                                break;
-                            }
-                            default: {
-                                float f = doc[i].as<float>();
-                                general[i]->set(f);
+                                    break;
+                                }
+                                default: {
+                                    float f = doc[general[i]->getId().c_str()].as<float>();
+                                    general[i]->set(f);
 #ifdef LOG_SETTINGS
-                                Log.logf("%d. %s: %f\n", i, general[i]->getName().c_str(), general[i]->get<float>());
+                                    Log.logf("%d. %s %s: %f\n", i, general[i]->getId().c_str(), general[i]->getName().c_str(),
+                                             general[i]->get<float>());
 #endif
-                                break;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -193,22 +200,22 @@ void SettingsClass::save() {
     if(SPIFFS.exists("/settings.json"))
         SPIFFS.remove("/settings.json");
     fs::File file = SPIFFS.open("/settings.json", "w");
-    StaticJsonDocument<4*1024> doc;
-    doc[VERSION] = general[VERSION]->get<int>();
-    for(int i=0; i<SETTINGS_SIZE; i++) {
-        if(Settings.general[i]->isConfigurable()) {
+    StaticJsonDocument<5*1024> doc;
+    doc[general[VERSION]->getId()] = general[VERSION]->get<float>();
+    for(int i=1; i<SETTINGS_SIZE; i++) {
+        if(general[i]->isConfigurable()) {
             switch (general[i]->getType()) {
                 case STRING: {
-                    doc[i] = (String)general[i]->getString().c_str();
+                    doc[general[i]->getId()] = (String)general[i]->getString().c_str();
 #ifdef LOG_SETTINGS
-                    Log.logf("%s: %s\n", general[i]->getName().c_str(), general[i]->getString().c_str());
+                    Log.logf("%s: %s %s\n", general[i]->getId().c_str(), general[i]->getName().c_str(), general[i]->getString().c_str());
 #endif
                     break;
                 }
                 default: {
-                    doc[i] = general[i]->get<float>();
+                    doc[general[i]->getId()] = general[i]->get<float>();
 #ifdef LOG_SETTINGS
-                    Log.logf("%s: %f\n", general[i]->getName().c_str(), general[i]->get<float>());
+                    Log.logf("%s: %s %f\n", general[i]->getId().c_str(), general[i]->getName().c_str(), general[i]->get<float>());
 #endif
                     break;
                 }
