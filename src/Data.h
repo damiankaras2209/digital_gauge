@@ -21,7 +21,6 @@
 
 #include <sstream>
 #include <iomanip>
-#include "muParser.h"
 
 #define SAMPLES_ADC 32
 #define SAMPLES_CAN 4
