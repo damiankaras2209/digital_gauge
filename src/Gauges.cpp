@@ -86,15 +86,27 @@ void Gauges::clean() {
 }
 
 void Gauges::setSelected(SettingsClass::DataSource *s) {
+    for(int i=0; i<SettingsClass::DataSource::VOLTAGE+1; i++)
+        Data.dataInput[i].visible = false;
+
     for(int i=LEFT; i<SIDE_LAST; i++) {
         selected[i] = s[i];
     }
+
+    for(int i=LEFT; i<SIDE_LAST; i++)
+        Data.dataInput[selected[i]].visible = true;
 }
 
 void Gauges::setSelected(Side side, SettingsClass::DataSource s) {
     if(selected[side] != s) {
         lock->lock();
         selected[side] = s;
+
+        for(int i=0; i<SettingsClass::DataSource::VOLTAGE+1; i++)
+            Data.dataInput[i].visible = false;
+        for(int i=LEFT; i<SIDE_LAST; i++)
+            Data.dataInput[selected[i]].visible = true;
+
         if(side != MID) {
             drawWhole[side] = true;
             createScaleSprites(side);
@@ -325,7 +337,8 @@ void Gauges::updateNeedle(int side) {
         start = 0;
         end = 1;
     } else {
-        value = gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>();
+        value = Data.dataInput[selected[side]].value;
+//        value = gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>();
         start = gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
         end = gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
     }
@@ -512,7 +525,7 @@ void Gauges::updateText(boolean force, int fps) {
     if(	(now.month() > 3 && now.month() < 10) ||
     (now.month() == 3 && now.day() > 28))
 
-        tft->setTextColor(gen[FONT_COLOR]->get<int>(), TFT_RED);
+    tft->setTextColor(gen[FONT_COLOR]->get<int>(), TFT_RED);
     tft->setAttribute(SFBG_ENABLE, true);
     tft->setTextDatum(CC_DATUM);
     //	tft->setTextPadding(24);
@@ -554,7 +567,7 @@ void Gauges::updateText(boolean force, int fps) {
 
     std::stringstream ss3;
     ss3.precision(gen[DATA_BEGIN_BEGIN + selected[MID] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
-    ss3 << std::fixed << gen[DATA_BEGIN_BEGIN + selected[MID] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>() << gen[DATA_BEGIN_BEGIN + selected[MID] * DATA_SETTINGS_SIZE + DATA_UNIT_OFFSET]->getString();
+    ss3 << std::fixed << Data.dataInput[selected[MID]].value << gen[DATA_BEGIN_BEGIN + selected[MID] * DATA_SETTINGS_SIZE + DATA_UNIT_OFFSET]->getString();
     const char* str = ss3.str().c_str();
 
     int w = textUpdate->textWidth(str);

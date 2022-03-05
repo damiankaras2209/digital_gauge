@@ -67,7 +67,7 @@ void setup(void) {
 
     Settings.init();
     S_STATUS settingsStatus = Settings.load();
-    SettingsClass::DataSource selected[SIDE_LAST];
+    SettingsClass::DataSource selected[3];
     Settings.loadSelected(selected);
 
     Screen.init();

@@ -54,6 +54,10 @@ class DataClass {
 
 public:
 
+    typedef struct DataInput {
+        volatile bool visible = false;
+        volatile float value = 0.0f;
+    } DataInput;
 
     typedef struct DataStruct {
             RTC_DS3231* rtcPtr;
@@ -62,9 +66,8 @@ public:
             Adafruit_MCP23X08* mcp23X08Ptr;
             RCSwitch* rcPtr;
 
-            bool RTCAvailable;
+            DataInput *dataInput;
             DateTime now;
-            int brightness = 255;
             ulong lastRTC = 0;
             volatile bool i2cBusy = false;
         } DataStruct;
@@ -80,9 +83,10 @@ public:
         Adafruit_MCP23X08 mcp23008;
         RCSwitch rc;
 
+        DataInput* getDataInput();
         DateTime getTime();
         DataStruct data;
-//        DataInput dataInput[SettingsClass::VOLTAGE + 1];
+        DataInput dataInput[SettingsClass::VOLTAGE + 1];
 
         static int adjustTime(DataStruct *);
 

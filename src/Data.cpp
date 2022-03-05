@@ -51,11 +51,10 @@ void DataClass::init() {
     data.mcp23X08Ptr = &mcp23008;
     data.mcp2515Ptr = &mcp;
     data.rcPtr = &rc;
+    data.dataInput = dataInput;
 
-    if (!status[D_DS3231]) {
-        data.RTCAvailable = false;
-    } else {
-        data.RTCAvailable = true;
+
+    if (status[D_DS3231]) {
         data.now = rtc.now();
         data.lastRTC = millis();
         if(rtc.lostPower()) {
@@ -130,10 +129,12 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
     for(;;) {
 
-        unsigned long t = millis();
+//        unsigned long t = millis();
+
+
 
         for(int i=0; i <= SettingsClass::VOLTAGE && Data.status[D_ADS1115]; i++) {
-            if(Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>()) {
+            if(params->dataInput[i].visible) {
 
                 for(int j= SAMPLES_ADC - 1; j > 0; j--)
                     readings[i][j] = readings[i][j - 1];
@@ -203,7 +204,7 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
                     try {
                         p.SetExpr(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + INPUT_EXPRESSION_OFFSET]->getString());
-                        Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float)p.Eval());
+                        params->dataInput[i].value = (float)p.Eval();
                     } catch (mu::Parser::exception_type &e) {
                         Log.logf("Exception: %s\n", e.GetMsg().c_str());
                     }
@@ -212,7 +213,7 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 //
 
                 } else if(i == SettingsClass::VOLTAGE)
-                    Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage * 5.7);
+                    params->dataInput[i].value = voltage * 5.7;
 
 //                Log.logf(", inputValue: %f\n", params->inputValue[i]);
             }
@@ -231,9 +232,9 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
         }
 
 
-        std::stringstream ss;
-        ss << millis()-t;
-        Log.logf("Loop time: %s\n", ss.str().c_str());
+//        std::stringstream ss;
+//        ss << millis()-t;
+//        Log.logf("Loop time: %s\n", ss.str().c_str());
 
         delay(1);
     }
@@ -382,6 +383,9 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
     }
 }
 
+DataClass::DataInput *DataClass::getDataInput() {
+    return dataInput;
+}
 
 DateTime DataClass::getTime() {
     return data.now;
