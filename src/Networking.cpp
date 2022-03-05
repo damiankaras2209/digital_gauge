@@ -19,13 +19,13 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
     events.onConnect([](AsyncEventSourceClient *client){
 //        Log.log("Client connected");
 //        Log.logf("Connected clients: %d", (int)events.count());
-        Log.setCountClients([](){return events.count();});
-        Log.onConnect();
-        Log.enable();
+//        Log.setCountClients([](){return events.count();});
+//        Log.onConnect();
+//        Log.enable();
     });
 
     server.addHandler(&events);
-    Log.setEvent([this](std::string str){ sendEvent( "log", std::move(str));});
+//    Log.setEvent([this](std::string str){ sendEvent( "log", std::move(str));});
 
     Log.logf("Connecting to WiFi network: \"%s\"\n", ssid);
 
@@ -171,6 +171,7 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(SPIFFS, "/settings.html", String(), false, processor);
+        Log.log("Request handled");
     });
 
     server.on("/log", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -186,7 +187,7 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
         for(int i=0;i<params;i++){
             AsyncWebParameter* p = request->getParam(i);
             if(p->isPost()){
-                Log.logf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+//                Log.logf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
 
                 for(int i=0; i<SETTINGS_SIZE; i++) {
                     if((String)i == p->name().c_str()) {

@@ -47,9 +47,9 @@ static void onChange(GxFT5436::Change change, void* param) {
 
 }
 
-
 void setup(void) {
     Serial.begin(115200);
+
 
 //    Log.logf("Free heap: %d\n", ESP.getFreeHeap());
 

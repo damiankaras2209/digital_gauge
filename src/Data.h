@@ -18,9 +18,11 @@
 #include "WiFi.h"
 
 #include <numeric>
+#include <algorithm>
 
 #include <sstream>
 #include <iomanip>
+#include "muParser.h"
 
 #define SAMPLES_ADC 32
 #define SAMPLES_CAN 4
@@ -52,6 +54,7 @@ class DataClass {
 
 public:
 
+
     typedef struct DataStruct {
             RTC_DS3231* rtcPtr;
             MCP2515* mcp2515Ptr;
@@ -79,6 +82,7 @@ public:
 
         DateTime getTime();
         DataStruct data;
+//        DataInput dataInput[SettingsClass::VOLTAGE + 1];
 
         static int adjustTime(DataStruct *);
 

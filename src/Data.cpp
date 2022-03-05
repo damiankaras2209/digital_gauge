@@ -103,34 +103,56 @@ void DataClass::init() {
 
 }
 
+
+double MySqr(double a_fVal) {  return a_fVal*a_fVal; }
+
 _Noreturn void DataClass::adcLoop(void * pvParameters) {
     Log.logf("%s started on core %d\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
-//    Log.log(" started on core ");
-//    Log.log(xPortGetCoreID());
 
-    DataStruct *params = (DataStruct*)pvParameters;
+    auto *params = (DataStruct*)pvParameters;
+
+
+    mu::Parser p;
+    double voltage;
+    double res;
+
+    try {
+        p.DefineVar("v", &voltage);
+        p.DefineVar("r", &res);
+    } catch (mu::Parser::exception_type &e) {
+        Log.logf("Exception: %s\n", e.GetMsg().c_str());
+    }
+
+    uint32_t readings[SettingsClass::VOLTAGE + 1][SAMPLES_ADC];
+    int readingsTaken[SettingsClass::VOLTAGE + 1];
+    for(int i=0; i<SettingsClass::VOLTAGE + 1; i++)
+        readingsTaken[i] = 0;
 
     for(;;) {
-        while(params->i2cBusy)
-           delay(1);
-        params->i2cBusy = true;
 
-        uint32_t readings[SettingsClass::VOLTAGE + 1][SAMPLES_ADC];
+        unsigned long t = millis();
 
-        for(int i=0; i <= SettingsClass::VOLTAGE && params->adsPtr->isConnected(); i++) {
+        for(int i=0; i <= SettingsClass::VOLTAGE && Data.status[D_ADS1115]; i++) {
             if(Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>()) {
 
                 for(int j= SAMPLES_ADC - 1; j > 0; j--)
                     readings[i][j] = readings[i][j - 1];
 
-                if(i<4)
+                if(i<4) {
+                    while(params->i2cBusy)
+                        delay(1);
+                    params->i2cBusy = true;
                     readings[i][0] = params->adsPtr->readADC(i);
-                else if(i==4)
+                    params->i2cBusy = false;
+                    delay(1);
+                } else if(i==4)
                     readings[i][0] = analogReadMilliVolts(36);
                 else if(i==5)
                     readings[i][0] = analogReadMilliVolts(39);
                 else if(i == SettingsClass::VOLTAGE)
                     readings[i][0] = analogReadMilliVolts(34);
+
+                readingsTaken[i] = min(++readingsTaken[i], SAMPLES_ADC);
 
 //                Serial.print("Raw voltage: ");
 //                Serial.print((double)readings[i][0] / 1000.0);
@@ -140,18 +162,17 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
 
                 uint32_t sum = 0;
-//                Log.log(i);
-//                Log.log(" ");
-                for(int j=0; j < SAMPLES_ADC; j++) {
+//                Log.logf("Readings taken: %d\n", readingsTaken[i]);
+                for(int j=0; j < readingsTaken[i]; j++) {
 //                    Log.log(readings[i][j]);
 //                    Log.log(", ");
                     sum += readings[i][j];
                 }
 //                Log.log("");
 
-                double avg = (double)sum / SAMPLES_ADC;
+                double avg = (double)sum / readingsTaken[i];
 
-                double voltage;
+
                 if(i<4)
                     voltage = params->adsPtr->toVoltage((int16_t)lround(avg));
                 else
@@ -166,22 +187,29 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
 
                     SettingsClass::Field** input = &(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE]);
-                    float res = input[INPUT_R_OFFSET]->get<float>() * voltage / (3.3 - voltage);
+                    res = input[INPUT_R_OFFSET]->get<float>() * voltage / (3.3 - voltage);
 
-//                    Log.logf("%s - voltage: %f", settings->dataSourceString[i].c_str(), voltage);
+//                    Log.logf("%s - voltage: %f", Settings.dataSourceString[i].c_str(), voltage);
 //                    Log.logf(", R: %f", res);
 
-//                    Log.logf(", R: %f\n", res);
 
-                    switch(input[INPUT_TYPE_OFFSET]->get<int>()){
-                        case Logarithmic: Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(input[INPUT_BETA_OFFSET]->get<float>() * (25.0 + 273.15) / (input[INPUT_BETA_OFFSET]->get<float>() + ((25.0 + 273.15) * log(res / input[INPUT_R25_OFFSET]->get<float>()))) - 273.15); break;
-                        case Linear:      Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((res - input[INPUT_RMIN_OFFSET]->get<float>()) / (input[INPUT_RMAX_OFFSET]->get<float>() - input[INPUT_RMIN_OFFSET]->get<float>()) * input[INPUT_MAXVAL_OFFSET]->get<float>()); break;
-                        case Voltage:     Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage); break;
+//                    switch(input[INPUT_TYPE_OFFSET]->get<int>()){
+//                        case Logarithmic: Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(input[INPUT_BETA_OFFSET]->get<float>() * (25.0 + 273.15) / (input[INPUT_BETA_OFFSET]->get<float>() + ((25.0 + 273.15) * log(res / input[INPUT_R25_OFFSET]->get<float>()))) - 273.15); break;
+//                        case Linear:      Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((res - input[INPUT_RMIN_OFFSET]->get<float>()) / (input[INPUT_RMAX_OFFSET]->get<float>() - input[INPUT_RMIN_OFFSET]->get<float>()) * input[INPUT_MAXVAL_OFFSET]->get<float>()); break;
+//                        case Voltage:     Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage); break;
+//                    }
+
+
+
+                    try {
+                        p.SetExpr(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + INPUT_EXPRESSION_OFFSET]->getString());
+                        Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float)p.Eval());
+                    } catch (mu::Parser::exception_type &e) {
+                        Log.logf("Exception: %s\n", e.GetMsg().c_str());
                     }
 
-//                    if(i==Settings::ADS1115_1) {
-//                        Log.logf(", value: %f\n", settings->dataDisplay[i].value);
-//                    }
+//                    Log.logf(", value: %f", Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>());
+//
 
                 } else if(i == SettingsClass::VOLTAGE)
                     Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage * 5.7);
@@ -190,28 +218,23 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
             }
         }
 
-        if(params->RTCAvailable && millis()-params->lastRTC > 1000) {
+        if(Data.status[D_DS3231] && millis()-params->lastRTC > 1000) {
+            while(params->i2cBusy)
+                delay(1);
+            params->i2cBusy = true;
             params->now = params->rtcPtr->now();
+            params->i2cBusy = false;
 //            std::stringstream s;
 //            s << std::setfill('0') << std::setw(2) << ((String)params->now.hour()).c_str() << ":" << std::setw(2) << ((String)params->now.minute()).c_str()  << ":" << std::setw(2) << ((String)params->now.second()).c_str();
 //            Log.logf("RTC: %s\n", s.str().c_str());
             params->lastRTC = millis();
         }
 
-        if (params->rcPtr->available()) {
 
-            Log.log("Received ");
-            Log.log(params->rcPtr->getReceivedValue() );
-            Log.log(" / ");
-            Log.log(params->rcPtr->getReceivedBitlength() );
-            Log.log("bit ");
-            Log.log("Protocol: ");
-            Log.log( params->rcPtr->getReceivedProtocol() );
+        std::stringstream ss;
+        ss << millis()-t;
+        Log.logf("Loop time: %s\n", ss.str().c_str());
 
-            params->rcPtr->resetAvailable();
-        }
-
-        params->i2cBusy = false;
         delay(1);
     }
 }

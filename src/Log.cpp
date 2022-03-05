@@ -5,7 +5,7 @@
 LogClass Log;
 
 void LogClass::_log(std::string str) {
-    Serial.printf("%d: %s", _data.messages.size() , str.c_str());
+    Serial.print(str.c_str());
     lock();
     if(_data.messages.size() < MAX_MESSAGES)
         _data.messages.push_back(str);
