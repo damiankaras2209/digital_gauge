@@ -1,3 +1,4 @@
 # Project exclude paths
-/.pio/build/
+/.pio/
 /cmake-build-esp32dev-mingw/
+/lib/TFT_eSPI-2.4.0-Beta/
