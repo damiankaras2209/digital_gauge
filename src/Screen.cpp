@@ -148,14 +148,9 @@ void ScreenClass::switchView(View view) {
         menu->clean();
     }
 
-    if(previousView == GAUGES && currentView != GAUGES) {
-        gauges->clean();
-    }
-
     switch(currentView) {
         case GAUGES:  {
             tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
-            gauges->prepare();
             gauges->drawWhole[0] = true;
             gauges->drawWhole[1] = true;
             for(auto v : *gauges->getClickables()) {
