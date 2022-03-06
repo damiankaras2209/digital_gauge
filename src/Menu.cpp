@@ -63,7 +63,8 @@ void Menu::draw() {
 //        Log.logf("spriteW: %d, spriteH: %d, entryHeight: %d, entries.size(): %d, gen[WIDTH]->get<int>()/2: %d\n", _w, _h, entryHeight, entries.size(), gen[WIDTH]->get<int>() / 2);
 
 
-        menuSprite->setColorDepth(8);
+        menuSprite->setColorDepth(1);
+        menuSprite->setBitmapColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
         menuSprite->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
         menuSprite->setTextDatum(CC_DATUM);
         menuSprite->createSprite(_w, _h, 1);
