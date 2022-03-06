@@ -61,14 +61,13 @@ void Prompt:: draw() {
 
         sprite->createSprite(_w, _h, 1);
         sprite->drawRect(0, 0, _w, _h, gen[FONT_COLOR]->get<int>());
-
         while(nextLine != std::string::npos) {
 
             //        Log.log(str.c_str());
             //        Log.log(nextLine);
 
             nextLine = str.find_first_of('\n');
-            sprite->drawString(str.substr(0, nextLine).c_str(), _w/2, (_lines++) * (tft->fontHeight() + _lineSpacing));
+            sprite->drawString(str.substr(0, nextLine).c_str(), _w/2, (_lines++) * (sprite->fontHeight() + _lineSpacing));
             str = str.substr(nextLine+1);
         }
 
