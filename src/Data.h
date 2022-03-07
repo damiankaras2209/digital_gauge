@@ -56,7 +56,14 @@ public:
 
     typedef struct DataInput {
         volatile bool visible = false;
+        volatile float voltage = 0.0f;
+        volatile float resistance = 0.0f;
         volatile float value = 0.0f;
+        std::string toString() {
+            std::stringstream ss;
+            ss << "[" << voltage << "," << resistance << "," << value << "]";
+            return ss.str();
+        }
     } DataInput;
 
     typedef struct DataStruct {
@@ -70,7 +77,7 @@ public:
             DateTime now;
             ulong lastRTC = 0;
             volatile bool i2cBusy = false;
-        } DataStruct;
+    } DataStruct;
 
         DataClass();
         void init();
@@ -86,7 +93,14 @@ public:
         DataInput* getDataInput();
         DateTime getTime();
         DataStruct data;
-        DataInput dataInput[SettingsClass::VOLTAGE + 1];
+        DataInput dataInput[SettingsClass::LAST];
+
+        typedef std::function<void(const char *, std::string )> SendEvent;
+        typedef std::function<size_t()> CountClients;
+        SendEvent _sendEvent;
+        CountClients _countClients;
+        void setEvent(SendEvent e);
+        void setCountClients(CountClients e);
 
         static int adjustTime(DataStruct *);
 

@@ -65,14 +65,8 @@ void SettingsClass::init() {
 
 
     for(int i=0; i<INPUT_SIZE; i++) {
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_R_OFFSET] = (new Field("r_" + (String)i + "_" + INPUT_R_OFFSET, "r", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_TYPE_OFFSET] = (new Field("type_" + (String)i + "_" + INPUT_TYPE_OFFSET, "type", Logarithmic))->setType(LIST);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_BETA_OFFSET] = (new Field("beta_" + (String)i + "_" + INPUT_BETA_OFFSET, "beta", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_R25_OFFSET] = (new Field("r25_" + (String)i + "_" + INPUT_R25_OFFSET, "r25", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_RMIN_OFFSET] = (new Field("r_min_" + (String)i + "_" + INPUT_RMIN_OFFSET, "r_min", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_RMAX_OFFSET] = (new Field("r_max_" + (String)i + "_" + INPUT_RMAX_OFFSET, "r_max", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_MAXVAL_OFFSET] = (new Field("max_val_" + (String)i + "_" + INPUT_MAXVAL_OFFSET, "max_val", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_EXPRESSION_OFFSET] = new Field("exp_" + (String)i + "_" + INPUT_EXPRESSION_OFFSET, "expression", "v");
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_R_OFFSET] = (new Field("r_" + (String)i + "_" + INPUT_R_OFFSET, "Pull-up R", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_EXPRESSION_OFFSET] = new Field("exp_" + (String)i + "_" + INPUT_EXPRESSION_OFFSET, "Expression", "v");
     }
 
     for(int i=ADS1115_0; i<=ADC_6; i++) {
@@ -82,7 +76,6 @@ void SettingsClass::init() {
         general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_SCALE_START_OFFSET] = new Field("scale_start_" + (String)i + "_" + DATA_SCALE_START_OFFSET, "scale_start", 0.0f);
         general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_SCALE_END_OFFSET] = new Field("scale_end_" + (String)i + "_" + DATA_SCALE_END_OFFSET, "scale_end", 0.0f);
         general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_PRECISION_OFFSET] = new Field("precision_" + (String)i + "_" + DATA_PRECISION_OFFSET, "precision", 1);
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_VALUE_OFFSET] = new Field("value_" + (String)i + "_" + DATA_VALUE_OFFSET, "value", 0.0f, false);
     }
 
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_ENABLE_OFFSET] = (new Field("voltage_enable", "enable", 1))->setType(CHECKBOX);
@@ -91,7 +84,6 @@ void SettingsClass::init() {
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_START_OFFSET] = new Field("voltage_scale_start", "scale_start", 6);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_END_OFFSET] = new Field("voltage_scale_end", "scale_end", 18);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_PRECISION_OFFSET] = new Field("voltage_precision", "precision", 1);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_VALUE_OFFSET] = new Field("voltage_value", "value", 0.0f, false);
 
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_ENABLE_OFFSET] = (new Field("cam_sw_", "enable", 0.0f))->setType(CHECKBOX);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_NAME_OFFSET] = new Field("cam_sw_name", "name", "SW");
@@ -99,7 +91,6 @@ void SettingsClass::init() {
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_START_OFFSET] = new Field("cam_sw_scale_start", "scale_start", -550);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_END_OFFSET] = new Field("cam_sw_scale_end", "scale_end", 550);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_PRECISION_OFFSET] = new Field("cam_sw_precision", "precision", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_VALUE_OFFSET] = new Field("cam_sw_value", "value", 0.0f, false);
 
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_ENABLE_OFFSET] = (new Field("can_speed_enable", "enable", 0.0f))->setType(CHECKBOX);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_NAME_OFFSET] = new Field("can_speed_name", "name", "Speed");
@@ -107,7 +98,6 @@ void SettingsClass::init() {
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_START_OFFSET] = new Field("can_speed_scale_start", "scale_start", 0.0f);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_END_OFFSET] = new Field("can_speed_scale_end", "scale_end", 280);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_PRECISION_OFFSET] = new Field("can_speed_precision", "precision", 1);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_VALUE_OFFSET] = new Field("can_speed_value", "value", 0.0f, false);
 
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_ENABLE_OFFSET] = (new Field("can_rpm_enable", "enable", 0.0f))->setType(CHECKBOX);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_NAME_OFFSET] = new Field("can_rpm_name", "name", "RPM");
@@ -115,7 +105,6 @@ void SettingsClass::init() {
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_START_OFFSET] = new Field("can_rpm_scale_start", "scale_start", 6);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_END_OFFSET] = new Field("can_rpm_scale_end", "scale_end", 8);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_PRECISION_OFFSET] = new Field("can_rpm_precision", "precision", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_VALUE_OFFSET] = new Field("can_rpm_value", "value", 0.0f, false);
 
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_ENABLE_OFFSET] = (new Field("can_gas_enable", "enable", 0.0f))->setType(CHECKBOX);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_NAME_OFFSET] = new Field("can_gas_name", "name", "Throttle");
@@ -123,7 +112,6 @@ void SettingsClass::init() {
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_START_OFFSET] = new Field("can_gas_scale_start", "scale_start", 0.0f);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_END_OFFSET] = new Field("can_gas_scale_end", "scale_end", 100);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_PRECISION_OFFSET] = new Field("can_gas_precision", "precision", 0.1f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_VALUE_OFFSET] = new Field("can_gas_value", "value", 0.0f, false);
 
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_ENABLE_OFFSET] = (new Field("can_hb_enable", "enable", 0.0f))->setType(CHECKBOX);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_NAME_OFFSET] = new Field("can_hb_name", "name", "Handbrake");
@@ -131,7 +119,6 @@ void SettingsClass::init() {
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_START_OFFSET] = new Field("can_hb_scale_start", "scale_start", 0.0f);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_END_OFFSET] = new Field("can_hb_scale_end", "scale_end", 1);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_PRECISION_OFFSET] = new Field("can_hb_precision", "precision", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_VALUE_OFFSET] = new Field("can_hb_value", "value", 0.0f, false);
 
 }
 

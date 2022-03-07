@@ -89,11 +89,11 @@ void Gauges::setSelected(SettingsClass::DataSource *s) {
     for(int i=0; i<SettingsClass::DataSource::VOLTAGE+1; i++)
         Data.dataInput[i].visible = false;
 
-    for(int i=LEFT; i<SIDE_LAST; i++) {
+    for(int i=LEFT; i<3; i++) {
         selected[i] = s[i];
     }
 
-    for(int i=LEFT; i<SIDE_LAST; i++)
+    for(int i=LEFT; i<3; i++)
         Data.dataInput[selected[i]].visible = true;
 }
 
@@ -104,7 +104,7 @@ void Gauges::setSelected(Side side, SettingsClass::DataSource s) {
 
         for(int i=0; i<SettingsClass::DataSource::VOLTAGE+1; i++)
             Data.dataInput[i].visible = false;
-        for(int i=LEFT; i<SIDE_LAST; i++)
+        for(int i=LEFT; i<3; i++)
             Data.dataInput[selected[i]].visible = true;
 
         if(side != MID) {

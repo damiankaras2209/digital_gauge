@@ -3,5 +3,9 @@ input {
 }
 
 input[type=number] {
-    width: 40px;
+    width: 60px;
+}
+
+input.Expression {
+    width: 250px;
 }

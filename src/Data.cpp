@@ -103,7 +103,17 @@ void DataClass::init() {
 }
 
 
+void DataClass::setEvent(SendEvent e) {
+    _sendEvent = std::move(e);
+}
+
+void DataClass::setCountClients(DataClass::CountClients e) {
+    _countClients = std::move(e);
+}
+
 double MySqr(double a_fVal) {  return a_fVal*a_fVal; }
+
+unsigned long t18 = 0;
 
 _Noreturn void DataClass::adcLoop(void * pvParameters) {
     Log.logf("%s started on core %d\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
@@ -179,6 +189,8 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
                 else
                     voltage = avg/1000.0;
 
+                params->dataInput[i].voltage = voltage;
+
 //                if(i==Settings::ADS1115_1) {
 //                    Log.logf("%s - avg: %f", settings->dataSourceString[i].c_str(), avg);
 //                    Log.logf(", voltage: %f", voltage);
@@ -189,6 +201,7 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
                     SettingsClass::Field** input = &(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE]);
                     res = input[INPUT_R_OFFSET]->get<float>() * voltage / (3.3 - voltage);
+                    params->dataInput[i].resistance = res;
 
 //                    Log.logf("%s - voltage: %f", Settings.dataSourceString[i].c_str(), voltage);
 //                    Log.logf(", R: %f", res);
@@ -218,6 +231,24 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 //                Log.logf(", inputValue: %f\n", params->inputValue[i]);
             }
         }
+
+        if(millis() - t18 > 0 && Data._countClients() > 0) {
+            std::stringstream ss;
+            ss << "{";
+            int x=0;
+            for(int i=0; i<SettingsClass::VOLTAGE + 1; i++) {
+                if(params->dataInput[i].visible) {
+                    if (x > 0)
+                        ss << ",";
+                    ss << "\"" << i << "\":" << params->dataInput[i].toString();
+                    x++;
+                }
+            }
+            ss << "}";
+            Data._sendEvent("data", ss.str());
+            t18 = millis();
+        }
+
 
         if(Data.status[D_DS3231] && millis()-params->lastRTC > 1000) {
             while(params->i2cBusy)
@@ -313,7 +344,7 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
                     int sign = raw > 0x8888 ? 1 : -1;
                     int val = sign==1 ? 0xffff - raw : raw;
 
-                    Settings.general[DATA_BEGIN_BEGIN + SettingsClass::DataSource::CAN_STEERING_ANGLE * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float) sign * val / 10); //checked
+                    params->dataInput[SettingsClass::CAN_STEERING_ANGLE].value = (float) sign * val / 10;
 //                    Serial.println(settings->dataDisplay[Settings::CAN_STEERING_ANGLE].value);
                     break;
                 }
@@ -345,9 +376,9 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
                         sumSpeed += samplesSpeed[j];
                     }
 
-                    Settings.general[DATA_BEGIN_BEGIN + SettingsClass::DataSource::CAN_RPM * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float) sumRPM / SAMPLES_CAN / 4); //checked
-                    Settings.general[DATA_BEGIN_BEGIN + SettingsClass::DataSource::CAN_SPEED * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float)  sumSpeed / SAMPLES_CAN * 2); //checked
-                    Settings.general[DATA_BEGIN_BEGIN + SettingsClass::DataSource::CAN_GAS * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((float) sumGas / SAMPLES_CAN / 51200 * 100); //checked
+                    params->dataInput[SettingsClass::CAN_RPM].value = (float) sumRPM / SAMPLES_CAN / 4;
+                    params->dataInput[SettingsClass::CAN_SPEED].value = (float)  sumSpeed / SAMPLES_CAN * 2;
+                    params->dataInput[SettingsClass::CAN_GAS].value = (float) sumGas / SAMPLES_CAN / 51200 * 100;
 //                    Serial.printf("rpm: %f", settings->dataDisplay[Settings::CAN_RPM].value);
 //                    Serial.printf("speed: %f", settings->dataDisplay[Settings::CAN_SPEED].value);
 //                    Serial.printf("gas: %f", settings->dataDisplay[Settings::CAN_GAS].value);
@@ -365,7 +396,7 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
                     int raw = canMsg.data[0] << 16 | canMsg.data[1] << 8 | canMsg.data[2];
 
                     if(raw != 0x0) {
-                        Settings.general[DATA_BEGIN_BEGIN + SettingsClass::DataSource::CAN_HB * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((canMsg.data[6] & 0x20) >> 5);
+                        params->dataInput[SettingsClass::CAN_HB].value = (float)((canMsg.data[6] & 0x20) >> 5);
 //                        Serial.printf(" HB: %f\n", settings->dataDisplay[Settings::CAN_HB].value);
                     }
 

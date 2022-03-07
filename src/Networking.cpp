@@ -9,7 +9,8 @@ AsyncEventSource events("/events");
 //AsyncWebSocket ws("/ws");
 
 void NetworkingClass::sendEvent(const char * event, std::string str) {
-    events.send(str.c_str(), event, millis());
+    if(events.count() > 0)
+        events.send(str.c_str(), event, millis());
 }
 
 int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
@@ -26,6 +27,8 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
 
     server.addHandler(&events);
 //    Log.setEvent([this](std::string str){ sendEvent( "log", std::move(str));});
+    Data.setCountClients([](){return events.count();});
+    Data.setEvent([this](const char * event, std::string str){ sendEvent( event, std::move(str));});
 
     Log.logf("Connecting to WiFi network: \"%s\"\n", ssid);
 
@@ -41,7 +44,7 @@ String processor(const String& var){
 
         for(int i=0; i<GENERAL_SETTINGS_SIZE; i++) {
             if(Settings.general[i]->isConfigurable()) {
-                ss << Settings.general[i]->getHTMLInput(i);
+                ss << Settings.general[i]->getHTMLInput(i) << "\n";
             }
         }
 
@@ -81,44 +84,43 @@ String processor(const String& var){
 
         std::stringstream ss;
 
-        ss << "const GENERAL_SETTINGS_SIZE = " << GENERAL_SETTINGS_SIZE << ";";
-        ss << "const INPUT_SETTINGS_SIZE = " << INPUT_SETTINGS_SIZE << ";";
-        ss << "const INPUT_SIZE = " << INPUT_SIZE << ";";
-        ss << "const INPUT_BEGIN_BEGIN = " << INPUT_BEGIN_BEGIN << ";";
-        ss << "const DATA_SETTINGS_SIZE = " << DATA_SETTINGS_SIZE << ";";
-        ss << "const DATA_SIZE = " << DATA_SIZE << ";";
-        ss << "const DATA_BEGIN_BEGIN = " << DATA_BEGIN_BEGIN << ";";
-        ss << "const SETTINGS_SIZE = " << SETTINGS_SIZE << ";";
+        ss << "const GENERAL_SETTINGS_SIZE = " << GENERAL_SETTINGS_SIZE << ";\n";
+        ss << "const INPUT_SETTINGS_SIZE = " << INPUT_SETTINGS_SIZE << ";\n";
+        ss << "const INPUT_SIZE = " << INPUT_SIZE << ";\n";
+        ss << "const INPUT_BEGIN_BEGIN = " << INPUT_BEGIN_BEGIN << ";\n";
+        ss << "const DATA_SETTINGS_SIZE = " << DATA_SETTINGS_SIZE << ";\n";
+        ss << "const DATA_SIZE = " << DATA_SIZE << ";\n";
+        ss << "const DATA_BEGIN_BEGIN = " << DATA_BEGIN_BEGIN << ";\n";
+        ss << "const SETTINGS_SIZE = " << SETTINGS_SIZE << ";\n";
 
         return String(ss.str().c_str());
 
     } else if(var == "input_table") {
 
         std::stringstream ss;
-        ss << "<table>\n<tr>";
+        ss << "<table>\n";
+
         for(int i=0; i<INPUT_SIZE; i++) {
             if(i<4)
-                ss << "<td>ADS1115_" << i << "</td>";
+                ss << "<tr class='input.ADS1115_" << i << "'><td>ADS1115_" << i << "</td>";
             else
-                ss << "<td>ADC" << i << "</td>";
-        }
-        ss << "</tr>\n<tr>";
+                ss << "<tr class='input.ADC" << i << "'><td>ADC" << i << "</td>";
 
-        for(int i=0; i<INPUT_SIZE; i++)
-            ss << "<td>Preset<select id='input_" << i << "_preset' onchange='return preset(" << i <<");' type='checkbox' ><option value='-1'>Puste</option><option value='0'>Ciśń. oleju</option><option value='1'>Temp. oleju</option></section></td>";
-        ss << "</tr>\n";
+            ss << "<td>Preset <select id='input_" << i << "_preset' onchange='return preset(" << i <<");' type='checkbox' ><option value='-1'>Puste</option><option value='0'>Ciśń. oleju</option><option value='1'>Temp. oleju</option></section></td>";
 
-        for(int i=0; i<INPUT_SETTINGS_SIZE; i++) {
-            ss << "<tr>";
-            for(int j=0; j<INPUT_SIZE; j++) {
-                int ind = INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * j + i;
+            for(int j=0; j<INPUT_SETTINGS_SIZE; j++) {
+                int ind = INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + j;
                 if(Settings.general[ind]->isConfigurable())
                     ss << "<td>" << Settings.general[ind]->getHTMLInput(ind) << "</td>";
             }
+
+            ss << "<td id='voltage_" << i << "'>Voltage: </td>";
+            ss << "<td id='resistance_" << i << "'>Resistance: </td>";
+            ss << "<td id='value_" << i << "'>Value: </td>";
+
             ss << "</tr>\n";
         }
-
-        ss << "</table>";
+        ss << "</table>\n";
 
         return String(ss.str().c_str());
 
