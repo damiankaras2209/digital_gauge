@@ -99,8 +99,12 @@ void ScreenClass::init() {
         showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) +
              "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()));
     }));
-    entries.push_back(new Menu::Entry("CHECK FOR UPDATE", [this]() {
+    entries.push_back(new Menu::Entry("RESTART", [this]() {
         Log.logf("Fired entry %d\n", 5);
+        esp_restart();
+    }));
+    entries.push_back(new Menu::Entry("CHECK FOR UPDATE", [this]() {
+        Log.logf("Fired entry %d\n", 6);
         showPrompt("Checking for updates... ");
         prompt->setDismissible(false);
         if(WiFi.status() == WL_CONNECTED) {
