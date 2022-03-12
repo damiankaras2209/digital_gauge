@@ -22,7 +22,7 @@ void ScreenClass::processEvent(GxFT5436::Event event, void* param) {
 
 };
 
-void ScreenClass::init() {
+void ScreenClass::init(SettingsClass::DataSource *selected) {
     ledcSetup(0, 5000, 8);
     ledcAttachPin(32, 0);
     ledcWrite(0, 0);
@@ -33,6 +33,7 @@ void ScreenClass::init() {
     tft->invertDisplay(1);
     lock = new Lock;
     gauges = new Gauges;
+    gauges->setSelected(selected);
     gauges->init(tft, lock);
     auto gaugesClickables = gauges->getClickables();
     for(auto v : *gaugesClickables) {
@@ -135,11 +136,12 @@ void ScreenClass::init() {
     Data.touch.addOnEvent(processEvent, (void*)&clickables);
 }
 
-void ScreenClass::reset() {
+void ScreenClass::reloadSettings() {
     lock->lock();
     tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
-    gauges->reset();
-	lock->release();
+    gauges->reloadSettings();
+    lock->release();
+    switchView(currentView);
 }
 
 
@@ -161,10 +163,11 @@ void ScreenClass::switchView(View view) {
     }
 
     switch(currentView) {
+        case INIT: break;
         case GAUGES:  {
             tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
-            gauges->drawWhole[0] = true;
-            gauges->drawWhole[1] = true;
+            gauges->redraw[0] = true;
+            gauges->redraw[1] = true;
             for(auto v : *gauges->getClickables()) {
                 v->setVisibility(true);
             }

@@ -26,14 +26,14 @@
 #define SCALE_SPRITE_Y_OFFSET_16 3
 
 enum View {
-	GAUGES, CLOCK, PROMPT, MENU
+    INIT, GAUGES, CLOCK, PROMPT, MENU
 };
 
 class ScreenClass {
 
 	public:
-        void init();
-		void reset();
+        void init(SettingsClass::DataSource *selected);
+		void reloadSettings();
 		void switchView(View);
 		void showPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
 		void appendToPrompt(String text);
@@ -48,8 +48,8 @@ class ScreenClass {
 		TFT_eSPI *tft;
 		SettingsClass::Field **gen;
 		Lock *lock;
-        volatile View previousView;
-        volatile View currentView;
+        volatile View previousView = INIT;
+        volatile View currentView = INIT;
         uint8_t _brightness;
 
 

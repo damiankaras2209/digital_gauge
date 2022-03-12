@@ -221,17 +221,20 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
         }
 
         Settings.save();
-        Screen.reset();
+        Screen.reloadSettings();
+        request->send(HTTP_CODE_OK);
     });
 
     server.on("/time", HTTP_POST, [](AsyncWebServerRequest *request){
         Data.adjustTime(&Data.data);
+        request->send(HTTP_CODE_OK);
     });
 
     server.on("/reset", HTTP_POST, [](AsyncWebServerRequest *request){
         Settings.loadDefault();
         Settings.save();
-        Screen.reset();
+        Screen.reloadSettings();
+        request->send(HTTP_CODE_OK);
     });
 
   server.begin();

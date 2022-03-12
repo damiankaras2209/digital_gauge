@@ -40,13 +40,13 @@ public:
         TFT_eSprite* needleUpdate;
         TFT_eSprite* textUpdate;
 
-        boolean drawWhole[2];
+        boolean redraw[SIDE_LAST];
         int16_t selectedInfoCoords[4]; // x, y, w, h;
         bool selectedInfoVisible;
         ulong selectedInfoTimestamp;
 
         void init(TFT_eSPI *, Lock *);
-        void reset();
+        void reloadSettings();
         void fillTables();
         void createScaleSprites(Side);
         void prepare();

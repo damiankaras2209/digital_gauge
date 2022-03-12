@@ -8,7 +8,49 @@
 
             %CONSTS%
 
+            let source;
+
+            function setEventSource() {
+                if (!!window.EventSource) {
+                    source = new EventSource('/events');
+
+                    source.addEventListener('open', function(e) {
+                        console.log("Events Connected");
+                    }, false);
+
+                    source.addEventListener('error', function(e) {
+                        if (e.target.readyState != EventSource.OPEN) {
+                            console.log("Events Disconnected");
+                        }
+                    }, false);
+
+                    source.addEventListener('data', function(e) {
+                        console.log("data", e.data);
+                        const json = JSON.parse(e.data);
+                        for(let i=0; i<6; i++) {
+                            if(json.hasOwnProperty(i)) {
+                                document.getElementById("voltage_" + i).innerText = "Voltage: " + json[i][0] + "V";
+                                document.getElementById("resistance_" + i).innerText = "Resistance: " + json[i][1] + "Ω";
+                                document.getElementById("value_" + i).innerText = "Value: " + json[i][2];
+                            } else {
+                                document.getElementById("voltage_" + i).innerText = "Voltage: 0V";
+                                document.getElementById("resistance_" + i).innerText = "Resistance: 0Ω;";
+                                document.getElementById("value_" + i).innerText = "Value: 0";
+                            }
+                        }
+                    }, false);
+
+                    source.addEventListener('frametime', function(e) {
+                        document.getElementById("frametime").innerText = "frametime: " + e.data;
+                    }, false);
+                }
+            }
+
+            setEventSource();
+
+
         function send(){
+            source.close();
           let data = new FormData();
 
 %settings_js%
@@ -17,12 +59,26 @@
           xhr.open('POST', 'settingsSet');
           xhr.onload = function(){ console.log(this.response); };
           xhr.send(data);
+          setEventSource();
           return false;
         }
 
         function post(s) {
+            source.close();
             let xhr = new XMLHttpRequest();
             xhr.open('POST', s);
+            xhr.send(null);
+            setEventSource();
+        }
+
+        function resetSettings() {
+            source.close();
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', "reset");
+            xhr.onload = function(){
+                console.log(this.status);
+                window.location.reload(true);
+            };
             xhr.send(null);
         }
 
@@ -60,47 +116,14 @@
             }
         }
 
-        if (!!window.EventSource) {
-            var source = new EventSource('/events');
-
-            source.addEventListener('open', function(e) {
-                console.log("Events Connected");
-            }, false);
-
-            source.addEventListener('error', function(e) {
-                if (e.target.readyState != EventSource.OPEN) {
-                    console.log("Events Disconnected");
-                }
-            }, false);
-
-            source.addEventListener('data', function(e) {
-                console.log("data", e.data);
-                const json = JSON.parse(e.data);
-                for(let i=0; i<6; i++) {
-                    if(json.hasOwnProperty(i)) {
-                        document.getElementById("voltage_" + i).innerText = "Voltage: " + json[i][0] + "V";
-                        document.getElementById("resistance_" + i).innerText = "Resistance: " + json[i][1] + "Ω";
-                        document.getElementById("value_" + i).innerText = "Value: " + json[i][2];
-                    } else {
-                        document.getElementById("voltage_" + i).innerText = "Voltage: 0V";
-                        document.getElementById("resistance_" + i).innerText = "Resistance: 0Ω;";
-                        document.getElementById("value_" + i).innerText = "Value: 0";
-                    }
-                }
-            }, false);
-
-            source.addEventListener('frametime', function(e) {
-                document.getElementById("frametime").innerText = "frametime: " + e.data;
-            }, false);
-        }
 
         </script>
     </head>
     <body>
         <form onsubmit='return send()'>
             <h1>Ustawienia</h1><p id='frametime'>frametime: </p>
-            <button type="button" onclick='post("reset"); window.location.reload(true);'>Przywróć domyślne</button>
-            <button type="button" onclick='post("time"); window.location.reload(true);'>Wymuś synchrunizację czasu</button>
+            <button type="button" onclick='resetSettings();'>Przywróć domyślne</button>
+            <button type="button" onclick='post("time");'>Wymuś synchrunizację czasu</button>
             %settings%
             <h2>Wejścia analogowe</h2>
             %input_table%

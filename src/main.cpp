@@ -22,13 +22,13 @@ void print_reset_reason(esp_reset_reason_t reason)
         case 1 : Serial.println ("ESP_RST_UNKNOWN"); break;        //!< Reset reason can not be determined
         case 3 : Serial.println ("ESP_RST_POWERON"); break;        //!< Reset due to power-on event
         case 4 : Serial.println ("ESP_RST_EXT"); break;            //!< Reset by external pin (not applicable for ESP32)
-        case 5 : Serial.println ("ESP_RST_SW"); break;             //!< Software reset via esp_restart
-        case 6 : Serial.println ("ESP_RST_PANIC"); break;          //!< Software reset due to exception/panic
+        case 5 : Serial.println ("ESP_RST_SW"); break;             //!< Software reloadSettings via esp_restart
+        case 6 : Serial.println ("ESP_RST_PANIC"); break;          //!< Software reloadSettings due to exception/panic
         case 7 : Serial.println ("ESP_RST_INT_WDT"); break;        //!< Reset (software or hardware) due to interrupt watchdog
         case 8 : Serial.println ("ESP_RST_TASK_WDT"); break;       //!< Reset due to task watchdog
         case 9 : Serial.println ("ESP_RST_WDT"); break;            //!< Reset due to other watchdogs
         case 10 : Serial.println ("ESP_RST_DEEPSLEEP"); break;     //!< Reset after exiting deep sleep mode
-        case 11 : Serial.println ("ESP_RST_BROWNOUT"); break;      //!< Brownout reset (software or hardware)
+        case 11 : Serial.println ("ESP_RST_BROWNOUT"); break;      //!< Brownout reloadSettings (software or hardware)
         case 13 : Serial.println ("ESP_RST_SDIO"); break;          //!< Reset over SDIO
     }
 }
@@ -57,7 +57,7 @@ void setup(void) {
         Log.log("SPIFFS initialisation failed!");
     }
 
-    Serial.println("ESP32 reset reason: ");
+    Serial.println("ESP32 reloadSettings reason: ");
     print_reset_reason(esp_reset_reason());
 
 //    if(esp_reset_reason() != ESP_RST_POWERON && esp_reset_reason() != ESP_RST_UNKNOWN && esp_reset_reason() != ESP_RST_SW)
@@ -70,8 +70,7 @@ void setup(void) {
     SettingsClass::DataSource selected[3];
     Settings.loadSelected(selected);
 
-    Screen.init();
-    Screen.gauges->setSelected(selected);
+    Screen.init(selected);
 
     Log.logf("Firmware version: %s(%d)\n", Updater.firmware.toString().c_str(), Updater.firmware.toInt());
     Log.logf("Filesystem version: %s(%d), target: %s(%d)\n", Updater.filesystemCurrent.toString().c_str(), Updater.filesystemCurrent.toInt(),  Updater.filesystemTarget.toString().c_str(), Updater.filesystemTarget.toInt());
@@ -150,9 +149,6 @@ void setup(void) {
     //      while (1);
     //  }
 
-
-
-        Screen.reset();
         Screen.switchView(GAUGES);
 
         switch (settingsStatus) {

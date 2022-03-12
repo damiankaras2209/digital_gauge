@@ -24,6 +24,8 @@ void Gauges::init(TFT_eSPI *t, Lock *l) {
     needleUpdate = new TFT_eSprite(tft);
     textUpdate = new TFT_eSprite(tft);
 
+    reloadSettings();
+
     for(int i=0; i<SIDE_LAST; i++)
         clickables.push_back(new Clickable);
 
@@ -58,16 +60,15 @@ void Gauges::init(TFT_eSPI *t, Lock *l) {
 
 }
 
-void Gauges::reset() {
+void Gauges::reloadSettings() {
     fillTables();
     prepare();
     selectedInfoCoords[2] = (gen[NEEDLE_CENTER_OFFSET]->get<int>() - gen[NEEDLE_CENTER_RADIUS]->get<int>()) * 2; //width
     selectedInfoCoords[3] = (textUpdate->fontHeight()+LINE_SPACING)*4 - LINE_SPACING + SCALE_SPRITE_Y_OFFSET_16; //height
     selectedInfoCoords[0] = gen[WIDTH]->get<int>()/2 + gen[OFFSET_X]->get<int>() - selectedInfoCoords[2]/2; //x
     selectedInfoCoords[1] = gen[HEIGHT]->get<int>()/2 + gen[OFFSET_Y]->get<int>() + 5; //y
-    drawWhole[0] = true;
-    drawWhole[1] = true;
-    updateText(true, 0);
+    for(auto & s : redraw)
+        s = true;
 }
 
 void Gauges::prepare() {
@@ -108,7 +109,7 @@ void Gauges::setSelected(Side side, SettingsClass::DataSource s) {
             Data.dataInput[selected[i]].visible = true;
 
         if(side != MID) {
-            drawWhole[side] = true;
+            redraw[side] = true;
             createScaleSprites(side);
         }
         drawSelectedInfo();
@@ -413,7 +414,7 @@ void Gauges::updateNeedle(int side) {
     int spriteW;
     int spriteH;
 
-    if(pSource[side] != selected[side] || drawWhole[side]) {
+    if(pSource[side] != selected[side] || redraw[side]) {
         spriteX = gen[WIDTH]->get<int>()/2 + (side ? (gen[NEEDLE_CENTER_OFFSET]->get<int>() -gen[NEEDLE_CENTER_RADIUS]->get<int>()) : -gen[ELLIPSE_A]->get<int>());
         spriteY = gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>();
         spriteW = gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>() + gen[NEEDLE_CENTER_RADIUS]->get<int>();
@@ -505,7 +506,7 @@ void Gauges::updateNeedle(int side) {
     pH[side] = h;
     pDeg[side] = deg;
     pSource[side] = selected[side];
-    drawWhole[side] = false;
+    redraw[side] = false;
 
     if(gen[DEMO]->get<bool>()) {
         xx+=2;
