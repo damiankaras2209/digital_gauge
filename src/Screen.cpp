@@ -91,8 +91,16 @@ void ScreenClass::init() {
         }
         prompt->setDismissible(true);
     }));
-    entries.push_back(new Menu::Entry("CHECK FOR UPDATE", [this]() {
+    entries.push_back(new Menu::Entry("RESET WIFI CREDENTIALS", [this]() {
         Log.logf("Fired entry %d\n", 4);
+        Settings.general[WIFI_SSID]->setDefault();
+        Settings.general[WIFI_PASS]->setDefault();
+        Settings.save(false);
+        showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) +
+             "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()));
+    }));
+    entries.push_back(new Menu::Entry("CHECK FOR UPDATE", [this]() {
+        Log.logf("Fired entry %d\n", 5);
         showPrompt("Checking for updates... ");
         prompt->setDismissible(false);
         if(WiFi.status() == WL_CONNECTED) {
