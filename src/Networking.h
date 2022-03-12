@@ -28,6 +28,13 @@ class NetworkingClass {
         void sendInfo();
         static void serverSetup();
         void sendEvent(const char *, std::string);
+
+    private:
+        struct Credentials {
+            const char *ssid = "";
+            const char *pass = "";
+        } _credentials;
+        _Noreturn  static void connectionMaintainer(void *);
 };
 
 extern NetworkingClass Networking;

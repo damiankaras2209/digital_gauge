@@ -15,9 +15,9 @@ void NetworkingClass::sendEvent(const char * event, std::string str) {
 
 int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
 
-    if(WiFi.status() == WL_CONNECTED)
+    if (WiFi.status() == WL_CONNECTED)
         return WiFi.status();
-    events.onConnect([](AsyncEventSourceClient *client){
+    events.onConnect([](AsyncEventSourceClient *client) {
 //        Log.log("Client connected");
 //        Log.logf("Connected clients: %d", (int)events.count());
 //        Log.setCountClients([](){return events.count();});
@@ -27,12 +27,47 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
 
     server.addHandler(&events);
 //    Log.setEvent([this](std::string str){ sendEvent( "log", std::move(str));});
-    Data.setCountClients([](){return events.count();});
-    Data.setEvent([this](const char * event, std::string str){ sendEvent( event, std::move(str));});
+    Data.setCountClients([]() { return events.count(); });
+    Data.setEvent([this](const char *event, std::string str) { sendEvent(event, std::move(str)); });
+
+
+    _credentials.ssid = ssid;
+    _credentials.pass = pass;
+
+    WiFi.mode(WIFI_MODE_STA);
+
+    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info) {
+        Serial.println("Disconnected from WIFI access point");
+        Serial.print("WiFi lost connection. Reason: ");
+        Serial.println(info.disconnected.reason);
+        Serial.println("Reconnecting...");
+        TaskHandle_t handle;
+        if (!xTaskCreate(connectionMaintainer,
+                         "connectionMaintainer",
+                         4 * 1024,
+                         &_credentials,
+                         1,
+                         &handle))
+            Log.log("Failed to start connectionMaintainer task");
+        }, SYSTEM_EVENT_STA_DISCONNECTED);
+
+    WiFi.begin(_credentials.ssid, _credentials.pass);
+
+
 
     Log.logf("Connecting to WiFi network: \"%s\"\n", ssid);
+}
 
-    WiFi.begin(ssid, pass);
+_Noreturn void NetworkingClass::connectionMaintainer(void * pvParameters) {
+//    auto cred = (Credentials*)pvParameters;
+
+    while(WiFi.status() != WL_CONNECTED) {
+        WiFi.reconnect();
+        WiFi.waitForConnectResult();
+//        Log.logf("Result: %d\n", WiFi.waitForConnectResult());
+    }
+
+    vTaskDelete(nullptr);
 }
 
 String processor(const String& var){
