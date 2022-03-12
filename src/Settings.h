@@ -338,14 +338,15 @@ class SettingsClass {
 		void init();
 		void loadDefault();
 		S_STATUS load();
-		void save();
+		void save(bool waitForCompletion = true);
 		void clear();
 		void loadSelected(DataSource *selected);
 		void saveSelected(DataSource *selected);
 
-	 public:
+	public:
 
         Field* general[SETTINGS_SIZE];
+
 
 };
 

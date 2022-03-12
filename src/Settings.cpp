@@ -183,40 +183,53 @@ S_STATUS SettingsClass::load() {
     return status;
 }
 
-void SettingsClass::save() {
-    Log.log("Saving settings");
-    if(SPIFFS.exists("/settings.json"))
-        SPIFFS.remove("/settings.json");
-    fs::File file = SPIFFS.open("/settings.json", "w");
-    StaticJsonDocument<5*1024> doc;
-    doc[general[VERSION]->getId()] = general[VERSION]->get<float>();
-    for(int i=1; i<SETTINGS_SIZE; i++) {
-        if(general[i]->isConfigurable()) {
-            switch (general[i]->getType()) {
-                case STRING: {
-                    doc[general[i]->getId()] = (String)general[i]->getString().c_str();
+void SettingsClass::save(bool waitForCompletion) {
+    TaskHandle_t handle;
+    bool finished = false;
+    if(!xTaskCreate([](void * finished) {
+            Log.log("Saving settings");
+            if(SPIFFS.exists("/settings.json"))
+                SPIFFS.remove("/settings.json");
+            fs::File file = SPIFFS.open("/settings.json", "w");
+            StaticJsonDocument<5*1024> doc;
+            doc[Settings.general[VERSION]->getId()] = Settings.general[VERSION]->get<float>();
+            for(int i=1; i<SETTINGS_SIZE; i++) {
+                if(Settings.general[i]->isConfigurable()) {
+                    switch (Settings.general[i]->getType()) {
+                        case STRING: {
+                            doc[Settings.general[i]->getId()] = (String)Settings.general[i]->getString().c_str();
 #ifdef LOG_SETTINGS
-                    Log.logf("%s: %s %s\n", general[i]->getId().c_str(), general[i]->getName().c_str(), general[i]->getString().c_str());
+                            Log.logf("%s: %s %s\n", Settings.general[i]->getId().c_str(), Settings.general[i]->getName().c_str(), Settings.general[i]->getString().c_str());
 #endif
-                    break;
-                }
-                default: {
-                    doc[general[i]->getId()] = general[i]->get<float>();
+                            break;
+                        }
+                        default: {
+                            doc[Settings.general[i]->getId()] = Settings.general[i]->get<float>();
 #ifdef LOG_SETTINGS
-                    Log.logf("%s: %s %f\n", general[i]->getId().c_str(), general[i]->getName().c_str(), general[i]->get<float>());
+                            Log.logf("%s: %s %f\n", Settings.general[i]->getId().c_str(), Settings.general[i]->getName().c_str(), Settings.general[i]->get<float>());
 #endif
-                    break;
+                            break;
+                        }
+                    }
                 }
             }
-        }
-    }
 
-    if (serializeJson(doc, file) == 0) {
-        Log.log("Failed to write to file");
-    }
-    Log.log("Settings saved");
-
-    file.close();
+            if (serializeJson(doc, file) == 0) {
+                Log.log("Failed to write to file");
+            }
+            file.close();
+            Log.log("Settings saved");
+            *(bool*)finished = true;
+            vTaskDelete(nullptr);
+        },
+        "saveSettings",
+        8*1024,
+        &finished,
+        1,
+        &handle))
+        Log.log("Failed to start saveSettings task");
+    while(!finished && waitForCompletion)
+        delay(1);
 }
 
 void SettingsClass::clear() {
