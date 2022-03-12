@@ -24,12 +24,12 @@ class Prompt : public Clickable {
 
 public:
 
-    void init(TFT_eSPI *, Lock *);
-    void setText(String);
+    void init(TFT_eSPI *t, Lock *l);
+    void setText(String text);
     void appendText(String text);
-    void setLineSpacing(int);
-    void setUseDefaultFont(bool);
-    void setDismissible(bool);
+    void setLineSpacing(int spacing);
+    void setUseDefaultFont(bool b);
+    void setDismissible(bool b);
     bool isDismissible();
     void draw();
 

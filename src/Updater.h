@@ -53,7 +53,7 @@ class UpdaterClass {
         void setOnFinnish(OnFinnishCallback);
         void setOnSuccessCallback(OnSuccessCallback);
         void checkForUpdate(LogCallback log = nullptr);
-        void updateFS(String, Callback);
+        void updateFS(String version, Callback onFinish);
         void loop();
         String getMac();
 
@@ -63,7 +63,7 @@ class UpdaterClass {
         LogCallback _log = nullptr;
         volatile bool _check = false;
         static void readFilesystemVersion(Version*);
-        void updateFW(String);
+        void updateFW(String url);
 
 };
 

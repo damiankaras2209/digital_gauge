@@ -46,14 +46,14 @@ class Menu {
 
     public:
         std::vector<Entry*> entries;
-        void init(TFT_eSPI *, Lock *);
-        void setEntries(std::vector<Entry*>);
+        void init(TFT_eSPI *t, Lock *l);
+        void setEntries(std::vector<Entry*> entries);
         void prepare();
         void clean();
         void resetPosition();
         void scroll(int);
         void draw();
-        Entry* getEntryAt(int, int);
+        Entry* getEntryAt(int x, int y);
         static void processEvent(GxFT5436::Event, void*);
 
 

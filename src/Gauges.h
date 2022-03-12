@@ -45,24 +45,24 @@ public:
         bool selectedInfoVisible;
         ulong selectedInfoTimestamp;
 
-        void init(TFT_eSPI *, Lock *);
+        void init(TFT_eSPI *t, Lock *l);
         void reloadSettings();
         void fillTables();
-        void createScaleSprites(Side);
+        void createScaleSprites(Side side);
         void prepare();
         void clean();
 
-        void drawScalePiece(TFT_eSprite*, int, int, int, int, int, int, uint16_t);
-        void drawScale(TFT_eSprite*, int, int, int, int, int, int);
-        void updateNeedle(int);
-        void updateText(boolean, int fps);
+        void drawScalePiece(TFT_eSprite* c, int deg, int side, int spriteX, int spriteY, int length, int width, uint16_t color);
+        void drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w, int start, int end);
+        void updateNeedle(int side);
+        void updateText(boolean force, int fps);
         void drawSelectedInfo();
         void clearSelectedInfo();
 
-        void setSelected(SettingsClass::DataSource*);
-        void setSelected(Side, SettingsClass::DataSource);
-        void getSelected(SettingsClass::DataSource*);
-        void cycleData(Side);
+        void setSelected(SettingsClass::DataSource* selected);
+        void setSelected(Side, SettingsClass::DataSource selected);
+        void getSelected(SettingsClass::DataSource* selected);
+        void cycleData(Side side);
 
         Clickable *leftGauge, *rightGauge, *midGauge, *date;
         std::vector<Clickable*> clickables;

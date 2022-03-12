@@ -44,7 +44,7 @@ class LogClass {
 
     public:
         void setEvent(Send send);
-        void setCountClients(std::function<size_t()>);
+        void setCountClients(std::function<size_t()> f);
         void enable();
         void onConnect();
 

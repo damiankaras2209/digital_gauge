@@ -27,7 +27,7 @@ class NetworkingClass {
         int connectWiFi(const char* ssid = "", const char* pass = "");
         void sendInfo();
         static void serverSetup();
-        void sendEvent(const char *, std::string);
+        void sendEvent(const char *event, std::string content);
 
     private:
         struct Credentials {

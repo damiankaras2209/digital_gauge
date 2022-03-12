@@ -34,7 +34,7 @@ class ScreenClass {
 	public:
         void init(SettingsClass::DataSource *selected);
 		void reloadSettings();
-		void switchView(View);
+		void switchView(View view);
 		void showPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
 		void appendToPrompt(String text);
 		View getView();
