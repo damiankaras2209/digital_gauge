@@ -92,8 +92,14 @@ void ScreenClass::init(SettingsClass::DataSource *selected) {
         }
         prompt->setDismissible(true);
     }));
-    entries.push_back(new Menu::Entry("RESET WIFI CREDENTIALS", [this]() {
+    entries.push_back(new Menu::Entry("POST", [this]() {
         Log.logf("Fired entry %d\n", 4);
+        showPrompt("POST:");
+        for(int i=0; i<Device::D_LAST; i++)
+            appendToPrompt("\n" + deviceName[i] + ": " + (Data.status[i] ? "good" : "fail"));
+    }));
+    entries.push_back(new Menu::Entry("RESET WIFI CREDENTIALS", [this]() {
+        Log.logf("Fired entry %d\n", 5);
         Settings.general[WIFI_SSID]->setDefault();
         Settings.general[WIFI_PASS]->setDefault();
         Settings.save(false);
@@ -101,11 +107,11 @@ void ScreenClass::init(SettingsClass::DataSource *selected) {
              "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()));
     }));
     entries.push_back(new Menu::Entry("RESTART", [this]() {
-        Log.logf("Fired entry %d\n", 5);
+        Log.logf("Fired entry %d\n", 6);
         esp_restart();
     }));
     entries.push_back(new Menu::Entry("CHECK FOR UPDATE", [this]() {
-        Log.logf("Fired entry %d\n", 6);
+        Log.logf("Fired entry %d\n", 7);
         showPrompt("Checking for updates... ");
         prompt->setDismissible(false);
         if(WiFi.status() == WL_CONNECTED) {
