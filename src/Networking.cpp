@@ -34,40 +34,33 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
     _credentials.ssid = ssid;
     _credentials.pass = pass;
 
+    WiFi.disconnect(true, true);
     WiFi.mode(WIFI_MODE_STA);
-
-    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info) {
-        Serial.println("Disconnected from WIFI access point");
-        Serial.print("WiFi lost connection. Reason: ");
-        Serial.println(info.disconnected.reason);
-        Serial.println("Reconnecting...");
-        TaskHandle_t handle;
-        if (!xTaskCreate(connectionMaintainer,
-                         "connectionMaintainer",
-                         4 * 1024,
-                         &_credentials,
-                         1,
-                         &handle))
-            Log.log("Failed to start connectionMaintainer task");
-        }, SYSTEM_EVENT_STA_DISCONNECTED);
-
+    delay(2000);
     WiFi.begin(_credentials.ssid, _credentials.pass);
 
+    TaskHandle_t handle;
+    if (!xTaskCreate(connectionMaintainer,
+                     "connectionMaintainer",
+                     4 * 1024,
+                     &_credentials,
+                     1,
+                     &handle))
+        Log.log("Failed to start connectionMaintainer task");
 
 
     Log.logf("Connecting to WiFi network: \"%s\"\n", ssid);
 }
 
 _Noreturn void NetworkingClass::connectionMaintainer(void * pvParameters) {
-//    auto cred = (Credentials*)pvParameters;
-
-    while(WiFi.status() != WL_CONNECTED) {
-        WiFi.reconnect();
-        WiFi.waitForConnectResult();
-//        Log.logf("Result: %d\n", WiFi.waitForConnectResult());
+    for(;;) {
+        while(WiFi.status() != WL_CONNECTED) {
+            WiFi.reconnect();
+//            Log.logf("Result: %d\n", WiFi.waitForConnectResult());
+            delay(5000);
+        }
+        delay(1000);
     }
-
-    vTaskDelete(nullptr);
 }
 
 String processor(const String& var){
