@@ -102,8 +102,8 @@ void SettingsClass::init() {
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_ENABLE_OFFSET] = (new Field("can_rpm_enable", "enable", 0.0f))->setType(CHECKBOX);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_NAME_OFFSET] = new Field("can_rpm_name", "name", "RPM");
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_UNIT_OFFSET] = new Field("can_rpm_unit", "unit", "rpm");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_START_OFFSET] = new Field("can_rpm_scale_start", "scale_start", 6);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_END_OFFSET] = new Field("can_rpm_scale_end", "scale_end", 8);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_START_OFFSET] = new Field("can_rpm_scale_start", "scale_start", 0);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_END_OFFSET] = new Field("can_rpm_scale_end", "scale_end", 8000);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_PRECISION_OFFSET] = new Field("can_rpm_precision", "precision", 0.0f);
 
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_ENABLE_OFFSET] = (new Field("can_gas_enable", "enable", 0.0f))->setType(CHECKBOX);
