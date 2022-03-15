@@ -200,7 +200,7 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
 
                     SettingsClass::Field** input = &(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE]);
-                    res = input[INPUT_R_OFFSET]->get<float>() * voltage / (3.3 - voltage);
+                    res = input[INPUT_PULLUP_OFFSET]->get<float>() * voltage / (3.3 - voltage);
                     params->dataInput[i].resistance = res;
 
 //                    Log.logf("%s - voltage: %f", Settings.dataSourceString[i].c_str(), voltage);

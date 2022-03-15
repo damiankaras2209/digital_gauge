@@ -65,7 +65,8 @@ void SettingsClass::init() {
 
 
     for(int i=0; i<INPUT_SIZE; i++) {
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_R_OFFSET] = (new Field("r_" + (String)i + "_" + INPUT_R_OFFSET, "Pull-up R", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_PULLUP_OFFSET] = (new Field("pullup_" + (String)i + "_" + INPUT_PULLUP_OFFSET, "Pull-up R", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_PULLDOWN_OFFSET] = (new Field("pullwon_" + (String)i + "_" + INPUT_PULLDOWN_OFFSET, "Pull-down R", 0.0f))->setStep(0.1f);
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_EXPRESSION_OFFSET] = new Field("exp_" + (String)i + "_" + INPUT_EXPRESSION_OFFSET, "Expression", "v");
     }
 

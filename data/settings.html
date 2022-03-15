@@ -71,6 +71,26 @@
             setEventSource();
         }
 
+        function calibration() {
+            let data = new FormData();
+            data.append("mac", MAC);
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://217.11.128.153:1337/calibration.php');
+            xhr.onload = function(){
+                console.log(this.status);
+                console.log(this.response);
+                const json = JSON.parse(this.response);
+                for(let i=0; i<6; i++) {
+                    if(json.hasOwnProperty(i)) {
+                        document.getElementById(INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE*i + 0).value = json[i][0];
+                        document.getElementById(INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE*i + 1).value = json[i][1];
+                    }
+                }
+                // window.location.reload(true);
+            };
+            xhr.send(data);
+        }
+
         function resetSettings() {
             source.close();
             let xhr = new XMLHttpRequest();
@@ -89,6 +109,7 @@
                 case -1:
                     document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 0).value = 0;
                     document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 1).value = 0;
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 2).value = "v";
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 1).value = "";
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 2).value = "u";
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 3).value = 0;
@@ -96,8 +117,7 @@
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 5).value = 0;
                     break;
                 case 0:
-                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 0).value = 101.5;
-                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 1).value = "(r-3)/(160-3)*10";
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 2).value = "(r-3)/(160-3)*10";
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 1).value = "Oil press";
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 2).value = "bar";
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 3).value = 0;
@@ -105,8 +125,7 @@
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 5).value = 1;
                     break;
                 case 1:
-                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 0).value = 10110.0;
-                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 1).value = "3800*298.15/(3800+(298.15)*log(r/58000))-273.15";
+                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 2).value = "3800*298.15/(3800+(298.15)*log(r/58000))-273.15";
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 1).value = "Oil temp";
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 2).value = "°C";
                     document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 3).value = 30;
@@ -126,6 +145,7 @@
             <button type="button" onclick='post("time");'>Wymuś synchrunizację czasu</button>
             %settings%
             <h2>Wejścia analogowe</h2>
+            <button type="button" onclick='calibration();'>Get calibration data</button>
             %input_table%
             <h2>Ustawienia danych</h2>
             %data_list%

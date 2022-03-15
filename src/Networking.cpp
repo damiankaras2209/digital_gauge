@@ -112,6 +112,7 @@ String processor(const String& var){
 
         std::stringstream ss;
 
+        ss << "const MAC = '" << Updater.getMac().c_str() << "';\n";
         ss << "const GENERAL_SETTINGS_SIZE = " << GENERAL_SETTINGS_SIZE << ";\n";
         ss << "const INPUT_SETTINGS_SIZE = " << INPUT_SETTINGS_SIZE << ";\n";
         ss << "const INPUT_SIZE = " << INPUT_SIZE << ";\n";
@@ -198,6 +199,12 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
         Log.log(".");
     }
 
+    server.onNotFound([](AsyncWebServerRequest *request) {
+        if (request->method() == HTTP_OPTIONS)
+            request->send(200);
+        else
+            request->send(404);
+    });
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(SPIFFS, "/settings.html", String(), false, processor);
