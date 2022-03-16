@@ -41,10 +41,10 @@
 //typedef std::function<void(t_httpUpdate_return status)> Callback;
 
 enum Device {
-    D_FT5436, D_DS3231, D_MCP2515, D_ADS1115, D_MCP23008, D_LAST
+    D_FT5436, D_DS3231, D_MCP2515, D_ADS1115, D_MCP23008, D_A24C32, D_LAST
 };
 
-const String deviceName[] = {"FT5436", "DS3231", "MCP2515", "ADS1115", "MCP23008"};
+const String deviceName[] = {"FT5436", "DS3231", "MCP2515", "ADS1115", "MCP23008", "AT24C32"};
 
 enum Result {
     D_SUCCESS, D_FAIL

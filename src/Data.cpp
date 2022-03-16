@@ -34,6 +34,8 @@ void DataClass::POST() {
     status[D_ADS1115] = ads.begin();
     status[D_MCP2515] = mcp.reset() == MCP2515::ERROR_OK;
     status[D_MCP23008] = mcp23008.begin_I2C();
+    Wire.beginTransmission(0x50);
+    status[D_A24C32] = (Wire.endTransmission() == 0);
 
     for(int i=0; i<D_LAST; i++) {
         Log.logf("%s... %s\n", deviceName[i].c_str(), status[i] ? "good" : "fail");
