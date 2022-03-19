@@ -22,8 +22,8 @@ void SettingsClass::init() {
 
     general[VERSION] = new Field("version", "version", 1.0f, false);
     general[DEMO] = (new Field("demo", "Demo mode", 0.0f))->setType(CHECKBOX);
-    general[WIFI_SSID] = new Field("ssid", "SSID", "esp32");
-    general[WIFI_PASS] = new Field("pass", "pass", "12345678");
+    general[WIFI_SSID] = new Field("ssid", "SSID", MY_SSID);
+    general[WIFI_PASS] = new Field("pass", "pass", MY_PASS);
     general[WIDTH] = new Field("width", "", 480, false);
     general[HEIGHT] = new Field("height", "", 320, false);
     general[OFFSET_Y] = (new Field("offset_y", "Y offset", -2))->setBounds(-50.0f, 50.0f);
