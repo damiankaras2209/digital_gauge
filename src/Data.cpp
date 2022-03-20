@@ -198,37 +198,33 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 //                    Log.logf(", voltage: %f", voltage);
 //                }
 
-                if(i < SettingsClass::VOLTAGE) {
+                SettingsClass::Field** input = &(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE]);
+                res = input[INPUT_PULLUP_OFFSET]->get<float>() * voltage / (3.3 - voltage) + input[INPUT_SERIES_OFFSET]->get<float>();
+                params->dataInput[i].resistance = res;
 
+                auto up = input[INPUT_PULLUP_OFFSET]->get<double>();
+                auto down = input[INPUT_PULLDOWN_OFFSET]->get<double>();
+                auto series = input[INPUT_SERIES_OFFSET]->get<double>();
 
-                    SettingsClass::Field** input = &(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE]);
-                    res = input[INPUT_PULLUP_OFFSET]->get<float>() * voltage / (3.3 - voltage);
-                    params->dataInput[i].resistance = res;
+                p.DefineVar("up", &up);
+                p.DefineVar("down", &down);
+                p.DefineVar("series", &series);
 
 //                    Log.logf("%s - voltage: %f", Settings.dataSourceString[i].c_str(), voltage);
 //                    Log.logf(", R: %f", res);
 
 
-//                    switch(input[INPUT_TYPE_OFFSET]->get<int>()){
-//                        case Logarithmic: Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(input[INPUT_BETA_OFFSET]->get<float>() * (25.0 + 273.15) / (input[INPUT_BETA_OFFSET]->get<float>() + ((25.0 + 273.15) * log(res / input[INPUT_R25_OFFSET]->get<float>()))) - 273.15); break;
-//                        case Linear:      Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set((res - input[INPUT_RMIN_OFFSET]->get<float>()) / (input[INPUT_RMAX_OFFSET]->get<float>() - input[INPUT_RMIN_OFFSET]->get<float>()) * input[INPUT_MAXVAL_OFFSET]->get<float>()); break;
-//                        case Voltage:     Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->set(voltage); break;
-//                    }
-
-
-
-                    try {
-                        p.SetExpr(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + INPUT_EXPRESSION_OFFSET]->getString());
-                        params->dataInput[i].value = (float)p.Eval();
-                    } catch (mu::Parser::exception_type &e) {
-                        Log.logf("Exception: %s\n", e.GetMsg().c_str());
-                    }
+                try {
+                    p.SetExpr(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + INPUT_EXPRESSION_OFFSET]->getString());
+                    params->dataInput[i].value = (float)p.Eval();
+                } catch (mu::Parser::exception_type &e) {
+                    Log.logf("Exception at %d: %s, \"%s\"\n", i, e.GetMsg().c_str(), e.GetExpr().c_str());
+                }
 
 //                    Log.logf(", value: %f", Settings.general[DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>());
 //
 
-                } else if(i == SettingsClass::VOLTAGE)
-                    params->dataInput[i].value = voltage * 5.7;
+//                    params->dataInput[i].value = voltage * 5.7;
 
 //                Log.logf(", inputValue: %f\n", params->inputValue[i]);
             }
@@ -238,7 +234,7 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
             std::stringstream ss;
             ss << "{";
             int x=0;
-            for(int i=0; i<SettingsClass::VOLTAGE + 1; i++) {
+            for(int i=0; i<=SettingsClass::VOLTAGE + 1; i++) {
                 if(params->dataInput[i].visible) {
                     if (x > 0)
                         ss << ",";
