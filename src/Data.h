@@ -23,6 +23,7 @@
 #include <sstream>
 #include <iomanip>
 #include "muParser.h"
+#include "Date.h"
 
 #define SAMPLES_ADC 32
 #define SAMPLES_CAN 4
@@ -108,6 +109,7 @@ private:
 //        static void IRAM_ATTR touchStart();
 
 //        [[noreturn]] static void test(void *);
+        static void readTime(DataStruct *dataStruct);
         static void canReset(MCP2515* mcp);
         _Noreturn  static void adcLoop(void *);
         _Noreturn  static void canLoop(void *);

@@ -4,7 +4,7 @@
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;
-const int   daylightOffset_sec = 3600;
+const int   daylightOffset_sec = 0;
 
 DataClass Data;
 
@@ -57,8 +57,7 @@ void DataClass::init() {
 
 
     if (status[D_DS3231]) {
-        data.now = rtc.now();
-        data.lastRTC = millis();
+        readTime(&data);
         if(rtc.lostPower()) {
             Log.log("RTC lost power");
             rtc.adjust(DateTime(2222, 2, 22, 22, 22, 22));
@@ -249,15 +248,7 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
 
         if(Data.status[D_DS3231] && millis()-params->lastRTC > 1000) {
-            while(params->i2cBusy)
-                delay(1);
-            params->i2cBusy = true;
-            params->now = params->rtcPtr->now();
-            params->i2cBusy = false;
-//            std::stringstream s;
-//            s << std::setfill('0') << std::setw(2) << ((String)params->now.hour()).c_str() << ":" << std::setw(2) << ((String)params->now.minute()).c_str()  << ":" << std::setw(2) << ((String)params->now.second()).c_str();
-//            Log.logf("RTC: %s\n", s.str().c_str());
-            params->lastRTC = millis();
+            readTime(params);
         }
 
 
@@ -420,6 +411,28 @@ DateTime DataClass::getTime() {
     return data.now;
 }
 
+
+
+void DataClass::readTime(DataClass::DataStruct *params) {
+    while(params->i2cBusy)
+        delay(1);
+    params->i2cBusy = true;
+    auto now = params->rtcPtr->now();
+    params->i2cBusy = false;
+//            std::stringstream s;
+//            s << std::setfill('0') << std::setw(2) << ((String)params->now.hour()).c_str() << ":" << std::setw(2) << ((String)params->now.minute()).c_str()  << ":" << std::setw(2) << ((String)params->now.second()).c_str();
+//            Log.logf("RTC: %s\n", s.str().c_str());
+    params->lastRTC = millis();
+
+    int year = now.year();
+    DateTime begin(year, 3, Date::findLastSunday(year, 3), 2, 0, 0);
+    DateTime end(year, 10, Date::findLastSunday(year, 10), 2, 0, 0);
+    if(now >= begin && now < end)
+        now = now + TimeSpan(3600);
+
+    params->now = now;
+}
+
 int DataClass::adjustTime(DataStruct *params) {
 
     Log.log("Getting time from server");
@@ -430,24 +443,16 @@ int DataClass::adjustTime(DataStruct *params) {
         return D_FAIL;
     }
 
-
-    Log.log("ree");
-
     while(params->i2cBusy)
         delay(1);
     params->i2cBusy = true;
 
-
-    Log.log("reee2");
-
     timeinfo.tm_mon += 1;
     timeinfo.tm_year += 1900;
     params->rtcPtr->adjust(DateTime(timeinfo.tm_year, timeinfo.tm_mon, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec));
-    DateTime now  = params->rtcPtr->now();
-    params->lastRTC = millis();
-    Log.logf("Got: %d.%d.%d %d:%d:%d, adjusted to: %d.%d.%d %d:%d:%d\n",
-             timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec,
-             now.day(), now.month(), now.year(), now.hour(), now.minute(), now.second());
+     Log.logf("Got: %d.%d.%d %d:%d:%d\n",
+             timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+
 
     params->i2cBusy = false;
     return D_SUCCESS;
