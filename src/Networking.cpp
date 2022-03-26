@@ -64,41 +64,40 @@ _Noreturn void NetworkingClass::connectionMaintainer(void * pvParameters) {
 }
 
 String processor(const String& var){
+
     char c[10];
+
+    String str;
 
     if(var == "settings"){
 
-        std::stringstream ss;
-
         for(int i=0; i<GENERAL_SETTINGS_SIZE; i++) {
             if(Settings.general[i]->isConfigurable()) {
-                ss << Settings.general[i]->getHTMLInput(i) << "\n";
+                str += Settings.general[i]->getHTMLInput(i).c_str();
+                str += "\n";
             }
         }
-
-        return String(ss.str().c_str());
+        return str;
 
     } else if(var == "settings_js"){
-
-        std::stringstream ss;
 
         for(int i=0; i<SETTINGS_SIZE; i++) {
             if(Settings.general[i]->isConfigurable()) {
                 switch(Settings.general[i]->getType()) {
                     case SettingsClass::CHECKBOX: {
-                        ss << "data.append('";
-                        ss << i;
-                        ss << "', document.getElementById('";
-                        ss << i;
-                        ss << "').checked ? \"1\" : \"0\");\n";
+                        str += "data.append('";
+                        str += i;
+                        str += "', document.getElementById('";
+                        str += i;
+                        str += "').checked ? \"1\" : \"0\");\n";
                         break;
                     }
                     default: {
-                        ss << "data.append('";
-                        ss << i;
-                        ss << "', document.getElementById('";
-                        ss << i;
-                        ss << "').value);\n";
+                        str += "data.append('";
+                        str += i;
+                        str += "', document.getElementById('";
+                        str += i;
+                        str += "').value);\n";
                         break;
                     }
                 }
@@ -106,78 +105,78 @@ String processor(const String& var){
             }
         }
 
-        return String(ss.str().c_str());
+        return str;
 
     } else if(var == "CONSTS") {
 
-        std::stringstream ss;
+        str += (String)"const MAC = '" + Updater.getMac().c_str() + "';\n";
+        str += (String)"const GENERAL_SETTINGS_SIZE = " + GENERAL_SETTINGS_SIZE + ";\n";
+        str += (String)"const INPUT_SETTINGS_SIZE = " + INPUT_SETTINGS_SIZE + ";\n";
+        str += (String)"const INPUT_SIZE = " + INPUT_SIZE + ";\n";
+        str += (String)"const INPUT_BEGIN_BEGIN = " + INPUT_BEGIN_BEGIN + ";\n";
+        str += (String)"const DATA_SETTINGS_SIZE = " + DATA_SETTINGS_SIZE + ";\n";
+        str += (String)"const DATA_SIZE = " + DATA_SIZE + ";\n";
+        str += (String)"const DATA_BEGIN_BEGIN = " + DATA_BEGIN_BEGIN + ";\n";
+        str += (String)"const SETTINGS_SIZE = " + SETTINGS_SIZE + ";\n";
 
-        ss << "const MAC = '" << Updater.getMac().c_str() << "';\n";
-        ss << "const GENERAL_SETTINGS_SIZE = " << GENERAL_SETTINGS_SIZE << ";\n";
-        ss << "const INPUT_SETTINGS_SIZE = " << INPUT_SETTINGS_SIZE << ";\n";
-        ss << "const INPUT_SIZE = " << INPUT_SIZE << ";\n";
-        ss << "const INPUT_BEGIN_BEGIN = " << INPUT_BEGIN_BEGIN << ";\n";
-        ss << "const DATA_SETTINGS_SIZE = " << DATA_SETTINGS_SIZE << ";\n";
-        ss << "const DATA_SIZE = " << DATA_SIZE << ";\n";
-        ss << "const DATA_BEGIN_BEGIN = " << DATA_BEGIN_BEGIN << ";\n";
-        ss << "const SETTINGS_SIZE = " << SETTINGS_SIZE << ";\n";
-
-        return String(ss.str().c_str());
+        return str;
 
     } else if(var == "input_table") {
 
-        std::stringstream ss;
-        ss << "<table>\n";
+        str += "<table>\n";
 
         for(int i=0; i<INPUT_SIZE; i++) {
             if(i<4)
-                ss << "<tr class='input.ADS1115_" << i << "'><td>ADS1115_" << i << "</td>";
+                str += (String) "<tr clastr='input.ADS1115_" + i + "'><td>ADS1115_" + i + "</td>";
             else
-                ss << "<tr class='input.ADC" << i << "'><td>ADC" << i << "</td>";
+                str += (String) "<tr clastr='input.ADC" + i + "'><td>ADC" + i + "</td>";
 
-            ss << "<td>Preset <select id='input_" << i << "_preset' onchange='return preset(" << i <<");' type='checkbox' ><option value='-1'>Puste</option><option value='0'>Ciśń. oleju</option><option value='1'>Temp. oleju</option></section></td>";
+            str += (String) "<td>Preset <select id='input_" + i + "_preset' onchange='return preset(" + i +");' type='checkbox' ><option value='-1'>Puste</option><option value='0'>Ciśń. oleju</option><option value='1'>Temp. oleju</option></section></td>";
 
             for(int j=0; j<INPUT_SETTINGS_SIZE; j++) {
                 int ind = INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + j;
                 if(Settings.general[ind]->isConfigurable())
-                    ss << "<td>" << Settings.general[ind]->getHTMLInput(ind) << "</td>";
+                    str += (String) "<td>" + Settings.general[ind]->getHTMLInput(ind).c_str() + "</td>";
             }
 
-            ss << "<td id='voltage_" << i << "'>Voltage: </td>";
-            ss << "<td id='resistance_" << i << "'>Resistance: </td>";
-            ss << "<td id='value_" << i << "'>Value: </td>";
+            str +=  (String)"<td id='voltage_" + i + "'>Voltage: </td>";
+            str +=  (String) + "<td id='resistance_" + i + "'>Resistance: </td>";
+            str +=  (String) + "<td id='value_" + i + "'>Value: </td>";
 
-            ss << "</tr>\n";
+            str += "</tr>\n";
         }
-        ss << "</table>\n";
+        str += "</table>\n";
 
-        return String(ss.str().c_str());
+        return str;
 
     } else if(var == "data_list") {
 
-        std::stringstream ss;
-
-        ss << "<table>\n<tr>";
-        for(int i=0; i<DATA_SIZE; i++)
-            ss << "<td>" << Settings.dataSourceString[i].c_str() << "</td>";
-        ss << "</tr>\n<tr>";
+        str += "<table>\n<tr>";
+        for(int i=0; i<DATA_SIZE; i++) {
+            str += "<td>";
+            str += Settings.dataSourceString[i].c_str();
+            str += "</td>";
+        }
+        str += "</tr>\n<tr>";
 
         for(int i=0; i<DATA_SETTINGS_SIZE; i++) {
-            ss << "<tr>";
+            str += "<tr>";
             for(int j=0; j<DATA_SIZE; j++) {
                 int ind = DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * j + i;
-                if(Settings.general[ind]->isConfigurable())
-                    ss << "<td>" << Settings.general[ind]->getHTMLInput(ind) << "</td>";
+                if(Settings.general[ind]->isConfigurable()) {
+                    str += "<td>";
+                    str += Settings.general[ind]->getHTMLInput(ind).c_str();
+                    str += "</td>";
+                }
             }
-            ss << "</tr>\n";
+            str += "</tr>\n";
         }
 
-        ss << "</table>";
+        str += "</table>";
 
-        return String(ss.str().c_str());
+        return str;
     }
 
-    return String("2137");
 }
 
 void NetworkingClass::serverSetup() {
@@ -201,18 +200,18 @@ void NetworkingClass::serverSetupTask(void * pvParameters) {
 
     server.onNotFound([](AsyncWebServerRequest *request) {
         if (request->method() == HTTP_OPTIONS)
-            request->send(200);
+            request->send(HTTP_CODE_OK);
         else
-            request->send(404);
+            request->send(HTTP_CODE_NOT_FOUND);
     });
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(SPIFFS, "/settings.html", String(), false, processor);
+        request->send(SPIFFS, "/settings.html", "text/html", false, processor);
         Log.log("Request handled");
     });
 
     server.on("/log", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(SPIFFS, "/log.html", String(), false, nullptr);
+        request->send(SPIFFS, "/log.html", "text/html", false, nullptr);
     });
 
     server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
