@@ -40,6 +40,8 @@ void Menu::clean() {
 void Menu::resetPosition() {
     prevScrollY = -1;
     scrollY = 0;
+    for(int i=0; i<entries.size(); i++)
+        entries.at(i)->setPos(_x, _y + scrollY + i * entries.at(i)->getHeight());
 }
 
 void Menu::scroll(int y) {
