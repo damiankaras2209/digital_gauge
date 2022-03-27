@@ -157,9 +157,6 @@ void loop() {
 
     t15 = millis();
 
-
-    Log.logf("total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
-
     Screen.tick();
 
     std::stringstream ss;
