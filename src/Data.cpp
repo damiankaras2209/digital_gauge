@@ -229,21 +229,23 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
             }
         }
 
-        if(millis() - t18 > 0 && Data._countClients() > 0) {
-            std::stringstream ss;
-            ss << "{";
-            int x=0;
-            for(int i=0; i<=SettingsClass::VOLTAGE + 1; i++) {
-                if(params->dataInput[i].visible) {
-                    if (x > 0)
-                        ss << ",";
-                    ss << "\"" << i << "\":" << params->dataInput[i].toString();
-                    x++;
+        if(Data._countClients != nullptr && Data._sendEvent != nullptr) {
+            if(millis() - t18 > 0 && Data._countClients() > 0) {
+                std::stringstream ss;
+                ss << "{";
+                int x=0;
+                for(int i=0; i<=SettingsClass::VOLTAGE + 1; i++) {
+                    if(params->dataInput[i].visible) {
+                        if (x > 0)
+                            ss << ",";
+                        ss << "\"" << i << "\":" << params->dataInput[i].toString();
+                        x++;
+                    }
                 }
+                ss << "}";
+                Data._sendEvent("data", ss.str());
+                t18 = millis();
             }
-            ss << "}";
-            Data._sendEvent("data", ss.str());
-            t18 = millis();
         }
 
 

@@ -98,8 +98,8 @@ public:
 
         typedef std::function<void(const char *, std::string )> SendEvent;
         typedef std::function<size_t()> CountClients;
-        SendEvent _sendEvent;
-        CountClients _countClients;
+        SendEvent _sendEvent = nullptr;
+        CountClients _countClients = nullptr;
         void setEvent(SendEvent e);
         void setCountClients(CountClients e);
 

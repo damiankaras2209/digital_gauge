@@ -11,6 +11,7 @@
 
 #include "Settings.h"
 #include "Data.h"
+#include "Networking.h"
 
 #include "Wifi.h"
 #include "RTClib.h"
@@ -51,6 +52,7 @@ class ScreenClass {
         volatile View previousView = INIT;
         volatile View currentView = INIT;
         uint8_t _brightness;
+        volatile bool reset = false;
 
 
 		std::vector<Clickable*> clickables;

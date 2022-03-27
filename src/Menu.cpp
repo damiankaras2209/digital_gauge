@@ -5,9 +5,10 @@
 
 //Menu::Menu(int x, int y, int w, int h) : _x(x), _y(y), _w(w), _h(h) {}
 
-void Menu::init(TFT_eSPI *t, Lock *l) {
+void Menu::init(TFT_eSPI *t, Lock *l, bool* b) {
     tft = t;
     lock = l;
+    serverOn = b;
     gen = Settings.general;
     menuSprite = new TFT_eSprite(tft);
     _w = gen[PROMPT_WIDTH]->get<int>();
@@ -64,12 +65,18 @@ void Menu::draw() {
 //        Log.logf("posY: %d, prevPosY: %d\n", scrollY, prevScrollY);
 //        Log.logf("spriteW: %d, spriteH: %d, entryHeight: %d, entries.size(): %d, gen[WIDTH]->get<int>()/2: %d\n", _w, _h, entryHeight, entries.size(), gen[WIDTH]->get<int>() / 2);
 
-
-        menuSprite->setColorDepth(1);
-        menuSprite->setBitmapColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
+        if (*serverOn) {
+            menuSprite->setColorDepth(1);
+            menuSprite->setBitmapColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
+        } else {
+            menuSprite->setColorDepth(8);
+        }
         menuSprite->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
         menuSprite->setTextDatum(CC_DATUM);
-        menuSprite->createSprite(_w, _h, 1);
+        while(!menuSprite->createSprite(_w, _h)) {
+            Log.log("Unable to create menu sprite");
+            delay(5);
+        }
         menuSprite->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
 
         for(int i=0; i<entries.size(); i++) {

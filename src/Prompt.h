@@ -13,6 +13,7 @@ class Prompt : public Clickable {
     TFT_eSPI *tft;
     SettingsClass::Field **gen;
     Lock *lock;
+    bool* serverOn;
 
     String _text;
     int _lines = 0;
@@ -24,7 +25,7 @@ class Prompt : public Clickable {
 
 public:
 
-    void init(TFT_eSPI *t, Lock *l);
+    void init(TFT_eSPI *t, Lock *l, bool* serverOn);
     void setText(String text);
     void appendText(String text);
     void setLineSpacing(int spacing);

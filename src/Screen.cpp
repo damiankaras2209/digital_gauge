@@ -56,14 +56,14 @@ void ScreenClass::init(SettingsClass::DataSource *selected) {
 
 //    clickables.insert(gauges->getClickables()->end(), gauges->getClickables()->begin(), gauges->getClickables()->end());
     prompt = new Prompt;
-    prompt->init(tft, lock);
+    prompt->init(tft, lock, Networking.getServerOnPointer());
     prompt->setOnClick([this]() {
         if(prompt->isDismissible())
             switchView(previousView);
     });
     clickables.push_back(prompt);
     menu = new Menu();
-    menu->init(tft, lock);
+    menu->init(tft, lock, Networking.getServerOnPointer());
     std::vector<Menu::Entry*> entries;
     entries.push_back(new Menu::Entry("BACK", [this]() {
         Log.logf("Fired entry %d\n", 1);
@@ -143,11 +143,7 @@ void ScreenClass::init(SettingsClass::DataSource *selected) {
 }
 
 void ScreenClass::reloadSettings() {
-    lock->lock();
-    tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
-    gauges->reloadSettings();
-    lock->release();
-    switchView(currentView);
+    reset = true;
 }
 
 
@@ -171,25 +167,21 @@ void ScreenClass::switchView(View view) {
     switch(currentView) {
         case INIT: break;
         case GAUGES:  {
-            tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
-            gauges->redraw[0] = true;
-            gauges->redraw[1] = true;
+            for(auto & r : gauges->redraw)
+                r = true;
             for(auto v : *gauges->getClickables()) {
                 v->setVisibility(true);
             }
-            gauges->updateText(true, 0);
             break;
         }
         case CLOCK:  {
             break;
         }
         case PROMPT:  {
-            tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
             prompt->setVisibility(true);
             break;
         }
         case MENU:  {
-            tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
             menu->prepare();
             menu->resetPosition();
             for(auto clickable : menu->entries)
@@ -197,6 +189,8 @@ void ScreenClass::switchView(View view) {
             break;
         }
     }
+
+    tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
 
     Log.logf("Current view: %d\n", currentView);
     lock->release();
@@ -206,10 +200,15 @@ unsigned long t, t1;
 void ScreenClass::tick() {
     lock->lock();
     t = millis();
+    if(reset) {
+        tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
+        gauges->reloadSettings();
+        reset = false;
+    }
     switch(currentView) {
         case GAUGES:  {
             t1 = millis();
-            gauges->updateText(false, 0);
+            gauges->updateText();
 #ifdef LOG_DETAILED_FRAMETIME
             Log.logf(" mid: %lu\n", millis()-t1);
             t1 = millis();

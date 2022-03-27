@@ -36,6 +36,7 @@ class Menu {
         TFT_eSPI *tft;
         SettingsClass::Field **gen;
         Lock *lock;
+        bool* serverOn;
 
         int16_t _x = 0, _y = 0, _w = 0, _h = 0;
         int16_t prevScrollY = -1;
@@ -46,7 +47,7 @@ class Menu {
 
     public:
         std::vector<Entry*> entries;
-        void init(TFT_eSPI *t, Lock *l);
+        void init(TFT_eSPI *t, Lock *l, bool* serverOn);
         void setEntries(std::vector<Entry*> entries);
         void prepare();
         void clean();

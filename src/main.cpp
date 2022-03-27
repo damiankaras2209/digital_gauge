@@ -57,12 +57,6 @@ void setup(void) {
         Log.log("SPIFFS initialisation failed!");
     }
 
-    Serial.println("ESP32 reloadSettings reason: ");
-    print_reset_reason(esp_reset_reason());
-
-//    if(esp_reset_reason() != ESP_RST_POWERON && esp_reset_reason() != ESP_RST_UNKNOWN && esp_reset_reason() != ESP_RST_SW)
-//        Settings.clear();
-
     Updater.init();
 
     Settings.init();
@@ -120,18 +114,6 @@ void setup(void) {
         });
     } else  {
 
-        WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
-            Log.logf("Connected to %s, IP: %s\n", WiFi.SSID().c_str(),IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
-
-            if (!MDNS.begin(HOSTNAME)) { //http://esp32.local
-                Log.log("Error setting up MDNS responder!");
-            }
-            Log.logf("mDNS responder started, hostname: http://%s.local\n", HOSTNAME);
-
-            Networking.sendInfo();
-            Networking.serverSetup();
-            }, SYSTEM_EVENT_STA_GOT_IP);
-
          Networking.connectWiFi((char *)Settings.general[WIFI_SSID]->getString().c_str(), (char *)Settings.general[WIFI_PASS]->getString().c_str());
 
          Data.POST();
@@ -174,6 +156,9 @@ void loop() {
     Updater.loop();
 
     t15 = millis();
+
+
+    Log.logf("total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
 
     Screen.tick();
 

@@ -432,7 +432,10 @@ void Gauges::updateNeedle(int side) {
 #endif
 
     needleUpdate->setColorDepth(8);
-    needleUpdate->createSprite(spriteW, spriteH);
+    while(!needleUpdate->createSprite(spriteW, spriteH)) {
+        delay(5);
+        Log.logf("Unable to create needle sprite; total: %d, block: %d, required: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), spriteW*spriteH*8);
+    }
     needleUpdate->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
 
 #ifdef LOG_DETAILED_FRAMETIME
@@ -519,7 +522,7 @@ void Gauges::updateNeedle(int side) {
 int pMinute = -1, pDay = -1;
 
 ulong t5;
-void Gauges::updateText(boolean force, int fps) {
+void Gauges::updateText() {
     t5 = millis();
     DateTime now = Data.getTime();
 
@@ -531,7 +534,7 @@ void Gauges::updateText(boolean force, int fps) {
     tft->setTextDatum(CC_DATUM);
     //	tft->setTextPadding(24);
 
-    if(now.minute() != pMinute || force) {
+    if(now.minute() != pMinute || redraw[TIME]) {
         int min = now.minute();
         //		tft->loadFont("GaugeHeavy"+(String)vis->timeSize);
         tft->loadFont("GaugeHeavyTime36", true);
@@ -546,7 +549,7 @@ void Gauges::updateText(boolean force, int fps) {
                 gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[TIME_POS_Y]->get<int>());
         pMinute = min;
     }
-    if(now.day() != pDay || force) {
+    if(now.day() != pDay || redraw[TIME]) {
         std::stringstream ss2;
         ss2 << std::setfill('0') << std::setw(2) << ((String)now.day()).c_str() << "." << std::setw(2) << ((String)now.month()).c_str()  << "." << std::setw(2) << ((String)now.year()).substring(2).c_str();
         //		tft->loadFont("GaugeHeavy"+(String)vis->dateSize);
@@ -560,6 +563,8 @@ void Gauges::updateText(boolean force, int fps) {
                 gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[DATE_POS_Y]->get<int>());
         pDay = now.day();
     }
+
+    redraw[TIME] = false;
 
 #ifdef LOG_DETAILED_FRAMETIME
     Log.logf("time and date: %lu", millis()-t5);

@@ -4,12 +4,12 @@
 
 #include "Prompt.h"
 
-void Prompt::init(TFT_eSPI *t, Lock *l) {
+void Prompt::init(TFT_eSPI *t, Lock *l, bool* b) {
     tft = t;
     lock = l;
+    serverOn = b;
     gen = Settings.general;
     sprite = new TFT_eSprite(tft);
-    sprite->setColorDepth(8);
     sprite->setTextDatum(CC_DATUM);
     sprite->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
     _w = gen[PROMPT_WIDTH]->get<int>();
@@ -58,8 +58,17 @@ void Prompt:: draw() {
         std::size_t nextLine = 0;
         _lines = 1;
 
+        if (*serverOn) {
+            sprite->setColorDepth(1);
+            sprite->setBitmapColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
+        } else {
+            sprite->setColorDepth(8);
+        }
 
-        sprite->createSprite(_w, _h, 1);
+        while(!sprite->createSprite(_w, _h)) {
+            Log.log("Unable to create prompt sprite");
+            delay(5);
+        }
         sprite->drawRect(0, 0, _w, _h, gen[FONT_COLOR]->get<int>());
         while(nextLine != std::string::npos) {
 
