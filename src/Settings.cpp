@@ -66,8 +66,8 @@ void SettingsClass::init() {
 
     for(int i=0; i<INPUT_SIZE; i++) {
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_PULLUP_OFFSET] = (new Field("pullup_" + (String)i + "_" + INPUT_PULLUP_OFFSET, "Pull-up R", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_PULLDOWN_OFFSET] = (new Field("pulldown_" + (String)i + "_" + INPUT_PULLDOWN_OFFSET, "Pull-down R", 0.0f))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_SERIES_OFFSET] = (new Field("input_" + (String)i + "_" + INPUT_SERIES_OFFSET, "Input R", 0.0f))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_PULLDOWN_OFFSET] = (new Field("pulldown_" + (String)i + "_" + INPUT_PULLDOWN_OFFSET, "Pull-down R", 0.0f, false))->setStep(0.1f);
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_SERIES_OFFSET] = (new Field("input_" + (String)i + "_" + INPUT_SERIES_OFFSET, "Input R", 0.0f, false))->setStep(0.1f);
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_EXPRESSION_OFFSET] = new Field("exp_" + (String)i + "_" + INPUT_EXPRESSION_OFFSET, "Expression", "v");
     }
 
@@ -185,10 +185,10 @@ S_STATUS SettingsClass::load() {
     return status;
 }
 
-void SettingsClass::save(bool waitForCompletion) {
+S_STATUS SettingsClass::save(bool waitForCompletion) {
     TaskHandle_t handle;
-    bool finished = false;
-    if(!xTaskCreate([](void * finished) {
+    S_STATUS status = S_PENDING;
+    if(!xTaskCreate([](void * status) {
             Log.log("Saving settings");
             if(SPIFFS.exists("/settings.json"))
                 SPIFFS.remove("/settings.json");
@@ -218,20 +218,25 @@ void SettingsClass::save(bool waitForCompletion) {
 
             if (serializeJson(doc, file) == 0) {
                 Log.log("Failed to write to file");
+                *(S_STATUS*)status = S_FAIL;
+            } else {
+                Log.log("Settings saved");
+                *(S_STATUS*)status = S_SUCCESS;
             }
             file.close();
-            Log.log("Settings saved");
-            *(bool*)finished = true;
             vTaskDelete(nullptr);
         },
         "saveSettings",
         8*1024,
-        &finished,
+        &status,
         1,
         &handle))
         Log.log("Failed to start saveSettings task");
-    while(!finished && waitForCompletion)
-        delay(1);
+
+    if(waitForCompletion)
+        while(status == S_PENDING)
+            delay(1);
+    return status;
 }
 
 void SettingsClass::clear() {

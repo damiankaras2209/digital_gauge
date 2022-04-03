@@ -12,7 +12,7 @@
 #include "Updater.h"
 
 enum S_STATUS {
-    S_SUCCESS, S_FAIL, S_MISSING
+    S_PENDING, S_SUCCESS, S_FAIL, S_MISSING
 };
 
 enum Field : uint16_t{
@@ -22,6 +22,7 @@ enum Field : uint16_t{
     DEMO,
     WIFI_SSID,
     WIFI_PASS,
+
     WIDTH,
     HEIGHT,
     OFFSET_Y,
@@ -86,6 +87,9 @@ enum Field : uint16_t{
 };
 
 #define GENERAL_SETTINGS_SIZE INPUT_BEGIN_BEGIN
+
+#define VISUAL_SETTINGS_START WIDTH
+#define VISUAL_SETTINGS_END (INPUT_BEGIN_BEGIN - 1)
 
 #define INPUT_PULLUP_OFFSET 0
 #define INPUT_PULLDOWN_OFFSET 1
@@ -283,8 +287,7 @@ class SettingsClass {
                             ss << " step='" << _step << "'";
                             ss << " min='" << _min << "' max='" << _max << "'";
                             ss << " id='" << id << "'";
-                            ss << " oninput='this.nextElementSibling.value = this.value'";
-                            ss << " onchange='send()'>";
+                            ss << " oninput='this.nextElementSibling.value = this.value'>";
                             ss << "<output>" << _valueFloat << "</output>";
                         } else {
                             ss << " value='" << _valueFloat <<"'";
@@ -315,8 +318,6 @@ class SettingsClass {
                     case CHECKBOX: {
                         ss << " type='checkbox' id='" << id << "'";
                         ss << (_valueFloat == 1 ? " checked" : "");
-                        if(id < GENERAL_SETTINGS_SIZE)
-                            ss << " onchange='send()'";
                         ss << ">";
                         break;
                     }
@@ -341,7 +342,7 @@ class SettingsClass {
 		void init();
 		void loadDefault();
 		S_STATUS load();
-		void save(bool waitForCompletion = true);
+        S_STATUS save(bool waitForCompletion = true);
 		void clear();
 		void loadSelected(DataSource *selected);
 		void saveSelected(DataSource *selected);

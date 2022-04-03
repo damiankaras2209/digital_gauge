@@ -98,7 +98,6 @@ void NetworkingClass::serverSetup() {
 
     server->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(SPIFFS, "/settings.html", "text/html", false, processor);
-        Log.log("Request handled");
     });
 
     server->on("/log", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -111,43 +110,48 @@ void NetworkingClass::serverSetup() {
 
     server->on("/settingsSet", HTTP_POST, [](AsyncWebServerRequest *request){
         int params = request->params();
+        bool resetScreen = false;
+        Log.logf("%d, %d\n", VISUAL_SETTINGS_START, VISUAL_SETTINGS_END);
         for(int i=0;i<params;i++){
             AsyncWebParameter* p = request->getParam(i);
             if(p->isPost()){
-//                Log.logf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
 
-                for(int i=0; i<SETTINGS_SIZE; i++) {
-                    if((String)i == p->name().c_str()) {
-                        switch (Settings.general[i]->getType()) {
-                            case SettingsClass::Type::STRING: {
-                                Settings.general[i]->set(p->value().c_str()); break;
-                            }
-                            case SettingsClass::Type::COLOR: {
-                                String str = p->value().substring(1);
+                int ind = (int)strtof(p->name().c_str(), nullptr);
 
-                                char *p;
-                                long color888 = std::strtol(str.c_str(), &p, 16);
-                                uint16_t r = (color888 >> 8) & 0xF800;
-                                uint16_t g = (color888 >> 5) & 0x07E0;
-                                uint16_t b = (color888 >> 3) & 0x001F;
+                Log.logf("POST[%d, %s]: %s\n", ind, Settings.general[ind]->getId().c_str(), p->value().c_str());
 
-                                Settings.general[i]->set((r | g | b));
-                                break;
-                            }
-                            default: {
-                                Settings.general[i]->set(strtof(p->value().c_str(), nullptr)); break;
-                            }
-                        }
+                if(ind >= VISUAL_SETTINGS_START && ind <= VISUAL_SETTINGS_END)
+                    resetScreen = true;
+
+                switch (Settings.general[ind]->getType()) {
+                    case SettingsClass::Type::STRING: {
+                        Settings.general[ind]->set(p->value().c_str()); break;
                     }
+                    case SettingsClass::Type::COLOR: {
+                        String str = p->value().substring(1);
 
+                        char *p;
+                        long color888 = std::strtol(str.c_str(), &p, 16);
+                        uint16_t r = (color888 >> 8) & 0xF800;
+                        uint16_t g = (color888 >> 5) & 0x07E0;
+                        uint16_t b = (color888 >> 3) & 0x001F;
+
+                        Settings.general[ind]->set((r | g | b));
+                        break;
+                    }
+                    default: {
+                        Settings.general[ind]->set(strtof(p->value().c_str(), nullptr)); break;
+                    }
                 }
-
             }
         }
 
-        Settings.save();
-        Screen.reloadSettings();
-        request->send(HTTP_CODE_OK);
+        if(resetScreen) {
+            Log.log("Resetting screen");
+            Screen.reloadSettings();
+        }
+        S_STATUS status = Settings.save();
+        request->send(HTTP_CODE_OK, "plain/text", status == S_SUCCESS ? "success" : "fail");
     });
 
     server->on("/time", HTTP_POST, [](AsyncWebServerRequest *request){
@@ -155,10 +159,32 @@ void NetworkingClass::serverSetup() {
         request->send(HTTP_CODE_OK);
     });
 
-    server->on("/reset", HTTP_POST, [](AsyncWebServerRequest *request){
+    server->on("/reset_all", HTTP_POST, [](AsyncWebServerRequest *request){
         Settings.loadDefault();
-        Settings.save();
         Screen.reloadSettings();
+        Settings.save();
+        request->send(HTTP_CODE_OK);
+    });
+
+    server->on("/reset_visual", HTTP_POST, [](AsyncWebServerRequest *request){
+        for(int i=VISUAL_SETTINGS_START; i<=VISUAL_SETTINGS_END; i++)
+            Settings.general[i]->setDefault();
+        Screen.reloadSettings();
+        Settings.save();
+        request->send(HTTP_CODE_OK);
+    });
+
+    server->on("/reset_input", HTTP_POST, [](AsyncWebServerRequest *request){
+        for(int i=INPUT_BEGIN_BEGIN; i<=INPUT_END_END; i++)
+            Settings.general[i]->setDefault();
+        Settings.save();
+        request->send(HTTP_CODE_OK);
+    });
+
+    server->on("/reset_data", HTTP_POST, [](AsyncWebServerRequest *request){
+        for(int i=DATA_BEGIN_BEGIN; i<=DATA_END_END; i++)
+            Settings.general[i]->setDefault();
+        Settings.save();
         request->send(HTTP_CODE_OK);
     });
 
@@ -190,9 +216,9 @@ String NetworkingClass::processor(const String& var) {
 
     String str;
 
-    if(var == "settings"){
+    if(var == "general"){
 
-        for(int i=0; i<GENERAL_SETTINGS_SIZE; i++) {
+        for(int i=0; i<VISUAL_SETTINGS_START; i++) {
             if(Settings.general[i]->isConfigurable()) {
                 str += Settings.general[i]->getHTMLInput(i).c_str();
                 str += "\n";
@@ -200,38 +226,22 @@ String NetworkingClass::processor(const String& var) {
         }
         return str;
 
-    } else if(var == "settings_js"){
+    } else if(var == "visual"){
 
-        for(int i=0; i<SETTINGS_SIZE; i++) {
+        for(int i=VISUAL_SETTINGS_START; i<GENERAL_SETTINGS_SIZE; i++) {
             if(Settings.general[i]->isConfigurable()) {
-                switch(Settings.general[i]->getType()) {
-                    case SettingsClass::CHECKBOX: {
-                        str += "data.append('";
-                        str += i;
-                        str += "', document.getElementById('";
-                        str += i;
-                        str += "').checked ? \"1\" : \"0\");\n";
-                        break;
-                    }
-                    default: {
-                        str += "data.append('";
-                        str += i;
-                        str += "', document.getElementById('";
-                        str += i;
-                        str += "').value);\n";
-                        break;
-                    }
-                }
-
+                str += Settings.general[i]->getHTMLInput(i).c_str();
+                str += "\n";
             }
         }
-
         return str;
 
     } else if(var == "CONSTS") {
 
         str += (String)"const MAC = '" + Updater.getMac().c_str() + "';\n";
         str += (String)"const GENERAL_SETTINGS_SIZE = " + GENERAL_SETTINGS_SIZE + ";\n";
+        str += (String)"const VISUAL_SETTINGS_START = " + VISUAL_SETTINGS_START + ";\n";
+        str += (String)"const VISUAL_SETTINGS_END = " + VISUAL_SETTINGS_END + ";\n";
         str += (String)"const INPUT_SETTINGS_SIZE = " + INPUT_SETTINGS_SIZE + ";\n";
         str += (String)"const INPUT_SIZE = " + INPUT_SIZE + ";\n";
         str += (String)"const INPUT_BEGIN_BEGIN = " + INPUT_BEGIN_BEGIN + ";\n";
@@ -239,6 +249,14 @@ String NetworkingClass::processor(const String& var) {
         str += (String)"const DATA_SIZE = " + DATA_SIZE + ";\n";
         str += (String)"const DATA_BEGIN_BEGIN = " + DATA_BEGIN_BEGIN + ";\n";
         str += (String)"const SETTINGS_SIZE = " + SETTINGS_SIZE + ";\n";
+
+        str += "let configurable = [";
+
+        for(int i=0; i<SETTINGS_SIZE; i++)
+            str += (String) (Settings.general[i]->isConfigurable() ? "1," : "0,");
+
+        str.remove(str.length()-1);
+        str += "];";
 
         return str;
 
@@ -252,7 +270,7 @@ String NetworkingClass::processor(const String& var) {
             else
                 str += (String) "<tr clastr='input.ADC" + i + "'><td>ADC" + i + "</td>";
 
-            str += (String) "<td>Preset <select id='input_" + i + "_preset' onchange='return preset(" + i +");' type='checkbox' ><option value='-1'>Puste</option><option value='0'>Ciśń. oleju</option><option value='1'>Temp. oleju</option></section></td>";
+            str += (String) "<td>Preset <select id='input_" + i + "_preset' onchange='return preset(" + i +");' type='checkbox' ><option value='0'>Puste</option><option value='1'>Ciśń. oleju</option><option value='2'>Temp. oleju</option></section></td>";
 
             for(int j=0; j<INPUT_SETTINGS_SIZE; j++) {
                 int ind = INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + j;

@@ -8,6 +8,22 @@
 
             %CONSTS%
 
+            let hasChanged = Array(SETTINGS_SIZE).fill(false);
+
+            window.onload = function init() {
+                for(let i=0; i<SETTINGS_SIZE; i++) {
+                    if(configurable[i] == 1) {
+                        document.getElementById(i).addEventListener("change", () => {hasChanged[i] = true;});
+                    }
+                }
+                for(let i=0; i<SETTINGS_SIZE; i++) {
+                    if(configurable[i] == 1) {
+                        document.getElementById(i).addEventListener("change", () => {send();});
+                    }
+                }
+            }
+
+
             let source;
 
             function setEventSource() {
@@ -48,25 +64,54 @@
 
             setEventSource();
 
+        let responseTime = 0;
 
-        function send(){
+        function send() {
             source.close();
-          let data = new FormData();
+            let data = new FormData();
 
-%settings_js%
+            for(let i=0; i<SETTINGS_SIZE; i++) {
+                if(hasChanged[i] && configurable[i]) {
+                    let type = document.getElementById(i).getAttribute("type");
+                    switch (type) {
+                        case "checkbox" : data.append(i, document.getElementById(i).checked ? 1 : 0);break;
+                        default : data.append(i, document.getElementById(i).value);
+                    }
+                }
+            }
 
-          let xhr = new XMLHttpRequest();
-          xhr.open('POST', 'settingsSet');
-          xhr.onload = function(){ console.log(this.response); };
-          xhr.send(data);
-          setEventSource();
-          return false;
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', 'settingsSet');
+            xhr.onload = function() {
+                if(this.response == "success") {
+                    hasChanged.fill(false);
+                    document.getElementById("response").style.color = "green";
+                    document.getElementById("response").innerHTML = "Saved successfully";
+                } else {
+                    document.getElementById("response").style.color = "red";
+                    document.getElementById("response").innerHTML = "Saving failed: " + this.status + " " + this.response;
+                }
+                console.log(this.status);
+                responseTime = Date.now();
+                setTimeout(function() {
+                        if(Date.now() - responseTime >= 2000)
+                            document.getElementById("response").innerHTML = "";
+                    }, 2000);
+            };
+            xhr.send(data);
+            setEventSource();
+            return false;
         }
 
-        function post(s) {
+        function post(s, reload = false) {
             source.close();
             let xhr = new XMLHttpRequest();
             xhr.open('POST', s);
+            if(reload)
+                xhr.onload = function(){
+                    console.log(this.status);
+                    window.location.reload(true);
+                };
             xhr.send(null);
             setEventSource();
         }
@@ -82,76 +127,66 @@
                 const json = JSON.parse(this.response);
                 for(let i=0; i<7; i++) {
                     if(json.hasOwnProperty(i)) {
-                        document.getElementById(INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE*i + 0).value = json[i][0];
-                        document.getElementById(INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE*i + 1).value = json[i][1];
-                        document.getElementById(INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE*i + 2).value = json[i][2];
+                        let offset = INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE*i;
+                        hasChanged.fill(true, offset, offset + 2);
+                        document.getElementById(offset + 0).value = json[i][0];
+                        // document.getElementById(offset + 1).value = json[i][1];
+                        // document.getElementById(offset + 2).value = json[i][2];
                     }
                 }
+                send();
                 // window.location.reload(true);
             };
             xhr.send(data);
         }
 
-        function resetSettings() {
-            source.close();
-            let xhr = new XMLHttpRequest();
-            xhr.open('POST', "reset");
-            xhr.onload = function(){
-                console.log(this.status);
-                window.location.reload(true);
-            };
-            xhr.send(null);
-        }
-
         function preset(i) {
             let preset = parseInt(document.getElementById('input_' + i + '_preset').value);
 
-            switch (preset) {
-                case -1:
-                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 0).value = 0;
-                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 1).value = 0;
-                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 2).value = 0;
-                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 3).value = "v";
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 1).value = "";
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 2).value = "u";
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 3).value = 0;
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 4).value = 0;
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 5).value = 0;
-                    break;
-                case 0:
-                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 3).value = "(r-3)/(160-3)*10";
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 1).value = "Oil press";
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 2).value = "bar";
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 3).value = 0;
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 4).value = 12;
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 5).value = 1;
-                    break;
-                case 1:
-                    document.getElementById(INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + 3).value = "3800*298.15/(3800+(298.15)*log(r/58000))-273.15";
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 1).value = "Oil temp";
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 2).value = "°C";
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 3).value = 30;
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 4).value = 150;
-                    document.getElementById(DATA_BEGIN_BEGIN  + i * DATA_SETTINGS_SIZE  + 5).value = 1;
-                    break;
-            }
-        }
+            let input = INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE;
+            let data = DATA_BEGIN_BEGIN + i * DATA_SETTINGS_SIZE;
 
+            let presets = Array(3);
+            presets[0] = [0, 0, 0, "v",                                                         false, "", "u", 0 ,0 ,0]; //emptyy
+            presets[1] = [null, null, null, "(r-3)/(160-3)*10",                                 true, "Oil press", "bar", 0 ,12 ,1]; //oil pressure
+            presets[2] = [null, null, null, "3800*298.15/(3800+(298.15)*log(r/58000))-273.15",  true, "Oil temp", "°C", 30 ,150 ,1]; //oil pressure
+
+            for(let i=0; i<INPUT_SETTINGS_SIZE + DATA_SETTINGS_SIZE; i++) {
+                if(presets[preset][i] != null) {
+                    if(i<INPUT_SETTINGS_SIZE)
+                        document.getElementById(input + i).value = presets[preset][i];
+                    else if(i==INPUT_SETTINGS_SIZE)
+                        document.getElementById(data + i - INPUT_SETTINGS_SIZE).checked = presets[preset][i];
+                    else
+                        document.getElementById(data + i - INPUT_SETTINGS_SIZE).value = presets[preset][i];
+                }
+            }
+
+            hasChanged.fill(true, input, input + INPUT_SETTINGS_SIZE);
+            hasChanged.fill(true, data, data + DATA_SETTINGS_SIZE);
+            send();
+        }
 
         </script>
     </head>
     <body>
         <form onsubmit='return send()'>
-            <h1>Ustawienia</h1><p id='frametime'>frametime: </p>
-            <button type="button" onclick='resetSettings();'>Przywróć domyślne</button>
-            <button type="button" onclick='post("time");'>Wymuś synchrunizację czasu</button>
-            %settings%
+            <p style="float:left" id='frametime'>frametime: </p>
+            <p style="float:left" id='response'></p>
+            <p style="clear:both"></p>
+            <button type="button" onclick='post("reset_all", true);'>Przywróć domyślne (wszystkie)</button>
+            <button type="button" onclick='post("time");'>Wymuś synchronizację czasu</button>
+            %general%
+            <h1>Ustawienia graficzne</h1>
+            <button type="button" onclick='post("reset_visual", true);'>Przywróć domyślne (w sekcji)</button>
+            %visual%
             <h2>Wejścia analogowe</h2>
+            <button type="button" onclick='post("reset_input", true);'>Przywróć domyślne (w sekcji)</button>
             <button type="button" onclick='calibration();'>Get calibration data</button>
             %input_table%
             <h2>Ustawienia danych</h2>
+            <button type="button" onclick='post("reset_data", true);'>Przywróć domyślne (w sekcji)</button>
             %data_list%
-            </br><input type='submit'>
         </form>
     </body>
 </html>
