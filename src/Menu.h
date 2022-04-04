@@ -48,6 +48,7 @@ class Menu {
     public:
         std::vector<Entry*> entries;
         void init(TFT_eSPI *t, Lock *l, bool* serverOn);
+        void reInit();
         void setEntries(std::vector<Entry*> entries);
         void prepare();
         void clean();

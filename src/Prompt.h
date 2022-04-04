@@ -26,6 +26,7 @@ class Prompt : public Clickable {
 public:
 
     void init(TFT_eSPI *t, Lock *l, bool* serverOn);
+    void reInit();
     void setText(String text);
     void appendText(String text);
     void setLineSpacing(int spacing);

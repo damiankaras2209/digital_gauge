@@ -52,8 +52,8 @@ public:
         void prepare();
         void clean();
 
-        void drawScalePiece(TFT_eSprite* c, int deg, int side, int spriteX, int spriteY, int length, int width, uint16_t color);
-        void drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w, int start, int end);
+        void drawScalePiece(void* target, bool isSprite, int deg, int side, int offsetX, int offsetY, int length, int width, uint16_t color);
+        void drawScale(void* target, bool isSprite, int side, int offsetX, int offsetY, int w, int start, int end);
         void updateNeedle(int side);
         void updateText();
         void drawSelectedInfo();

@@ -203,6 +203,8 @@ void ScreenClass::tick() {
     if(reset) {
         tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
         gauges->reloadSettings();
+        menu->reInit();
+        prompt->reInit();
         reset = false;
     }
     switch(currentView) {

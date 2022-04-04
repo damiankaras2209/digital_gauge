@@ -1,5 +1,7 @@
 #include "Gauges.h"
 
+#define TARGET (isSprite ? (TFT_eSprite*)target : (TFT_eSPI*)target)
+
 double rad(int16_t deg) {
     return 1.0*deg * PI / 180;
 }
@@ -219,7 +221,7 @@ void Gauges::createScaleSprites(Side side) {
     //    Log.logf("Sprites creation time: %lu", millis()-t4);
 }
 
-void Gauges::drawScalePiece(TFT_eSprite* c, int deg, int side, int spriteX, int spriteY, int length, int width, uint16_t color) {
+void Gauges::drawScalePiece(void* target, bool isSprite, int deg, int side, int offsetX, int offsetY, int length, int width, uint16_t color) {
 
     if(!side)
         side = -1;
@@ -253,11 +255,11 @@ void Gauges::drawScalePiece(TFT_eSprite* c, int deg, int side, int spriteX, int 
     // Log.log(" ");
     // Log.log(y2);
 
-    c->drawWideLine(
-            gen[WIDTH]->get<int>()/2 +side*(gen[NEEDLE_CENTER_OFFSET]->get<int>()+x1) - spriteX,
-            gen[HEIGHT]->get<int>()/2 +m*(y1) - spriteY,
-            gen[WIDTH]->get<int>()/2 +side*(gen[NEEDLE_CENTER_OFFSET]->get<int>()+x2) - spriteX,
-            gen[HEIGHT]->get<int>()/2 +m*(y2) - spriteY,
+    TARGET->drawWideLine(
+            gen[WIDTH]->get<int>()/2 +side*(gen[NEEDLE_CENTER_OFFSET]->get<int>()+x1) + offsetX,
+            gen[HEIGHT]->get<int>()/2 +m*(y1) + offsetY,
+            gen[WIDTH]->get<int>()/2 +side*(gen[NEEDLE_CENTER_OFFSET]->get<int>()+x2) + offsetX,
+            gen[HEIGHT]->get<int>()/2 +m*(y2) + offsetY,
             width,
             color,
             gen[BACKGROUND_COLOR]->get<int>());
@@ -266,7 +268,7 @@ void Gauges::drawScalePiece(TFT_eSprite* c, int deg, int side, int spriteX, int 
 
 unsigned long t3;
 
-void Gauges::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w, int start, int end) {
+void Gauges::drawScale(void *target, bool isSprite, int side, int offsetX, int offsetY, int w, int start, int end) {
 
     t3 = millis();
 
@@ -274,7 +276,7 @@ void Gauges::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w
     int steps = gen[SCALE_LARGE_STEPS]->get<int>()*gen[SCALE_SMALL_STEPS]->get<int>()+1;
     for(uint8_t i=0; i<steps; i++) {
         int16_t deg = stepSmall*i;
-        drawScalePiece(c, deg, side, spriteX, spriteY,
+        drawScalePiece(target, isSprite, deg, side, offsetX, offsetY,
                        (i%(steps/gen[SCALE_LARGE_STEPS]->get<int>())==0) ? gen[SCALE_LARGE_LENGTH]->get<int>() : gen[SCALE_SMALL_LENGTH]->get<int>(),
                        (i%(steps/gen[SCALE_LARGE_STEPS]->get<int>())==0) ? gen[SCALE_LARGE_WIDTH]->get<int>() : gen[SCALE_SMALL_WIDTH]->get<int>(),
                        (i%gen[SCALE_ACC_COLOR_EVERY]->get<int>()==0) ? gen[SCALE_ACC_COLOR]->get<int>() : gen[SCALE_COLOR]->get<int>());
@@ -298,10 +300,13 @@ void Gauges::drawScale(TFT_eSprite* c, int side, int spriteX, int spriteY, int w
 
         int top = i>2 ? -1 : 1;
 
-        scaleSprite[side][i]->pushToSprite(c,
-                                           gen[WIDTH]->get<int>()/2 + (side ? 1 : -1)*(gen[NEEDLE_CENTER_OFFSET]->get<int>() + calcX(0, deg, arrR[deg] - gen[SCALE_TEXT_OFFSET]->get<int>())) - spriteX - scaleSprite[side][i]->width()/2,
-                                           gen[HEIGHT]->get<int>()/2 + top*(calcY(0, deg, arrR[deg] - gen[SCALE_TEXT_OFFSET]->get<int>())) - spriteY - scaleSprite[side][i]->height()/2
-                                           );
+        int x = gen[WIDTH]->get<int>()/2 + (side ? 1 : -1)*(gen[NEEDLE_CENTER_OFFSET]->get<int>() + calcX(0, deg, arrR[deg] - gen[SCALE_TEXT_OFFSET]->get<int>())) - scaleSprite[side][i]->width()/2 + offsetX;
+        int y = gen[HEIGHT]->get<int>()/2 + top*(calcY(0, deg, arrR[deg] - gen[SCALE_TEXT_OFFSET]->get<int>())) - scaleSprite[side][i]->height()/2 + offsetY;
+
+        if(isSprite)
+            scaleSprite[side][i]->pushToSprite(needleUpdate, x, y);
+        else
+            scaleSprite[side][i]->pushSprite(x, y);
 
     }
 
@@ -364,7 +369,7 @@ void Gauges::updateNeedle(int side) {
     // Log.log(length);
 
     double length;
-    int x, y, x1, y1, w, h;
+    int x, y    , x1, y1, w, h;
 
     int off = 5+gen[NEEDLE_TOP_WIDTH]->get<int>();
 
@@ -409,58 +414,80 @@ void Gauges::updateNeedle(int side) {
     // Log.log(" h:");
     // Log.log(h);
 
-    int spriteX;
-    int spriteY;
-    int spriteW;
-    int spriteH;
+    int areaX;
+    int areaY;
+    int areaW;
+    int areaH;
 
     if(pSource[side] != selected[side] || redraw[side]) {
-        spriteX = gen[WIDTH]->get<int>()/2 + (side ? (gen[NEEDLE_CENTER_OFFSET]->get<int>() -gen[NEEDLE_CENTER_RADIUS]->get<int>()) : -gen[ELLIPSE_A]->get<int>());
-        spriteY = gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>();
-        spriteW = gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>() + gen[NEEDLE_CENTER_RADIUS]->get<int>();
-        spriteH = gen[ELLIPSE_B]->get<int>()*2;
+        areaX = gen[WIDTH]->get<int>() / 2 + (side ? (gen[NEEDLE_CENTER_OFFSET]->get<int>() - gen[NEEDLE_CENTER_RADIUS]->get<int>()) : -gen[ELLIPSE_A]->get<int>());
+        areaY = gen[HEIGHT]->get<int>() / 2 - gen[ELLIPSE_B]->get<int>();
+        areaW = gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>() + gen[NEEDLE_CENTER_RADIUS]->get<int>();
+        areaH = gen[ELLIPSE_B]->get<int>() * 2;
     } else {
-        spriteW = max(w, pW[side]);
-        spriteX = side ? x1 : (gen[WIDTH]->get<int>()/2 - abs(gen[WIDTH]->get<int>()/2 - x1) - spriteW);
-        spriteY = min(y1, pY1[side]);
-        spriteH = pY1[side]+pH[side] > y1+h ? pY1[side]+pH[side]-spriteY : h+abs(y1-pY1[side]);
+        areaW = max(w, pW[side]);
+        areaX = side ? x1 : (gen[WIDTH]->get<int>() / 2 - abs(gen[WIDTH]->get<int>() / 2 - x1) - areaW);
+        areaY = min(y1, pY1[side]);
+        areaH = pY1[side] + pH[side] > y1 + h ? pY1[side] + pH[side] - areaY : h + abs(y1 - pY1[side]);
     }
+
 
 #ifdef LOG_DETAILED_FRAMETIME
     Log.logf("first calc: %lu", millis()-t2);
     t2 = millis();
 #endif
 
+    void* target = needleUpdate;
+    bool isSprite = true;
+    int offsetX = 0;
+    int offsetY = 0;
+
     needleUpdate->setColorDepth(8);
-    while(!needleUpdate->createSprite(spriteW, spriteH)) {
-        delay(5);
-        Log.logf("Unable to create needle sprite; total: %d, block: %d, required: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), spriteW*spriteH*8);
+    if(!needleUpdate->createSprite(areaW, areaH)) {
+        Log.log("Unable to create needle sprite");
+        isSprite = false;
+        target = tft;
+        tft->loadFont("GaugeHeavyNumbers12");
+        offsetX = gen[OFFSET_X]->get<int>();
+        offsetY = gen[OFFSET_Y]->get<int>();
     }
-    needleUpdate->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
+
+    if(isSprite)
+        needleUpdate->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
+    else {
+        tft->fillRect(areaX + offsetX, areaY + offsetY, areaW, areaH, gen[BACKGROUND_COLOR]->get<int>());
+        areaY = 0;
+        areaX = 0;
+    }
+
+    offsetX = - areaX + offsetX;
+    offsetY = - areaY + offsetY;
+
 
 #ifdef LOG_DETAILED_FRAMETIME
     Log.logf(" draw scale: {", millis()-t2);
 #endif
 
-    drawScale(needleUpdate, side, spriteX, spriteY, 0, start, end);
+    drawScale(target, isSprite, side, offsetX, offsetY, 0, start, end);
 
 #ifdef LOG_DETAILED_FRAMETIME
     Log.logf("} total: %lu", millis()-t2);
     t2 = millis();
 #endif
 
-    int needleX = side ? gen[NEEDLE_CENTER_RADIUS]->get<int>() : (spriteW-gen[NEEDLE_CENTER_RADIUS]->get<int>());
-    int needleY = deg >= 0 ? y1-spriteY+gen[NEEDLE_CENTER_RADIUS]->get<int>() : gen[HEIGHT]->get<int>()/2 - spriteY;
+    //absolute location of needle center on screen without offset
+    int needleX = gen[WIDTH]->get<int>()/2 + (side ? 1 : -1)*gen[NEEDLE_CENTER_OFFSET]->get<int>();
+    int needleY = gen[HEIGHT]->get<int>()/2;
 
-    needleUpdate->drawWedgeLine(
-            needleX,
-            needleY,
-            side ? calcX(needleX, deg, length) : (spriteW-calcX(gen[NEEDLE_CENTER_RADIUS]->get<int>(), deg, length)),
-            calcY(needleY, deg, length),
-            gen[NEEDLE_BOTTOM_WIDTH]->get<int>(),
-            gen[NEEDLE_TOP_WIDTH]->get<int>(),
-            gen[NEEDLE_COLOR]->get<int>()
-            );
+    TARGET->drawWedgeLine(
+        needleX + offsetX,
+        needleY + offsetY,
+        needleX + (side ? 1 : -1)*calcX(0, deg, length) + offsetX,
+        needleY + calcY(0, deg, length) + offsetY,
+        gen[NEEDLE_BOTTOM_WIDTH]->get<int>(),
+        gen[NEEDLE_TOP_WIDTH]->get<int>(),
+        gen[NEEDLE_COLOR]->get<int>()
+    );
 
     //    needleUpdate->drawRect(
     //        0,
@@ -469,11 +496,12 @@ void Gauges::updateNeedle(int side) {
     //        spriteH,
     //        TFT_VIOLET);
 
-    needleUpdate->fillCircle(
-            needleX,
-            needleY,
-            gen[NEEDLE_CENTER_RADIUS]->get<int>(),
-            gen[NEEDLE_CENTER_COLOR]->get<int>());
+    TARGET->fillCircle(
+        needleX + offsetX,
+        needleY + offsetY,
+        gen[NEEDLE_CENTER_RADIUS]->get<int>(),
+        gen[NEEDLE_CENTER_COLOR]->get<int>()
+    );
 
 #ifdef LOG_DETAILED_FRAMETIME
     Log.logf(" draw needle: %lu", millis()-t2);
@@ -483,20 +511,23 @@ void Gauges::updateNeedle(int side) {
     std::stringstream ss;
     ss.precision(gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
     ss << std::fixed << value;
-    needleUpdate->setTextDatum(CC_DATUM);
-    needleUpdate->setTextColor(gen[FONT_COLOR]->get<int>());
-    needleUpdate->drawString(
+    TARGET->setTextDatum(CC_DATUM);
+    TARGET->setTextColor(gen[FONT_COLOR]->get<int>());
+    TARGET->drawString(
             ss.str().c_str(),
-            side ? gen[NEEDLE_CENTER_RADIUS]->get<int>() : spriteW-gen[NEEDLE_CENTER_RADIUS]->get<int>(),
-            gen[HEIGHT]->get<int>()/2 - spriteY);
+            gen[WIDTH]->get<int>()/2 + (side ? 1 : -1)*(gen[NEEDLE_CENTER_OFFSET]->get<int>()) + offsetX,
+            gen[HEIGHT]->get<int>()/2 + offsetY
+    );
 
 #ifdef LOG_DETAILED_FRAMETIME
     Log.logf(" draw value: %lu", millis()-t2);
     t2 = millis();
 #endif
 
-    needleUpdate->pushSprite(spriteX + gen[OFFSET_X]->get<int>(), spriteY + gen[OFFSET_Y]->get<int>());
-    needleUpdate->deleteSprite();
+    if(isSprite) {
+        needleUpdate->pushSprite(areaX + gen[OFFSET_X]->get<int>(), areaY + gen[OFFSET_Y]->get<int>());
+        needleUpdate->deleteSprite();
+    }
 
 #ifdef LOG_DETAILED_FRAMETIME
     Log.logf(" push sprite: %lu ", millis()-t2);
