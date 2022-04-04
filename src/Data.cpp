@@ -60,7 +60,7 @@ void DataClass::init() {
         readTime(&data);
         if(rtc.lostPower()) {
             Log.log("RTC lost power");
-            rtc.adjust(DateTime(2222, 2, 22, 22, 22, 22));
+            rtc.adjust(DateTime(2099, 9, 99, 99, 99, 99));
         }
     }
 
@@ -431,6 +431,9 @@ void DataClass::readTime(DataClass::DataStruct *params) {
     DateTime end(year, 10, Date::findLastSunday(year, 10), 2, 0, 0);
     if(now >= begin && now < end)
         now = now + TimeSpan(3600);
+
+    if(now.hour() > 24 || now.minute() > 60 || now.day() > 31 || now.month() > 13 || now.year() > 2098)
+        now = DateTime(2099, 9, 99, 99, 99);
 
     params->now = now;
 }
