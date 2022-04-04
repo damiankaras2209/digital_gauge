@@ -12,20 +12,16 @@ void Menu::init(TFT_eSPI *t, Lock *l, bool* b) {
     gen = Settings.general;
     menuSprite = new TFT_eSprite(tft);
     menuSprite->setTextDatum(CC_DATUM);
-    menuSprite->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
-    _w = gen[PROMPT_WIDTH]->get<int>();
-    _h = gen[HEIGHT]->get<int>() - MENU_MARGIN * 2;
-    _x = gen[WIDTH]->get<int>()/2 - _w / 2;
-    _y = MENU_MARGIN;
-    entryHeight = menuSprite->fontHeight() + 2 * PADDING + 2;
+    reInit();
 }
 
 void Menu::reInit() {
-    menuSprite->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());    _w = gen[PROMPT_WIDTH]->get<int>();
-    _h = gen[HEIGHT]->get<int>() - MENU_MARGIN * 2;
-    _x = gen[WIDTH]->get<int>()/2 - _w / 2;
-    _y = MENU_MARGIN;
-    entryHeight = menuSprite->fontHeight() + 2 * PADDING + 2;
+    menuSprite->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
+    _w = gen[PROMPT_WIDTH]->get<int>();
+    _h = gen[HEIGHT]->get<int>() - MENU_MARGIN*2;
+    _x = gen[WIDTH]->get<int>()/2 - _w/2 + gen[OFFSET_X]->get<int>();
+    _y = MENU_MARGIN + gen[OFFSET_Y]->get<int>();
+    entryHeight = menuSprite->fontHeight() + 2*PADDING + 2;
 }
 
 void Menu::setEntries(std::vector<Entry*> e) {

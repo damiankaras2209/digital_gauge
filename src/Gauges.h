@@ -46,7 +46,7 @@ public:
         ulong selectedInfoTimestamp;
 
         void init(TFT_eSPI *t, Lock *l);
-        void reloadSettings();
+        void reInit();
         void fillTables();
         void createScaleSprites(Side side);
         void prepare();

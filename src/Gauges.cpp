@@ -26,43 +26,14 @@ void Gauges::init(TFT_eSPI *t, Lock *l) {
     needleUpdate = new TFT_eSprite(tft);
     textUpdate = new TFT_eSprite(tft);
 
-    reloadSettings();
-
     for(int i=0; i<SIDE_LAST; i++)
         clickables.push_back(new Clickable);
 
-    clickables.at(LEFT)->setPos(gen[WIDTH]->get<int>()/2 - gen[ELLIPSE_A]->get<int>(),
-                      gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>());
-    clickables.at(LEFT)->setSize(gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>(),
-                       gen[ELLIPSE_B]->get<int>()*2);
-    clickables.at(LEFT)->setOnClick([this]() {
-        Log.log("Left");
-    });
-    clickables.at(RIGHT)->setPos(gen[WIDTH]->get<int>()/2 + gen[NEEDLE_CENTER_OFFSET]->get<int>(),
-                       gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>());
-    clickables.at(RIGHT)->setSize(gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>(),
-                        gen[ELLIPSE_B]->get<int>()*2);
-    clickables.at(RIGHT)->setOnClick([this]() {
-        Log.log("Right");
-    });
-    clickables.at(MID)->setPos(gen[WIDTH]->get<int>()/2 - gen[NEEDLE_CENTER_OFFSET]->get<int>(),
-                                      gen[HEIGHT]->get<int>()/2);
-    clickables.at(MID)->setSize(gen[NEEDLE_CENTER_OFFSET]->get<int>()*2,
-                                gen[ELLIPSE_B]->get<int>());
-    clickables.at(MID)->setOnClick([this]() {
-        Log.log("Mid");
-    });
-    clickables.at(TIME)->setPos(gen[WIDTH]->get<int>()/2 - gen[NEEDLE_CENTER_OFFSET]->get<int>(),
-                 gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>());
-    clickables.at(TIME)->setSize(gen[NEEDLE_CENTER_OFFSET]->get<int>()*2,
-                  gen[ELLIPSE_B]->get<int>());
-    clickables.at(TIME)->setOnClick([this]() {
-        Log.log("Date");
-    });
+    reInit();
 
 }
 
-void Gauges::reloadSettings() {
+void Gauges::reInit() {
     fillTables();
     prepare();
     selectedInfoCoords[2] = (gen[NEEDLE_CENTER_OFFSET]->get<int>() - gen[NEEDLE_CENTER_RADIUS]->get<int>()) * 2; //width
@@ -71,6 +42,34 @@ void Gauges::reloadSettings() {
     selectedInfoCoords[1] = gen[HEIGHT]->get<int>()/2 + gen[OFFSET_Y]->get<int>() + 5; //y
     for(auto & s : redraw)
         s = true;
+
+    clickables.at(LEFT)->setPos(
+            gen[WIDTH]->get<int>()/2 - gen[ELLIPSE_A]->get<int>() + gen[OFFSET_X]->get<int>(),
+            gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>() + gen[OFFSET_Y]->get<int>());
+    clickables.at(LEFT)->setSize(
+            gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>(),
+            gen[ELLIPSE_B]->get<int>()*2);
+
+    clickables.at(RIGHT)->setPos(
+            gen[WIDTH]->get<int>()/2 + gen[NEEDLE_CENTER_OFFSET]->get<int>() + gen[OFFSET_X]->get<int>(),
+            gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>() + gen[OFFSET_Y]->get<int>());
+    clickables.at(RIGHT)->setSize(
+            gen[ELLIPSE_A]->get<int>() - gen[NEEDLE_CENTER_OFFSET]->get<int>(),
+            gen[ELLIPSE_B]->get<int>()*2);
+
+    clickables.at(MID)->setPos(
+            gen[WIDTH]->get<int>()/2 - gen[NEEDLE_CENTER_OFFSET]->get<int>() + gen[OFFSET_X]->get<int>(),
+            gen[HEIGHT]->get<int>()/2 + gen[OFFSET_Y]->get<int>());
+    clickables.at(MID)->setSize(
+            gen[NEEDLE_CENTER_OFFSET]->get<int>()*2,
+            gen[ELLIPSE_B]->get<int>());
+
+    clickables.at(TIME)->setPos(
+            gen[WIDTH]->get<int>()/2 - gen[NEEDLE_CENTER_OFFSET]->get<int>() + gen[OFFSET_X]->get<int>(),
+            gen[HEIGHT]->get<int>()/2 - gen[ELLIPSE_B]->get<int>() + gen[OFFSET_Y]->get<int>());
+    clickables.at(TIME)->setSize(
+            gen[NEEDLE_CENTER_OFFSET]->get<int>()*2,
+            gen[ELLIPSE_B]->get<int>());
 }
 
 void Gauges::prepare() {

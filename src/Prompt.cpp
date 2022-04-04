@@ -11,19 +11,15 @@ void Prompt::init(TFT_eSPI *t, Lock *l, bool* b) {
     gen = Settings.general;
     sprite = new TFT_eSprite(tft);
     sprite->setTextDatum(CC_DATUM);
-    sprite->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
-    _w = gen[PROMPT_WIDTH]->get<int>();
-    _h = gen[PROMPT_HEIGHT]->get<int>();
-    _x = gen[WIDTH]->get<int>()/2 - _w / 2;
-    _y = gen[HEIGHT]->get<int>()/2 - _h / 2;
+    reInit();
 }
 
 void Prompt::reInit() {
     sprite->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
     _w = gen[PROMPT_WIDTH]->get<int>();
     _h = gen[PROMPT_HEIGHT]->get<int>();
-    _x = gen[WIDTH]->get<int>()/2 - _w / 2;
-    _y = gen[HEIGHT]->get<int>()/2 - _h / 2;
+    _x = gen[WIDTH]->get<int>()/2 - _w/2 + gen[OFFSET_X]->get<int>();
+    _y = gen[HEIGHT]->get<int>()/2 - _h/2  + gen[OFFSET_Y]->get<int>();
 }
 
 void Prompt::setText(String t) {
