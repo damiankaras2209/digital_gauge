@@ -544,7 +544,8 @@ void Gauges::updateNeedle(int side) {
     }
 }
 
-int pMinute = -1, pDay = -1, pTimeWidth = 0;
+int pMinute = -1, pDay = -1;
+int pTimeWidth = 0, pDateWidth = 0;
 
 ulong t5;
 void Gauges::updateText() {
@@ -569,8 +570,6 @@ void Gauges::updateText() {
         int width = tft->textWidth(ss.str().c_str());
         int w = max(width, pTimeWidth);
         int h = tft->fontHeight() + 8;
-        Log.log(width);
-        Log.log(w);
         tft->fillRect(
                 gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>() - w/2,
                 gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[TIME_POS_Y]->get<int>() - h/2 - 4,
@@ -592,10 +591,21 @@ void Gauges::updateText() {
         tft->loadFont("GaugeHeavy16");
         tft->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
         tft->setTextDatum(CC_DATUM);
+        int width = tft->textWidth(ss2.str().c_str());
+        int w = max(width, pDateWidth);
+        int h = tft->fontHeight() + 2;
+        tft->fillRect(
+                gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>() - w/2,
+                gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[DATE_POS_Y]->get<int>() - h/2 - 3,
+                w,
+                h,
+                gen[BACKGROUND_COLOR]->get<int>()
+        );
         tft->drawString(
                 ss2.str().c_str(),
                 gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>(),
                 gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[DATE_POS_Y]->get<int>());
+        pDateWidth = w;
         pDay = now.day();
     }
 
