@@ -431,11 +431,6 @@ void Gauges::updateNeedle(int side) {
     }
 
 
-#ifdef LOG_DETAILED_FRAMETIME
-    Log.logf("first calc: %lu", millis()-t2);
-    t2 = millis();
-#endif
-
     void* target = needleUpdate;
     bool isSprite = true;
     int offsetX = 0;
@@ -462,9 +457,9 @@ void Gauges::updateNeedle(int side) {
     offsetX = - areaX + offsetX;
     offsetY = - areaY + offsetY;
 
-
 #ifdef LOG_DETAILED_FRAMETIME
-    Log.logf(" draw scale: {", millis()-t2);
+    Log.logf("first calc: %lu draw scale: {", millis()-t2);
+    t2 = millis();
 #endif
 
     drawScale(target, isSprite, side, offsetX, offsetY, 0, start, end);
@@ -549,7 +544,7 @@ void Gauges::updateNeedle(int side) {
     }
 }
 
-int pMinute = -1, pDay = -1;
+int pMinute = -1, pDay = -1, pTimeWidth = 0;
 
 ulong t5;
 void Gauges::updateText() {
@@ -560,7 +555,6 @@ void Gauges::updateText() {
     (now.month() == 3 && now.day() > 28))
 
     tft->setTextColor(gen[FONT_COLOR]->get<int>(), TFT_RED);
-    tft->setAttribute(SFBG_ENABLE, true);
     tft->setTextDatum(CC_DATUM);
     //	tft->setTextPadding(24);
 
@@ -569,14 +563,26 @@ void Gauges::updateText() {
         //		tft->loadFont("GaugeHeavy"+(String)vis->timeSize);
         tft->loadFont("GaugeHeavyTime36", true);
         tft->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
-        tft->setAttribute(SFBG_ENABLE, true);
         tft->setTextDatum(CC_DATUM);
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(2) << ((String)now.hour()).c_str() << ":" << std::setw(2) << ((String)min).c_str();
+        int width = tft->textWidth(ss.str().c_str());
+        int w = max(width, pTimeWidth);
+        int h = tft->fontHeight() + 8;
+        Log.log(width);
+        Log.log(w);
+        tft->fillRect(
+                gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>() - w/2,
+                gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[TIME_POS_Y]->get<int>() - h/2 - 4,
+                w,
+                h,
+                gen[BACKGROUND_COLOR]->get<int>()
+                );
         tft->drawString(
                 ss.str().c_str(),
                 gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>(),
                 gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[TIME_POS_Y]->get<int>());
+        pTimeWidth = width;
         pMinute = min;
     }
     if(now.day() != pDay || redraw[TIME]) {
@@ -585,7 +591,6 @@ void Gauges::updateText() {
         //		tft->loadFont("GaugeHeavy"+(String)vis->dateSize);
         tft->loadFont("GaugeHeavy16");
         tft->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
-        tft->setAttribute(SFBG_ENABLE, true);
         tft->setTextDatum(CC_DATUM);
         tft->drawString(
                 ss2.str().c_str(),
