@@ -2,15 +2,15 @@
 
 #define TARGET (isSprite ? (TFT_eSprite*)target : (TFT_eSPI*)target)
 
-double rad(int16_t deg) {
-    return 1.0*deg * PI / 180;
+double rad(double deg) {
+    return 1.0 * deg * PI / 180;
 }
 
-float calcX(int16_t startX, int16_t deg, int16_t radius) {
+double calcX(int16_t startX, double deg, int16_t radius) {
     return startX + radius * cos(rad(deg));
 }
 
-float calcY(int16_t startY, int16_t deg, int16_t radius) {
+double calcY(int16_t startY, double deg, int16_t radius) {
     return startY + radius * sin(rad(deg));
 }
 
@@ -146,10 +146,9 @@ void Gauges::fillTables() {
     int b = gen[ELLIPSE_B]->get<int>();
     int offset = gen[NEEDLE_CENTER_OFFSET]->get<int>();
     double rmin = 1000.0;
-    //	double rmax = 0.0;
+
     for(int i=0; i<91; i++) {
         double tga = tan(rad(i));
-        double r = 0.0;
 
         if(i < 45) {
             for(int nx=1; nx<(a+1)*density; nx++) {
@@ -181,15 +180,11 @@ void Gauges::fillTables() {
         }
         if(arrR[i] < rmin)
             rmin = arrR[i];
-        //		if(arrR[i] > rmax)
-        //		    rmax = arrR[i];
-
-        for(int i=0; i<91; i++) {
-            arrOffset[i] = arrR[i] - rmin;
-        }
     }
 
-
+    for(int i=0; i<91; i++) {
+        arrOffset[i] = arrR[i] - rmin;
+    }
 }
 
 //ulong t4;
@@ -325,7 +320,7 @@ Log.logf(" draw numbers: %lu", millis()-t3);
 
 int xx = 0;
 
-int pX1[2], pY1[2], pW[2], pH[2], pDeg[2];
+int pX[2], pY[2], pW[2], pH[2], pDeg[2];
 SettingsClass::DataSource pSource[2];
 
 unsigned long t2;
@@ -355,64 +350,41 @@ void Gauges::updateNeedle(int side) {
     if(val>1.0)
         val = 1.0;
 
-    double deg = (1.0-val)*180;
-    // Log.log(pos);
-    // Log.log(" ");
-    // Log.log(deg);
-    deg-=90.0;
-    // Log.log(" ");
-    // Log.log(deg);
+    auto deg = (1.0 - val)*180;
+    deg -= 90.0;
 
-    //Log.log(deg);
-    // Log.log(" ");
-    // Log.log(length);
+    //calculate dimensions
+    double needleLength;
+    int needleBBoxW, needleBBoxH;
+    int x, y, w, h;
 
-    double length;
-    int x, y    , x1, y1, w, h;
+    int off = gen[NEEDLE_TOP_WIDTH]->get<int>() + 1;
 
-    int off = 5+gen[NEEDLE_TOP_WIDTH]->get<int>();
-
-    //	length = arrR[lround(abs(deg))];
-    length = gen[NEEDLE_LENGTH]->get<double>();
+    needleLength = gen[NEEDLE_LENGTH]->get<double>();
     if(gen[NEEDLE_LENGTH_ADAPTIVE]->get<bool>()) {
-        length += arrOffset[lround(abs(deg))];
+        needleLength += arrOffset[lround(abs(deg))];
     }
+
+    if(side)
+        Log.logf("length[%d]: %lf\n", lround(abs(deg)), needleLength);
 
     if(deg >= 0) {
-        x = length*cos(rad(deg));
-        y = length*sin(rad(deg));
-        y1 = gen[HEIGHT]->get<int>()/2-gen[NEEDLE_CENTER_RADIUS]->get<int>();
-        h = max(y+gen[NEEDLE_CENTER_RADIUS]->get<int>(), gen[NEEDLE_CENTER_RADIUS]->get<int>()*2)+off;
-        //		tft->drawRect(x1, y1, w, h, TFT_RED);
+        needleBBoxW = lround(needleLength * cos(rad(deg))) + off;
+        needleBBoxH = lround(needleLength * sin(rad(deg))) + off;
+        y = gen[HEIGHT]->get<int>() / 2 - gen[NEEDLE_CENTER_RADIUS]->get<int>();
     } else {
-        y = length*cos(rad(deg+90));
-        x = length*sin(rad(deg+90));
-        y1 = gen[HEIGHT]->get<int>()/2-max((int)gen[NEEDLE_CENTER_RADIUS]->get<int>(), y)-off;
-        h = max(y+gen[NEEDLE_CENTER_RADIUS]->get<int>(), gen[NEEDLE_CENTER_RADIUS]->get<int>()*2)+off;
-        //		tft->drawRect(x1, y1, w, h, TFT_RED);
+        needleBBoxW = lround(needleLength * sin(rad(deg + 90))) + off;
+        needleBBoxH = lround(needleLength * cos(rad(deg + 90))) + off;
+        y = gen[HEIGHT]->get<int>() / 2 - max(gen[NEEDLE_CENTER_RADIUS]->get<int>(), needleBBoxH);
     }
 
-    x1 = gen[WIDTH]->get<int>()/2+(gen[NEEDLE_CENTER_OFFSET]->get<int>()-gen[NEEDLE_CENTER_RADIUS]->get<int>());
-    w = max(x+gen[NEEDLE_CENTER_RADIUS]->get<int>(), gen[NEEDLE_CENTER_RADIUS]->get<int>()*2)+off;
+    x = gen[WIDTH]->get<int>() / 2 + (gen[NEEDLE_CENTER_OFFSET]->get<int>() - gen[NEEDLE_CENTER_RADIUS]->get<int>());
     w = gen[ELLIPSE_A]->get<int>()-gen[NEEDLE_CENTER_OFFSET]->get<int>()+gen[NEEDLE_CENTER_RADIUS]->get<int>();
+    w = max(needleBBoxW + gen[NEEDLE_CENTER_RADIUS]->get<int>(), gen[NEEDLE_CENTER_RADIUS]->get<int>() * 2);
+    h = max(needleBBoxH + gen[NEEDLE_CENTER_RADIUS]->get<int>(), gen[NEEDLE_CENTER_RADIUS]->get<int>() * 2);
 
-    // Log.log("x1:");
-    // Log.log(x1);
-    // Log.log(" pX1:");
-    // Log.log(pX1[side]);
-    // Log.log(" y1:");
-    // Log.log(y1);
-    // Log.log(" pY1:");
-    // Log.log(pY1[side]);
-    // Log.log(" w:");
-    // Log.log(w);
-    // Log.log(" pW:");
-    // Log.log(pW[side]);
-    // Log.log(" pH:");
-    // Log.log(pH[side]);
-    // Log.log(" h:");
-    // Log.log(h);
 
+    //enlarge the area with the previous dimensions
     int areaX;
     int areaY;
     int areaW;
@@ -425,12 +397,13 @@ void Gauges::updateNeedle(int side) {
         areaH = gen[ELLIPSE_B]->get<int>() * 2;
     } else {
         areaW = max(w, pW[side]);
-        areaX = side ? x1 : (gen[WIDTH]->get<int>() / 2 - abs(gen[WIDTH]->get<int>() / 2 - x1) - areaW);
-        areaY = min(y1, pY1[side]);
-        areaH = pY1[side] + pH[side] > y1 + h ? pY1[side] + pH[side] - areaY : h + abs(y1 - pY1[side]);
+        areaX = side ? x : (gen[WIDTH]->get<int>() / 2 - abs(gen[WIDTH]->get<int>() / 2 - x) - areaW);
+        areaY = min(y, pY[side]);
+        areaH = max(pY[side] + pH[side], y + h) - areaY;;
     }
 
 
+    //prepare sprite or tft
     void* target = needleUpdate;
     bool isSprite = true;
     int offsetX = 0;
@@ -457,6 +430,8 @@ void Gauges::updateNeedle(int side) {
     offsetX = - areaX + offsetX;
     offsetY = - areaY + offsetY;
 
+//    needleUpdate->drawRect(x + offsetX, y + offsetY, w, h, TFT_RED);
+
 #ifdef LOG_DETAILED_FRAMETIME
     Log.logf("first calc: %lu draw scale: {", millis()-t2);
     t2 = millis();
@@ -476,19 +451,14 @@ void Gauges::updateNeedle(int side) {
     TARGET->drawWedgeLine(
         needleX + offsetX,
         needleY + offsetY,
-        needleX + (side ? 1 : -1)*calcX(0, deg, length) + offsetX,
-        needleY + calcY(0, deg, length) + offsetY,
+        needleX + (side ? 1 : -1)*calcX(0, deg, needleLength) + offsetX,
+        needleY + calcY(0, deg, needleLength) + offsetY,
         gen[NEEDLE_BOTTOM_WIDTH]->get<int>(),
         gen[NEEDLE_TOP_WIDTH]->get<int>(),
         gen[NEEDLE_COLOR]->get<int>()
     );
 
-    //    needleUpdate->drawRect(
-    //        0,
-    //        0,
-    //        spriteW,
-    //        spriteH,
-    //        TFT_VIOLET);
+//    needleUpdate->drawRect(0, 0, areaW, areaH, TFT_VIOLET);
 
     TARGET->fillCircle(
         needleX + offsetX,
@@ -528,8 +498,8 @@ void Gauges::updateNeedle(int side) {
     t2 = millis();
 #endif
 
-    pX1[side] = x1;
-    pY1[side] = y1;
+    pX[side] = x;
+    pY[side] = y;
     pW[side] = w;
     pH[side] = h;
     pDeg[side] = deg;

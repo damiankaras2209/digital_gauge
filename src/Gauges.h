@@ -18,9 +18,9 @@
 #define SCALE_SPRITE_Y_OFFSET_16 3
 #define LINE_SPACING 10
 
-float calcX(int16_t, int16_t, int16_t);
-float calcY(int16_t, int16_t, int16_t);
-double rad(int16_t);
+double calcX(int16_t startX, double deg, int16_t radius);
+double calcY(int16_t startY, double deg, int16_t radius);
+double rad(double);
 
 enum Side {
     LEFT, RIGHT, MID, TIME, SIDE_LAST
