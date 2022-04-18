@@ -140,6 +140,53 @@
             xhr.send(data);
         }
 
+        function screenshot() {
+            source.close();
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', "screenshot");
+            xhr.responseType = "arraybuffer";
+
+            xhr.onload = function(){
+                console.log(this.status)
+                let arrayBuffer = this.response;
+                console.log(arrayBuffer)
+                if (arrayBuffer) {
+                    let RGBarray = new Uint8ClampedArray(arrayBuffer);
+                    let RGBAlength = RGBarray.length / 3 * 4;
+                    let RGBAarray = new Uint8ClampedArray(RGBAlength);
+
+                    for(let i=0; i<RGBAlength/4; i++) {
+                        RGBAarray[i*4 + 0] = RGBarray[i*3 + 0];
+                        RGBAarray[i*4 + 1] = RGBarray[i*3 + 1];
+                        RGBAarray[i*4 + 2] = RGBarray[i*3 + 2];
+                        RGBAarray[i*4 + 3] = 255;
+                    }
+
+                    console.log(RGBarray);
+                    console.log(RGBAarray);
+
+                    var canvas = document.getElementById('canvas');
+                    var ctx = canvas.getContext('2d');
+
+                    ctx.putImageData(new ImageData(RGBAarray, 480), 0, 0);
+
+                    var MIME_TYPE = "image/png";
+                    var imgURL = canvas.toDataURL(MIME_TYPE);
+                    var dlLink = document.getElementById('canvas_a');
+                    var now = new Date();
+
+                    dlLink.download = "esp_ss_" + now.getFullYear() + (now.getMonth()+1) + now.getDate() + now.getHours() + now.getMinutes() + now.getSeconds();
+                    dlLink.href = imgURL;
+                    dlLink.dataset.downloadurl = [MIME_TYPE, dlLink.download, dlLink.href].join(':');
+                    dlLink.style.display = "inline";
+
+                    setEventSource();
+                }
+
+            };
+            xhr.send(null);
+        }
+
         function preset(i) {
             let preset = parseInt(document.getElementById('input_' + i + '_preset').value);
 
@@ -176,6 +223,8 @@
             <p style="clear:both"></p>
             <button type="button" onclick='post("reset_all", true);'>Przywróć domyślne (wszystkie)</button>
             <button type="button" onclick='post("time");'>Wymuś synchronizację czasu</button>
+            <button type="button" onclick='screenshot();'>Zrzut ekranu</button></br></br>
+            <a id="canvas_a" style="display:none"><canvas id="canvas" width="480", height="320"></canvas></a>
             %general%
             <h1>Ustawienia graficzne</h1>
             <button type="button" onclick='post("reset_visual", true);'>Przywróć domyślne (w sekcji)</button>

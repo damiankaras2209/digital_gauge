@@ -186,6 +186,74 @@ void NetworkingClass::serverSetup() {
             Settings.general[i]->setDefault();
         Settings.save();
         request->send(HTTP_CODE_OK);
+    });;
+
+    server->on("/screenshot", HTTP_POST, [](AsyncWebServerRequest *request){
+        Screen.enableTouch(false);
+        Screen.pause(true, true);
+        AsyncWebServerResponse *response = request->beginChunkedResponse("text/plain", [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+
+            if (!index)
+                Log.log("Begin response");
+
+            int width = Settings.general[WIDTH]->get<int>();
+            int height = Settings.general[HEIGHT]->get<int>();
+            int lineSize = 3 * width;
+
+            int line = (int) floor(index / 3) / width;
+            int newLine = (int) floor(index / 3) % width;
+
+            if (line == height) {
+                Screen.pause(false, false);
+                Screen.enableTouch(true);
+                return 0;
+            }
+
+
+//            Log.logf("index: %d, maxLen: %d, line: %d, lineProgress: %d\n", index, maxLen, line, newLine);
+
+            int writtenNow = 0;
+            int linesWritten = 0;
+
+            if (newLine > 0) {
+                int length = min(width - newLine, (int) floor(maxLen / 3));
+                Screen.tft->readRectRGB(newLine, line, length, 1, buffer);
+//                Log.logf("writing %d pixels from %d to line end\n", length, newLine);
+                writtenNow += 3 * length;
+            }
+
+            line = (int) floor((index + writtenNow) / 3) / width;
+            newLine = (int) floor((index + writtenNow) / 3) % width;
+
+            if (newLine > 0)
+                return writtenNow;
+
+            while (maxLen - writtenNow > lineSize && line < height) {
+//                Log.logf("writing line: %d\n", line);
+                Screen.tft->readRectRGB(0, line, width, 1, buffer + writtenNow);
+                line++;
+                linesWritten++;
+                writtenNow += lineSize;
+            }
+
+            if (line < height - 1) {
+                int spaceLeft = (int) floor((maxLen - writtenNow) / 3);
+//                Log.logf("writing remaining space: %d\n", spaceLeft);
+                Screen.tft->readRectRGB(0, line, spaceLeft, 1, buffer + writtenNow);
+                writtenNow += 3 * spaceLeft;
+            }
+
+//            Log.logf("\n");
+
+            if (writtenNow == 0) {
+                Screen.pause(false, false);
+                Screen.enableTouch(true);
+            }
+
+            return writtenNow;
+        });
+        response->setContentType("application/octet-stream");
+        request->send(response);
     });
 
     server->begin();

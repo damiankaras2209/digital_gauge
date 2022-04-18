@@ -365,9 +365,6 @@ void Gauges::updateNeedle(int side) {
         needleLength += arrOffset[lround(abs(deg))];
     }
 
-    if(side)
-        Log.logf("length[%d]: %lf\n", lround(abs(deg)), needleLength);
-
     if(deg >= 0) {
         needleBBoxW = lround(needleLength * cos(rad(deg))) + off;
         needleBBoxH = lround(needleLength * sin(rad(deg))) + off;

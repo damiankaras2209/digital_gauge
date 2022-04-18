@@ -41,23 +41,34 @@ class ScreenClass {
 		View getView();
 		void tick();
 		void setBrightness(uint8_t x);
+        void pause(bool b, bool wait);
+        void enableTouch(bool b);
 
 		Gauges *gauges;
 		Menu *menu;
 
+        TFT_eSPI *tft;
+
 	private:
-		TFT_eSPI *tft;
 		SettingsClass::Field **gen;
 		Lock *lock;
         volatile View previousView = INIT;
         volatile View currentView = INIT;
         uint8_t _brightness;
         volatile bool reset = false;
+        volatile bool _pause = false;
+        volatile bool _paused = false;
+        bool _touchEnabled = true;
 
 
 		std::vector<Clickable*> clickables;
 		Prompt *prompt;
 
+        typedef struct EventParams {
+            std::vector<Clickable*> *clickables;
+            bool *touchEnabled;
+        } EventParams;
+        EventParams eventParams;
 		static void processEvent(GxFT5436::Event, void*);
 
 

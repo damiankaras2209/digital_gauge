@@ -10,10 +10,10 @@ void ScreenClass::processEvent(GxFT5436::Event event, void* param) {
 
     if(event.type == SINGLE_CLICK) {
 
-        auto clickables = (std::vector<Clickable*>*)param;
+        auto params = (EventParams*)param;
 
-        for(auto clickable : *clickables)
-            if(clickable->isVisible() && clickable->isInBoundaries(event.x, event.y)) {
+        for(auto clickable : *(params->clickables))
+            if(*(params->touchEnabled) && clickable->isVisible() && clickable->isInBoundaries(event.x, event.y)) {
                 clickable->onClick();
                 break;
             }
@@ -139,7 +139,8 @@ void ScreenClass::init(SettingsClass::DataSource *selected) {
     for (auto clickable: entries) {
         clickables.push_back(clickable);
     }
-    Data.touch.addOnEvent(processEvent, (void*)&clickables);
+    eventParams = {&clickables, &_touchEnabled};
+    Data.touch.addOnEvent(processEvent, (void*)&eventParams);
 }
 
 void ScreenClass::reloadSettings() {
@@ -199,52 +200,58 @@ void ScreenClass::switchView(View view) {
 unsigned long t, t1;
 void ScreenClass::tick() {
     lock->lock();
-    t = millis();
-    if(reset) {
-        tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
-        gauges->reInit();
-        menu->reInit();
-        prompt->reInit();
-        reset = false;
-    }
-    switch(currentView) {
-        case GAUGES:  {
-            t1 = millis();
-            gauges->updateText();
+//    Log.logf("pause: %s, paused: %s\n", _pause ? "true" : "false",  _paused ? "true" : "false");
+    if(_pause) {
+        _paused = true;
+    } else {
+        _paused = false;
+        t = millis();
+        if(reset) {
+            tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
+            gauges->reInit();
+            menu->reInit();
+            prompt->reInit();
+            reset = false;
+        }
+        switch(currentView) {
+            case GAUGES:  {
+                t1 = millis();
+                gauges->updateText();
 #ifdef LOG_DETAILED_FRAMETIME
-            Log.logf(" mid: %lu\n", millis()-t1);
-            t1 = millis();
+                Log.logf(" mid: %lu\n", millis()-t1);
+             t1 = millis();
 #endif
             gauges->updateNeedle(LEFT);
 #ifdef LOG_DETAILED_FRAMETIME
-            Log.logf(" left: %lu\n", millis()-t1);
-            t1 = millis();
+                Log.logf(" left: %lu\n", millis()-t1);
+             t1 = millis();
 #endif
             gauges->updateNeedle(RIGHT);
 #ifdef LOG_DETAILED_FRAMETIME
-            Log.logf(" right: %lu ", millis()-t1);
+                Log.logf(" right: %lu ", millis()-t1);
 #endif
 
-            if(gauges->selectedInfoVisible && millis() - gauges->selectedInfoTimestamp > 5000)
-                gauges->clearSelectedInfo();
-            break;
+                if(gauges->selectedInfoVisible && millis() - gauges->selectedInfoTimestamp > 5000)
+                    gauges->clearSelectedInfo();
+                break;
+            }
+            case CLOCK:  {
+                break;
+            }
+            case PROMPT:  {
+                prompt->draw();
+                break;
+            }
+            case MENU:  {
+                menu->draw();
+                break;
+            }
         }
-        case CLOCK:  {
-            break;
-        }
-        case PROMPT:  {
-            prompt->draw();
-            break;
-        }
-        case MENU:  {
-            menu->draw();
-            break;
-        }
-    }
 
 #if defined(LOG_FRAMETIME) || defined(LOG_DETAILED_FRAMETIME)
-    Log.logf("frametime: %lu\n", millis()-t);
+        Log.logf("frametime: %lu\n", millis()-t);
 #endif
+    }
     lock->release();
     delay(1);
 }
@@ -271,4 +278,16 @@ void ScreenClass::appendToPrompt(String text) {
 void ScreenClass::setBrightness(uint8_t x) {
     _brightness = x;
     ledcWrite(0, x);
+}
+
+void ScreenClass::pause(bool b, bool wait) {
+//    Log.logf("Pause");
+    _pause = b;
+    if(wait)
+        while(_paused != b)
+            delay(1);
+}
+
+void ScreenClass::enableTouch(bool b) {
+    _touchEnabled = b;
 }
