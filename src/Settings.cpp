@@ -68,7 +68,7 @@ void SettingsClass::init() {
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_PULLUP_OFFSET] = (new Field("pullup_" + (String)i + "_" + INPUT_PULLUP_OFFSET, "Pull-up R", 0.0f))->setStep(0.1f);
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_PULLDOWN_OFFSET] = (new Field("pulldown_" + (String)i + "_" + INPUT_PULLDOWN_OFFSET, "Pull-down R", 0.0f, false))->setStep(0.1f);
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_SERIES_OFFSET] = (new Field("input_" + (String)i + "_" + INPUT_SERIES_OFFSET, "Input R", 0.0f, false))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_EXPRESSION_OFFSET] = new Field("exp_" + (String)i + "_" + INPUT_EXPRESSION_OFFSET, "Expression", "v");
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_EXPRESSION_OFFSET] = new Field("exp_" + (String)i + "_" + INPUT_EXPRESSION_OFFSET, "Expression", i==(INPUT_SIZE-1) ? "v*5.7" : "v");
     }
 
     for(int i=ADS1115_0; i<=ADC_6; i++) {
