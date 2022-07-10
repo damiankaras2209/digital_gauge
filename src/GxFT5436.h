@@ -19,6 +19,7 @@
 #include <Wire.h>
 #include <functional>
 #include <sstream>
+#include <vector>
 
 // defines taken from ft5x06.c of https://github.com/focaltech-systems/drivers-input-touchscreen-FTS_driver
 /*

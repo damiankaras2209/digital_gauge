@@ -21,7 +21,7 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
     _credentials.pass = pass;
 
     WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info) {
-        Log.logf("Connected to %s, IP: %s\n", WiFi.SSID().c_str(),IPAddress(info.ap_staipassigned.ip.addr).toString().c_str());
+        Log.logf("Connected to %s, IP: %s\n", WiFi.SSID().c_str(),IPAddress(info.wifi_ap_staipassigned.ip.addr).toString().c_str());
 
         Log.logf("Connected; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
 
@@ -35,7 +35,7 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
         sendInfo();
         serverSetup();
         Log.logf("Info; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
-    }, SYSTEM_EVENT_STA_GOT_IP);
+    }, ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
     WiFi.disconnect(true, true);
     WiFi.mode(WIFI_MODE_STA);
@@ -53,6 +53,7 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
 
 
     Log.logf("Connecting to WiFi network: \"%s\"\n", ssid);
+    return 0;
 }
 
 _Noreturn void NetworkingClass::connectionMaintainer(void * pvParameters) {
