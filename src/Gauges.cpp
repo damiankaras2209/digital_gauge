@@ -205,7 +205,7 @@ void Gauges::createScaleSprites(Side side) {
             h = scaleSprite[side][j]->fontHeight();
             scaleSprite[side][j]->createSprite(w, h + SCALE_SPRITE_Y_OFFSET_12, 1);
             scaleSprite[side][j]->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
-            scaleSprite[side][j]->setTextColor(gen[FONT_COLOR]->get<int>());
+            scaleSprite[side][j]->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
             scaleSprite[side][j]->setTextDatum(TL_DATUM);
             scaleSprite[side][j]->drawString(string, 0, SCALE_SPRITE_Y_OFFSET_12);
             scaleSprite[side][j]->unloadFont();
@@ -473,7 +473,7 @@ void Gauges::updateNeedle(int side) {
     ss.precision(gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
     ss << std::fixed << value;
     TARGET->setTextDatum(CC_DATUM);
-    TARGET->setTextColor(gen[FONT_COLOR]->get<int>());
+    TARGET->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
     TARGET->drawString(
             ss.str().c_str(),
             gen[WIDTH]->get<int>()/2 + (side ? 1 : -1)*(gen[NEEDLE_CENTER_OFFSET]->get<int>()) + offsetX,
@@ -593,7 +593,7 @@ void Gauges::updateText() {
     textUpdate->setColorDepth(8);
     textUpdate->createSprite((gen[NEEDLE_CENTER_OFFSET]->get<int>()-gen[NEEDLE_CENTER_RADIUS]->get<int>())*2, h + SCALE_SPRITE_Y_OFFSET_12, 1);
     textUpdate->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
-    textUpdate->setTextColor(gen[FONT_COLOR]->get<int>());
+    textUpdate->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
     textUpdate->setTextDatum(TC_DATUM);
     textUpdate->drawString(str, textUpdate->width()/2, SCALE_SPRITE_Y_OFFSET_16);
 
@@ -622,7 +622,7 @@ void Gauges::drawSelectedInfo() {
     textUpdate->setColorDepth(8);
     textUpdate->createSprite(selectedInfoCoords[2], selectedInfoCoords[3], 1);
     textUpdate->fillSprite(gen[BACKGROUND_COLOR]->get<int>());
-    textUpdate->setTextColor(gen[FONT_COLOR]->get<int>());
+    textUpdate->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
     textUpdate->setTextDatum(TC_DATUM);
     std::size_t nextLine = 0;
     int x = 0;
