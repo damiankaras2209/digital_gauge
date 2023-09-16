@@ -74,10 +74,17 @@ void DataClass::init() {
         ads.setDataRate(7);
     }
 
+    if(status[D_MCP23008]) {
+        for(int i=0; i<8; i++) {
+            mcp23008.pinMode(i,OUTPUT);
+            mcp23008.digitalWrite(i,LOW);
+        }
+    }
+
     rc.enableReceive(3);
 
 
-    touch.enableInterrupt(33, &(data.i2cBusy), 1, 0);
+    touch.enableInterrupt(33, &(data.lock), 1, 0);
 
     TaskHandle_t adcHandle;
     if(!xTaskCreatePinnedToCore(adcLoop,
@@ -151,11 +158,9 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
                     readings[i][j] = readings[i][j - 1];
 
                 if(i<4) {
-                    while(params->i2cBusy)
-                        delay(1);
-                    params->i2cBusy = true;
+                    params->lock.lock();
                     readings[i][0] = params->adsPtr->readADC(i);
-                    params->i2cBusy = false;
+                    params->lock.release();
                     delay(1);
                 } else if(i==4)
                     readings[i][0] = analogReadMilliVolts(36);
@@ -254,9 +259,25 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
         }
 
 
-//        std::stringstream ss;
-//        ss << millis()-t;
-//        Log.logf("Loop time: %s\n", ss.str().c_str());
+        if(Data.status[D_MCP23008]) {
+            int pin = 6;
+            if (millis() - params->lastFrame < 2000) {
+                if (Data.data.dataInput[SettingsClass::CAN_RPM].value > 1000 && params->relayState[pin] == LOW) {
+                    params->lock.lock();
+                    Data.mcp23008.digitalWrite(pin, HIGH);
+                    params->lock.release();
+                    params->relayState[pin] = HIGH;
+                }
+            } else {
+                if (params->relayState[pin] == HIGH) {
+                    params->lock.lock();
+                    Data.mcp23008.digitalWrite(pin, LOW);
+                    params->lock.release();
+                    params->relayState[pin] = LOW;
+                }
+            }
+
+        }
 
         delay(1);
     }
@@ -287,11 +308,11 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 
 //        params->mcp2515Ptr->sendMessage(&msg);
 
-        if(millis() - lastFrame > 1000) {
+        if(millis() - params->lastFrame > 1000) {
 //            Log.log("Can lost");
-            if(millis() - lastCanInit > 1000) {
+            if(millis() - params->lastCanInit > 1000) {
 //                Log.log("Try to init");
-                lastCanInit = millis();
+                params->lastCanInit = millis();
                 canReset(params->mcp2515Ptr);
             }
             delay(500);
@@ -301,7 +322,7 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 
         if (err == MCP2515::ERROR_OK) {
 
-            lastFrame = millis();
+            params->lastFrame = millis();
 
 //            std::stringstream ss;
 //
@@ -416,11 +437,9 @@ DateTime DataClass::getTime() {
 
 
 void DataClass::readTime(DataClass::DataStruct *params) {
-    while(params->i2cBusy)
-        delay(1);
-    params->i2cBusy = true;
+    params->lock.lock();
     auto now = params->rtcPtr->now();
-    params->i2cBusy = false;
+    params->lock.release();
 //            std::stringstream s;
 //            s << std::setfill('0') << std::setw(2) << ((String)params->now.hour()).c_str() << ":" << std::setw(2) << ((String)params->now.minute()).c_str()  << ":" << std::setw(2) << ((String)params->now.second()).c_str();
 //            Log.logf("RTC: %s\n", s.str().c_str());
@@ -447,10 +466,7 @@ int DataClass::adjustTime(DataStruct *params) {
         Log.log("Failed to obtain time from server");
         return D_FAIL;
     }
-
-    while(params->i2cBusy)
-        delay(1);
-    params->i2cBusy = true;
+    params->lock.lock();
 
     timeinfo.tm_mon += 1;
     timeinfo.tm_year += 1900;
@@ -458,7 +474,6 @@ int DataClass::adjustTime(DataStruct *params) {
      Log.logf("Got: %d.%d.%d %d:%d:%d\n",
              timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 
-
-    params->i2cBusy = false;
+    params->lock.release();
     return D_SUCCESS;
 }

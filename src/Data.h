@@ -24,6 +24,7 @@
 #include <iomanip>
 #include "muParser.h"
 #include "Date.h"
+#include "Lock.h"
 
 #define SAMPLES_ADC 32
 #define SAMPLES_CAN 4
@@ -77,7 +78,10 @@ public:
             DataInput *dataInput;
             DateTime now;
             ulong lastRTC = 0;
-            volatile bool i2cBusy = false;
+            ulong lastFrame = 0;
+            ulong lastCanInit = 0;
+            bool relayState[8] = {LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW};
+            Lock lock;
     } DataStruct;
 
         DataClass();

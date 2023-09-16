@@ -110,8 +110,8 @@ void GxFT5436::touchStart() {
     touchDetectedTime = millis();
 }
 
-bool GxFT5436::enableInterrupt(int8_t interrupt, volatile bool* i2cBusy, int8_t priority, int8_t core) {
-    _loopData.i2cBusy = i2cBusy;
+bool GxFT5436::enableInterrupt(int8_t interrupt, Lock* lock, int8_t priority, int8_t core) {
+    _loopData.lock = lock;
     pinMode(interrupt, INPUT_PULLDOWN);
     attachInterrupt(digitalPinToInterrupt(interrupt), touchStart, RISING);
 
@@ -171,14 +171,11 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
 //        data->diagOut->print("millis() - touchDetectedTime: ");
 //        data->diagOut->print (millis() - touchDetectedTime);
         if(millis() - touchDetectedTime < 100) {
-            while(*(data->i2cBusy)) {
-                delay(1);
-            }
-            *(data->i2cBusy) = true;
+           data->lock->lock();
 
             GxFT5436::TouchInfo touchInfo = data->touch->scan();
 
-            *(data->i2cBusy) = false;
+            data->lock->release();
 
             bool detected[5] = {false, false, false, false, false};
 

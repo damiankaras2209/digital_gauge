@@ -5,6 +5,7 @@ class Lock {
     private:
         volatile bool isBusy = false;
     public:
+        Lock() = default;
         void lock();
         void release();
 };

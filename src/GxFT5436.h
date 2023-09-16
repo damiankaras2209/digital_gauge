@@ -20,6 +20,7 @@
 #include <functional>
 #include <sstream>
 #include <vector>
+#include "Lock.h"
 
 // defines taken from ft5x06.c of https://github.com/focaltech-systems/drivers-input-touchscreen-FTS_driver
 /*
@@ -173,14 +174,14 @@ class GxFT5436
   public:
     GxFT5436(int8_t rst, int8_t sda = SDA, int8_t scl = SCL);
     bool init(Stream* pDiagnosticOutput = 0);
-    bool enableInterrupt(int8_t interrupt, volatile bool* i2cBusy, int8_t priority = 1, int8_t core = 0); //33
+    bool enableInterrupt(int8_t interrupt, Lock* lock, int8_t priority = 1, int8_t core = 0); //33
     GxFT5436::TouchInfo scan();
 
   private:
     typedef struct LoopData {
         Stream* diagOut;
         GxFT5436* touch;
-        volatile bool* i2cBusy;
+        Lock* lock;
         std::vector<onEventCallback> actionCallbacks;
         std::vector<void*> actionCallbacksParam;
         std::vector<onChangeCallback> changeCallbacks;
