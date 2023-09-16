@@ -65,7 +65,7 @@ void LogClass::enable() {
                                     1,
                                     &handle,
                                     0))
-            log("Failed to start canLoop task");
+            log("Failed to start sendMessagesTask task");
         _enabled = true;
     }
 }
