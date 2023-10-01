@@ -468,7 +468,12 @@ void Gauges::updateNeedle(int side) {
 
     std::stringstream ss;
     ss.precision(gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_PRECISION_OFFSET]->get<int>());
-    ss << std::fixed << value;
+    if (value > 1000 || value < 0)
+        ss << (int) value;
+    else if(isnan(value))
+        ss << "-";
+    else
+        ss << std::fixed << value;
     TARGET->setTextDatum(CC_DATUM);
     TARGET->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
     TARGET->drawString(
