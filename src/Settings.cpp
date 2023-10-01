@@ -9,6 +9,9 @@ void SettingsClass::loadDefault() {
 
 void SettingsClass::init() {
 
+    state = State();
+    state.selected = new DataSource[3];
+
 #ifdef LOG_SETTINGS
     Log.logf("GENERAL_SETTINGS_SIZE: %d\n", GENERAL_SETTINGS_SIZE);
     Log.logf("INPUT_END_END: %d\n", INPUT_END_END);
@@ -244,40 +247,44 @@ void SettingsClass::clear() {
         SPIFFS.remove("/settings.json");
 }
 
-void SettingsClass::loadSelected(SettingsClass::DataSource *selected) {
-    Log.log("Loading selected");
-    if(SPIFFS.exists("/selected.json")) {
+void SettingsClass::loadState() {
+    Log.log("Loading state");
+    if(SPIFFS.exists("/state.json")) {
         StaticJsonDocument<128> doc;
-        fs::File file = SPIFFS.open("/selected.json", "r");
+        fs::File file = SPIFFS.open("/state.json", "r");
         DeserializationError error = deserializeJson(doc, file);
-        if (error) {
-            Log.log("Failed to read file, using default configuration");
-        }
-
-        selected[0] = doc["sel_0"] | VOLTAGE;
-        selected[1] = doc["sel_1"] | VOLTAGE;
-        selected[2] = doc["sel_2"] | VOLTAGE;
+        state.selected[0] = doc["sel_0"] | VOLTAGE;
+        state.selected[1] = doc["sel_1"] | VOLTAGE;
+        state.selected[2] = doc["sel_2"] | VOLTAGE;
+        state.throttleState = doc["throttle"] | false;
+        if (error)
+            Log.log("Failed to read file, using default state");
+        else
+            Log.log("State loaded");
     } else {
-        selected[0] = VOLTAGE;
-        selected[1] = VOLTAGE;
-        selected[2] = VOLTAGE;
+        state.selected[0] = VOLTAGE;
+        state.selected[1] = VOLTAGE;
+        state.selected[2] = VOLTAGE;
+        state.throttleState = false;
+        Log.log("File not found, using default state");
     }
 }
 
-void SettingsClass::saveSelected(SettingsClass::DataSource *selected) {
-    if(SPIFFS.exists("/selected.json"))
-        SPIFFS.remove("/selected.json");
-    fs::File file = SPIFFS.open("/selected.json", "w");
+void SettingsClass::saveState() {
+    if(SPIFFS.exists("/state.json"))
+        SPIFFS.remove("/state.json");
+    fs::File file = SPIFFS.open("/state.json", "w");
     StaticJsonDocument<128> doc;
 
-    doc["sel_0"] = selected[0];
-    doc["sel_1"] = selected[1];
-    doc["sel_2"] = selected[2];
+    doc["sel_0"] = state.selected[0];
+    doc["sel_1"] = state.selected[1];
+    doc["sel_2"] = state.selected[2];
+    doc["throttle"] = state.throttleState;
 
-    if (serializeJson(doc, file) == 0) {
+    if (serializeJson(doc, file) == 0)
         Log.log("Failed to write to file");
-    }
-    Log.log("Selected saved");
+
+    Log.log("State saved");
 
     file.close();
 }

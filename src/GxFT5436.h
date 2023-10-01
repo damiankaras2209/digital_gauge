@@ -118,11 +118,11 @@
 // end of defines taken from ft5x06.c of https://github.com/focaltech-systems/drivers-input-touchscreen-FTS_driver
 
 enum EventType {
-    TOUCH_DOWN, TOUCH_UP, SINGLE_CLICK
+    TOUCH_DOWN, TOUCH_UP, SINGLE_CLICK, TWO_POINT_CLICK
 };
 
-static String EventTypeString[3] = {
-        "TOUCH_DOWN", "TOUCH_UP", "SINGLE_CLICK"
+static String EventTypeString[4] = {
+        "TOUCH_DOWN", "TOUCH_UP", "SINGLE_CLICK", "TWO_POINT_CLICK"
 };
 
 class GxFT5436
@@ -143,12 +143,20 @@ class GxFT5436
 
 
     typedef struct Event {
+        Event(EventType type, int i, uint16_t x0, uint16_t y0, uint16_t x1 = 0, uint16_t y1 = 0) {
+            this->type = type;
+            this->x[0] = x0;
+            this->y[0] = y0;
+            this->x[1] = x1;
+            this->y[1] = y1;
+        }
+
         EventType type;
-        uint16_t id;
-        uint16_t x, y;
+        uint16_t id{};
+        uint16_t x[2] = {0, 0}, y[2] = {0, 0};
         String toString() {
             std::stringstream ss;
-            ss << "[" << id << "] event " << EventTypeString[type].c_str() << " at " << x << ", " << y;
+            ss << "[" << id << "] event " << EventTypeString[type].c_str() << " at (" << x[0] << ", " << y[0] << "), (" <<  x[1] << ", " << y[1] << ")";
             return {ss.str().c_str()};
         }
     } Event;

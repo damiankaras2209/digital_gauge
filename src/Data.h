@@ -34,6 +34,14 @@
 #define CAN_ID_AC 0x440
 #define CAN_ID_HB 0x430
 
+#define THROTTLE_VALVE_POWER_ON_TIME 2500
+#define THROTTLE_VALVE_DELAY 1000
+
+#define HEADLIGHTS_PIN 6
+#define THROTTLE_PIN 5
+#define THROTTLE_POWER_PIN 4
+
+
 //typedef struct Event {
 //    uint16_t event;
 //    uint16_t beginX[5], beginY[5];
@@ -80,6 +88,9 @@ public:
             ulong lastRTC = 0;
             ulong lastFrame = 0;
             ulong lastCanInit = 0;
+            bool shouldToggleValve = false;
+            ulong lastValveChange = 0;
+            ulong lastValvePowerOn = 0;
             bool relayState[8] = {LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW};
             Lock lock;
     } DataStruct;

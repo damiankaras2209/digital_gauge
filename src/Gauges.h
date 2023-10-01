@@ -33,7 +33,7 @@ public:
         SettingsClass::Field **gen;
         Lock *lock;
 
-        SettingsClass::DataSource selected[3];
+        SettingsClass::DataSource* selected;
 
         double arrR[91], arrOffset[91], arrX[91], arrY[91];
         TFT_eSprite* scaleSprite[2][5];
@@ -59,7 +59,7 @@ public:
         void drawSelectedInfo();
         void clearSelectedInfo();
 
-        void setSelected(SettingsClass::DataSource* selected);
+        void setSelectedFromState();
         void setSelected(Side, SettingsClass::DataSource selected);
         void getSelected(SettingsClass::DataSource* selected);
         void cycleData(Side side);

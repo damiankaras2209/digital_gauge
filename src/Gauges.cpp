@@ -18,6 +18,8 @@ void Gauges::init(TFT_eSPI *t, Lock *l) {
     tft = t;
     lock = l;
     gen = Settings.general;
+    selected = Settings.state.selected;
+    setSelectedFromState();
     for(int i=0; i<2; i++) {
         for(int j=0; j<5; j++) {
             scaleSprite[i][j] = new TFT_eSprite(tft);
@@ -87,14 +89,9 @@ void Gauges::clean() {
             j->deleteSprite();
 }
 
-void Gauges::setSelected(SettingsClass::DataSource *s) {
+void Gauges::setSelectedFromState() {
     for(int i=0; i<SettingsClass::DataSource::VOLTAGE+1; i++)
         Data.dataInput[i].visible = false;
-
-    for(int i=LEFT; i<3; i++) {
-        selected[i] = s[i];
-    }
-
     for(int i=LEFT; i<3; i++)
         Data.dataInput[selected[i]].visible = true;
 }
@@ -115,7 +112,7 @@ void Gauges::setSelected(Side side, SettingsClass::DataSource s) {
         }
         drawSelectedInfo();
         lock->release();
-        Settings.saveSelected(selected);
+        Settings.saveState();
     }
 }
 
@@ -653,8 +650,10 @@ void Gauges::clearSelectedInfo() {
 
 void Gauges::processEvent(GxFT5436::Event event, void *param) {
 
-    int16_t x = event.x;
-    int16_t y = event.y;
+    if(event.type != SINGLE_CLICK) return;
+
+    int16_t x = event.x[0];
+    int16_t y = event.y[0];
 
     //change gauge
 
@@ -680,7 +679,7 @@ void Gauges::processEvent(GxFT5436::Event event, void *param) {
         } while (!Settings.general[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
         Log.logf("Changing to: %s\n", Settings.dataSourceString[selected[side]].c_str());
         ((Gauges*)param)->setSelected(side, selected[side]);
-        Settings.saveSelected(selected);
+        Settings.saveState();
     }
 }
 

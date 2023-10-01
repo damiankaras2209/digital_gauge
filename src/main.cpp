@@ -35,8 +35,6 @@ void print_reset_reason(esp_reset_reason_t reason)
 
 static void onChange(GxFT5436::Change change, void* param) {
 
-//    Log.log(change.toString());
-
     View view = Screen.getView();
 
     switch (view) {
@@ -44,12 +42,14 @@ static void onChange(GxFT5436::Change change, void* param) {
             Screen.menu->scroll(change.diffY);
         }
     }
-
 }
 
 void setup(void) {
     Serial.begin(115200);
 
+    while (!Serial);
+
+    Log.log("Hello");
 
 //    Log.logf("Free heap: %d\n", ESP.getFreeHeap());
 
@@ -57,14 +57,13 @@ void setup(void) {
         Log.log("SPIFFS initialisation failed!");
     }
 
-    Updater.init();
+//    Updater.init();
 
     Settings.init();
     S_STATUS settingsStatus = Settings.load();
-    SettingsClass::DataSource selected[3];
-    Settings.loadSelected(selected);
+    Settings.loadState();
 
-    Screen.init(selected);
+    Screen.init();
 
     Log.logf("Firmware version: %s(%d)\n", Updater.firmware.toString().c_str(), Updater.firmware.toInt());
     Log.logf("Filesystem version: %s(%d), target: %s(%d)\n", Updater.filesystemCurrent.toString().c_str(), Updater.filesystemCurrent.toInt(),  Updater.filesystemTarget.toString().c_str(), Updater.filesystemTarget.toInt());

@@ -158,6 +158,8 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
 
     unsigned long last[5];
     bool down[5] = {false, false, false, false, false};
+    uint8_t downCount = 0;
+    uint8_t maxDownCount = 0;
     uint16_t startX[5], startY[5];
     uint16_t endX[5], endY[5];
     int16_t prevX[5], prevY[5];
@@ -170,15 +172,18 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
     while(1) {
 //        data->diagOut->print("millis() - touchDetectedTime: ");
 //        data->diagOut->print (millis() - touchDetectedTime);
+
+        //any touch detected
         if(millis() - touchDetectedTime < 100) {
-           data->lock->lock();
 
+            //get touch info from touch IC
+            data->lock->lock();
             GxFT5436::TouchInfo touchInfo = data->touch->scan();
-
             data->lock->release();
 
             bool detected[5] = {false, false, false, false, false};
 
+            //process data for every touch point 
             for (uint8_t i = 0; i < touchInfo.touch_count; i++) {
 
                 uint16_t x1 = touchInfo.x[i];
@@ -189,7 +194,7 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
                 uint8_t id = touchInfo.id[i];
                 if(!down[id]) {
                     down[id] = true;
-//                    data->diagOut->print("Touch down (%d)", id);
+//                    data->diagOut->printf("Touch down (%d)", id);
                     dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam, Event{TOUCH_DOWN, id, touchInfo.x[i], touchInfo.y[i]});
                     startX[id] = touchInfo.x[i];
                     startY[id] = touchInfo.y[i];
@@ -216,46 +221,94 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
 //                data->diagOut->printf("touch id: %d, last: %lu (%d,%d)\n", touchInfo.id[i], millis() - last[id], touchInfo.x[i], touchInfo.y[i]);
             }
 
+            //count active touch points
+            downCount = 0;
+            for (bool i : down) {
+                downCount += i;
+            }
+            maxDownCount = max(maxDownCount, downCount);
+
+//            data->diagOut->printf("downCount: %d, maxDownCount: %d\n", downCount, maxDownCount);
+
 //            for (uint8_t id = 0; id < 5; id++) {
 //                data->diagOut->printf("detected: %d, down: %d", detected[id], down[id]);
 //            }
 //            data->diagOut->printf("\n");
 
-            for (uint8_t id = 0; id < 5; id++) {
-                if(!detected[id] && down[id]) {
-                    down[id] = false;
-//                    data->diagOut->printf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu)\n", id, startX[id], startY[id], endX[id], endY[id]);
-                    dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam, Event{TOUCH_UP, id, endX[id], endY[id]});
+
+            //Process TOUCH_UP event for individual points
+            for (uint8_t i = 0; i < maxDownCount; i++) {
+                if(!detected[i] && down[i]) {
+                    down[i] = false;
+//                    data->diagOut->printf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu)\n", i, startX[i], startY[i],
+//                                          endX[i], endY[i]);
+                    dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam,
+                                    Event{TOUCH_UP, i, endX[i], endY[i]});
+                }
+            }
 
 //                    Event event;
 //                    event.startX = startX[id];
 //                    event.startY = startY[id];
 //                    event.endX = endX[id];
 //                    event.endY = endY[id];
+            
+            //touch ended, process events
+            if(downCount == 0) {
+
+                //Single point events
+                if (maxDownCount == 1) {
 
                     //Single touch
-                    if((abs(startX[id] - endX[id]) < SINGLE_POINT_DISTANCE) && (abs(startY[id] - endY[id]) < SINGLE_POINT_DISTANCE)) {
-//                        data->diagOut->printf("Single touch at %d,%d", endX[id], endY[id]);
-                        dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam, Event{SINGLE_CLICK, id, startX[id], startY[id]});
+                    if ((abs(startX[0] - endX[0]) < SINGLE_POINT_DISTANCE) &&
+                        (abs(startY[0] - endY[0]) < SINGLE_POINT_DISTANCE)) {
+//                        data->diagOut->printf("Single touch at %d,%d", endX[0], endY[0]);
+                            dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam,
+                                        Event{SINGLE_CLICK, 0, startX[0], startY[0]});
                     }
-                    //Slide right
-                    else if((abs(startX[id] - endX[id]) > SLIDE_ALONG_DISTANCE) && (abs(startY[id] - endY[id]) < SLIDE_ACROSS_DISTANCE) && (endX[id] > startX[id])) {
-//                        data->diagOut->printf("Slide right from %d,%d", startX[id], endY[id]);
+                        //Slide right
+                    else if ((abs(startX[0] - endX[0]) > SLIDE_ALONG_DISTANCE) &&
+                             (abs(startY[0] - endY[0]) < SLIDE_ACROSS_DISTANCE) && (endX[0] > startX[0])) {
+//                        data->diagOut->printf("Sl0e right from %d,%d", startX[0], endY[0]);
 //                        event.type = SLIDE_LEFT;
                     }
-                    //Slide left
-                    else if((abs(startX[id] - endX[id]) > SLIDE_ALONG_DISTANCE) && (abs(startY[id] - endY[id]) < SLIDE_ACROSS_DISTANCE) && (endX[id] < startX[id])) {
-//                        data->diagOut->printf("Slide left from %d,%d", startX[id], endY[id]);
+                        //Slide left
+                    else if ((abs(startX[0] - endX[0]) > SLIDE_ALONG_DISTANCE) &&
+                             (abs(startY[0] - endY[0]) < SLIDE_ACROSS_DISTANCE) && (endX[0] < startX[0])) {
+//                        data->diagOut->printf("Sl0e left from %d,%d", startX[0], endY[0]);
                     }
-                    //Slide down
-                    else if((abs(startX[id] - endX[id]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[id] - endY[id]) > SLIDE_ALONG_DISTANCE) && (endY[id] > startY[id])) {
-//                        data->diagOut->printf("Slide down from %d,%d", startX[id], endY[id]);
+                        //Slide down
+                    else if ((abs(startX[0] - endX[0]) < SLIDE_ACROSS_DISTANCE) &&
+                             (abs(startY[0] - endY[0]) > SLIDE_ALONG_DISTANCE) && (endY[0] > startY[0])) {
+//                        data->diagOut->printf("Sl0e down from %d,%d", startX[0], endY[0]);
                     }
-                    //Slide up
-                    else if((abs(startX[id] - endX[id]) < SLIDE_ACROSS_DISTANCE) && (abs(startY[id] - endY[id]) > SLIDE_ALONG_DISTANCE) && (endY[id] < startY[id])) {
-//                        data->diagOut->printf("Slide up from %d,%d", startX[id], endY[id]);
+                        //Slide up
+                    else if ((abs(startX[0] - endX[0]) < SLIDE_ACROSS_DISTANCE) &&
+                             (abs(startY[0] - endY[0]) > SLIDE_ALONG_DISTANCE) && (endY[0] < startY[0])) {
+//                        data->diagOut->printf("Sl0e up from %d,%d", startX[0], endY[0]);
                     }
+
+                //Two point events
+                } else if (maxDownCount == 2) {
+//                    data->diagOut->printf("Two point action\n");
+
+                    //Two point touch
+                    if ((abs(startX[0] - endX[0]) < SINGLE_POINT_DISTANCE) &&
+                        (abs(startY[0] - endY[0]) < SINGLE_POINT_DISTANCE) &&
+                        (abs(startX[1] - endX[1]) < SINGLE_POINT_DISTANCE) &&
+                        (abs(startY[1] - endY[1]) < SINGLE_POINT_DISTANCE)) {
+//                        data->diagOut->printf("Single touch at %d,%d", endX[0], endY[0]);
+                        dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam,
+                                        Event{TWO_POINT_CLICK, 0,
+                                              startX[0], startY[0],
+                                              startX[1], startY[1]});
+                    }
+
                 }
+
+                //Reset max down count
+                maxDownCount = 0;
+                
             }
         }
         delay(7);

@@ -33,8 +33,9 @@ enum View {
 class ScreenClass {
 
 	public:
-        void init(SettingsClass::DataSource *selected);
+        void init();
 		void reloadSettings();
+        void closePrompt();
 		void switchView(View view);
 		void showPrompt(String text, int lineSpacing = LINE_SPACING, boolean useDefaultFont = false);
 		void appendToPrompt(String text);
@@ -67,6 +68,7 @@ class ScreenClass {
         typedef struct EventParams {
             std::vector<Clickable*> *clickables;
             bool *touchEnabled;
+            ScreenClass* screen;
         } EventParams;
         EventParams eventParams;
 		static void processEvent(GxFT5436::Event, void*);

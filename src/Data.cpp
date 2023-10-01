@@ -260,22 +260,49 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
 
         if(Data.status[D_MCP23008]) {
-            int pin = 6;
             if (millis() - params->lastFrame < 2000) {
-                if (Data.data.dataInput[SettingsClass::CAN_RPM].value > 1000 && params->relayState[pin] == LOW) {
+                if (Data.data.dataInput[SettingsClass::CAN_RPM].value > 1000 && params->relayState[HEADLIGHTS_PIN] == LOW) {
                     params->lock.lock();
-                    Data.mcp23008.digitalWrite(pin, HIGH);
+                    Data.mcp23008.digitalWrite(HEADLIGHTS_PIN, HIGH);
                     params->lock.release();
-                    params->relayState[pin] = HIGH;
+                    params->relayState[HEADLIGHTS_PIN] = HIGH;
                 }
             } else {
-                if (params->relayState[pin] == HIGH) {
+                if (params->relayState[HEADLIGHTS_PIN] == HIGH) {
                     params->lock.lock();
-                    Data.mcp23008.digitalWrite(pin, LOW);
+                    Data.mcp23008.digitalWrite(HEADLIGHTS_PIN, LOW);
                     params->lock.release();
-                    params->relayState[pin] = LOW;
+                    params->relayState[HEADLIGHTS_PIN] = LOW;
                 }
             }
+
+            if (!params->relayState[THROTTLE_POWER_PIN] && params->shouldToggleValve && millis() - params->lastValveChange > THROTTLE_VALVE_DELAY) {
+                params->lock.lock();
+                Data.mcp23008.digitalWrite(THROTTLE_PIN, !Settings.state.throttleState);
+                Data.mcp23008.digitalWrite(THROTTLE_POWER_PIN, HIGH);
+                bool newState = Data.mcp23008.digitalRead(THROTTLE_PIN);
+                params->lock.release();
+
+                params->shouldToggleValve = false;
+                params->lastValvePowerOn = millis();
+                params->relayState[THROTTLE_PIN] = newState;
+                params->relayState[THROTTLE_POWER_PIN] = HIGH;
+
+                Settings.state.throttleState = newState;
+                Settings.saveState();
+            }
+
+            if (params->relayState[THROTTLE_POWER_PIN] && millis() - params->lastValvePowerOn > THROTTLE_VALVE_POWER_ON_TIME) {
+                params->lock.lock();
+                Data.mcp23008.digitalWrite(THROTTLE_POWER_PIN, LOW);
+                Data.mcp23008.digitalWrite(THROTTLE_PIN, LOW);
+                params->lock.release();
+                params->relayState[THROTTLE_PIN] = LOW;
+                params->relayState[THROTTLE_POWER_PIN] = LOW;
+                params->lastValveChange = millis();
+
+            }
+
 
         }
 

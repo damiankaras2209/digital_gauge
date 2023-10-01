@@ -114,7 +114,8 @@ Menu::Entry* Menu::getEntryAt(int x, int y) {
 }
 
 void Menu::processEvent(GxFT5436::Event e, void* menu) {
-    Entry* entry = ((Menu*)menu)->getEntryAt(e.x, e.y);
+    if(e.type != SINGLE_CLICK) return;
+    Entry* entry = ((Menu*)menu)->getEntryAt(e.x[0], e.y[0]);
     if(e.type == SINGLE_CLICK && entry != nullptr)
         entry->onClick();
 }

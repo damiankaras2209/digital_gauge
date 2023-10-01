@@ -12,17 +12,51 @@ void ScreenClass::processEvent(GxFT5436::Event event, void* param) {
 
         auto params = (EventParams*)param;
 
-        for(auto clickable : *(params->clickables))
-            if(*(params->touchEnabled) && clickable->isVisible() && clickable->isInBoundaries(event.x, event.y)) {
+        for(auto clickable : *(params->clickables)) {
+            if (*(params->touchEnabled) && clickable->isVisible() &&
+                clickable->isInBoundaries(event.x[0], event.y[0])) {
                 clickable->onClick();
                 break;
             }
+        }
+
+    } else if(event.type == TWO_POINT_CLICK) {
+        auto params = (EventParams*)param;
+        auto clickables =  *(params->clickables);
+
+        if(*(params->touchEnabled) && clickables[LEFT]->isVisible() && clickables[RIGHT]->isVisible() &&
+            (
+                (
+                clickables[LEFT]->isInBoundaries(event.x[0], event.y[0]) &&
+                clickables[RIGHT]->isInBoundaries(event.x[1], event.y[1])
+                ) || (
+                clickables[LEFT]->isInBoundaries(event.x[1], event.y[1]) &&
+                clickables[RIGHT]->isInBoundaries(event.x[0], event.y[0])
+                )
+           )
+        ) {
+            Log.logf("Throttle!\n", 3);
+            if(millis() - Data.data.lastValveChange > THROTTLE_VALVE_DELAY) {
+                params->screen->prompt->setDismissible(false);
+                params->screen->showPrompt(String(Settings.state.throttleState ? "Closing" : "Opening") + " exhaust throttle valve");
+                Data.data.shouldToggleValve = true;
+                while(millis() - Data.data.lastValveChange > THROTTLE_VALVE_DELAY) {
+                    delay(50);
+                }
+                params->screen->closePrompt();
+                params->screen->prompt->setDismissible(true);
+            }
+            else {
+                params->screen->showPrompt("Wait at least " + String(THROTTLE_VALVE_DELAY) + " seconds before\ntoggling exhaust throttle valve again");
+            }
+
+        }
 
     }
 
-};
+}
 
-void ScreenClass::init(SettingsClass::DataSource *selected) {
+void ScreenClass::init() {
     ledcSetup(0, 5000, 8);
     ledcAttachPin(32, 0);
     ledcWrite(0, 0);
@@ -33,7 +67,6 @@ void ScreenClass::init(SettingsClass::DataSource *selected) {
     tft->invertDisplay(1);
     lock = new Lock;
     gauges = new Gauges;
-    gauges->setSelected(selected);
     gauges->init(tft, lock);
     auto gaugesClickables = gauges->getClickables();
     for(auto v : *gaugesClickables) {
@@ -139,7 +172,7 @@ void ScreenClass::init(SettingsClass::DataSource *selected) {
     for (auto clickable: entries) {
         clickables.push_back(clickable);
     }
-    eventParams = {&clickables, &_touchEnabled};
+    eventParams = {&clickables, &_touchEnabled, this};
     Data.touch.addOnEvent(processEvent, (void*)&eventParams);
 }
 
@@ -273,6 +306,11 @@ void ScreenClass::appendToPrompt(String text) {
     prompt->appendText(text);
 //    draw()
     lock->release();
+}
+
+void ScreenClass::closePrompt() {
+    if(currentView == PROMPT)
+        switchView(previousView);
 }
 
 void ScreenClass::setBrightness(uint8_t x) {

@@ -337,6 +337,11 @@ class SettingsClass {
             }
         };
 
+    typedef struct State {
+        DataSource* selected;
+        bool throttleState;
+    } State;
+
 
 	public:
 		void init();
@@ -344,13 +349,12 @@ class SettingsClass {
 		S_STATUS load();
         S_STATUS save(bool waitForCompletion = true);
 		void clear();
-		void loadSelected(DataSource *selected);
-		void saveSelected(DataSource *selected);
+		void loadState();
+		void saveState();
 
 	public:
-
         Field* general[SETTINGS_SIZE];
-
+        State state;
 
 };
 
