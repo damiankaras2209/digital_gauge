@@ -18,7 +18,7 @@
 
 #define DiagOut if(_pDiagnosticOutput) (*_pDiagnosticOutput)
 
-GxFT5436::GxFT5436(int8_t sda, int8_t scl, int8_t rst) : I2C(0), _sda(sda), _scl(scl), _rst(rst)
+GxFT5436::GxFT5436(int8_t sda, int8_t scl, int8_t rst) : _sda(sda), _scl(scl), _rst(rst)
 {
     _loopData.touch = this;
   _prev_idx = 0;
@@ -41,9 +41,9 @@ bool GxFT5436::init(Stream* pDiagnosticOutput)
     digitalWrite(_rst, HIGH);
     delay(100);
   }
-  I2C.begin(_sda, _scl);
-  I2C.beginTransmission(FT5436_I2C_ADDR);
-  uint8_t error = I2C.endTransmission();
+  I2C->begin(_sda, _scl);
+  I2C->beginTransmission(FT5436_I2C_ADDR);
+  uint8_t error = I2C->endTransmission();
   if (error != 0)
   {
 //    DiagOut.println("GxFT5436::init() - I2C failed for address 0x"); DiagOut.print(FT5436_I2C_ADDR, HEX);
@@ -183,7 +183,7 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
 
             bool detected[5] = {false, false, false, false, false};
 
-            //process data for every touch point 
+            //process data for every touch point
             for (uint8_t i = 0; i < touchInfo.touch_count; i++) {
 
                 uint16_t x1 = touchInfo.x[i];
@@ -252,7 +252,7 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
 //                    event.startY = startY[id];
 //                    event.endX = endX[id];
 //                    event.endY = endY[id];
-            
+
             //touch ended, process events
             if(downCount == 0) {
 
@@ -308,7 +308,7 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
 
                 //Reset max down count
                 maxDownCount = 0;
-                
+
             }
         }
         delay(7);
@@ -327,37 +327,37 @@ void GxFT5436::check(const char text[], TouchInfo& touchinfo)
 void GxFT5436::I2C_Write(uint8_t dev_addr, uint8_t reg_addr, uint8_t data)
 {
   //DiagOut.println("I2C_Write");
-  I2C.beginTransmission(dev_addr);
-  I2C.write(reg_addr);
-  I2C.write(data);
-  I2C.endTransmission();
+  I2C->beginTransmission(dev_addr);
+  I2C->write(reg_addr);
+  I2C->write(data);
+  I2C->endTransmission();
   //DiagOut.println("I2C_Write done");
 }
 
 uint8_t GxFT5436::I2C_Read(uint8_t dev_addr, uint8_t reg_addr)
 {
   uint8_t data = 0;
-  I2C.beginTransmission(dev_addr);
-  I2C.write(reg_addr);
-  I2C.endTransmission();
-  I2C.requestFrom(dev_addr, uint8_t(1));
-  if (I2C.available())
+  I2C->beginTransmission(dev_addr);
+  I2C->write(reg_addr);
+  I2C->endTransmission();
+  I2C->requestFrom(dev_addr, uint8_t(1));
+  if (I2C->available())
   {
-    data = I2C.read();
+    data = I2C->read();
   }
   return data;
 }
 
 void GxFT5436::I2C_Read(uint8_t dev_addr, uint8_t reg_addr, uint8_t* data, uint8_t n)
 {
-  I2C.beginTransmission(dev_addr);
-  I2C.write(reg_addr);
-  I2C.endTransmission();
-  I2C.requestFrom(dev_addr, n);
+  I2C->beginTransmission(dev_addr);
+  I2C->write(reg_addr);
+  I2C->endTransmission();
+  I2C->requestFrom(dev_addr, n);
   uint8_t i = 0;
-  while (I2C.available())
+  while (I2C->available())
   {
-    data[i++] = I2C.read();
+    data[i++] = I2C->read();
   }
   //DiagOut.print("I2C_Read "); DiagOut.println(i);
 }

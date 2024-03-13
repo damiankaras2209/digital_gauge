@@ -204,7 +204,7 @@ class GxFT5436
     static void IRAM_ATTR touchStart();
     [[noreturn]] static void touch(void * pvParameters);
 
-    TwoWire I2C;
+    TwoWire* I2C = &Wire;
     int8_t _sda, _scl, _rst;
     uint8_t _registers[POINT_READ_BUF];
     TouchInfo _info[2];
