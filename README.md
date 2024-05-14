@@ -8,3 +8,7 @@ A digital replacement for Mondeo MK3 analog clock featuring:
 - CAN bus interface
 
 ![image](images/clocks.jpg)
+
+![image](images/back.jpg)
+
+![image](images/scheme.svg)
