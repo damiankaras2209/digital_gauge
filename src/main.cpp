@@ -57,13 +57,13 @@ void setup(void) {
         Log.log("SPIFFS initialisation failed!");
     }
 
-//    Updater.init();
-
     Settings.init();
     S_STATUS settingsStatus = Settings.load();
     Settings.loadState();
 
     Screen.init();
+
+    Updater.init();
 
     Log.logf("Firmware version: %s(%d)\n", Updater.firmware.toString().c_str(), Updater.firmware.toInt());
     Log.logf("Filesystem version: %s(%d), target: %s(%d)\n", Updater.filesystemCurrent.toString().c_str(), Updater.filesystemCurrent.toInt(),  Updater.filesystemTarget.toString().c_str(), Updater.filesystemTarget.toInt());
