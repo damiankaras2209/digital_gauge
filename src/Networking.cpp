@@ -43,7 +43,7 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
 
     WiFi.disconnect(true, true);
     WiFi.mode(WIFI_MODE_STA);
-    delay(2000);
+    // delay(2000);
     WiFi.begin(_credentials.ssid, _credentials.pass);
 
     TaskHandle_t handle;
