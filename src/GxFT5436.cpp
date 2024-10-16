@@ -146,6 +146,7 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
 
 
 #define SINGLE_POINT_DISTANCE 1
+#define MULTI_POINT_DISTANCE 5
 #define SLIDE_ALONG_DISTANCE 40
 #define SLIDE_ACROSS_DISTANCE 15
 
@@ -260,31 +261,31 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
                 if (maxDownCount == 1) {
 
                     //Single touch
-                    if ((abs(startX[0] - endX[0]) < SINGLE_POINT_DISTANCE) &&
-                        (abs(startY[0] - endY[0]) < SINGLE_POINT_DISTANCE)) {
+                    if ((abs(startX[0] - endX[0]) <= SINGLE_POINT_DISTANCE) &&
+                        (abs(startY[0] - endY[0]) <= SINGLE_POINT_DISTANCE)) {
 //                        data->diagOut->printf("Single touch at %d,%d", endX[0], endY[0]);
                             dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam,
-                                        Event{SINGLE_CLICK, 0, startX[0], startY[0]});
+                                        Event{SINGLE_CLICK, 0, endX[0], endY[0]});
                     }
                         //Slide right
-                    else if ((abs(startX[0] - endX[0]) > SLIDE_ALONG_DISTANCE) &&
-                             (abs(startY[0] - endY[0]) < SLIDE_ACROSS_DISTANCE) && (endX[0] > startX[0])) {
+                    else if ((abs(startX[0] - endX[0]) >= SLIDE_ALONG_DISTANCE) &&
+                             (abs(startY[0] - endY[0]) <= SLIDE_ACROSS_DISTANCE) && (endX[0] > startX[0])) {
 //                        data->diagOut->printf("Sl0e right from %d,%d", startX[0], endY[0]);
 //                        event.type = SLIDE_LEFT;
                     }
                         //Slide left
-                    else if ((abs(startX[0] - endX[0]) > SLIDE_ALONG_DISTANCE) &&
-                             (abs(startY[0] - endY[0]) < SLIDE_ACROSS_DISTANCE) && (endX[0] < startX[0])) {
+                    else if ((abs(startX[0] - endX[0]) >= SLIDE_ALONG_DISTANCE) &&
+                             (abs(startY[0] - endY[0]) <= SLIDE_ACROSS_DISTANCE) && (endX[0] < startX[0])) {
 //                        data->diagOut->printf("Sl0e left from %d,%d", startX[0], endY[0]);
                     }
                         //Slide down
-                    else if ((abs(startX[0] - endX[0]) < SLIDE_ACROSS_DISTANCE) &&
-                             (abs(startY[0] - endY[0]) > SLIDE_ALONG_DISTANCE) && (endY[0] > startY[0])) {
+                    else if ((abs(startX[0] - endX[0]) <= SLIDE_ACROSS_DISTANCE) &&
+                             (abs(startY[0] - endY[0]) >= SLIDE_ALONG_DISTANCE) && (endY[0] > startY[0])) {
 //                        data->diagOut->printf("Sl0e down from %d,%d", startX[0], endY[0]);
                     }
                         //Slide up
-                    else if ((abs(startX[0] - endX[0]) < SLIDE_ACROSS_DISTANCE) &&
-                             (abs(startY[0] - endY[0]) > SLIDE_ALONG_DISTANCE) && (endY[0] < startY[0])) {
+                    else if ((abs(startX[0] - endX[0]) <= SLIDE_ACROSS_DISTANCE) &&
+                             (abs(startY[0] - endY[0]) >= SLIDE_ALONG_DISTANCE) && (endY[0] < startY[0])) {
 //                        data->diagOut->printf("Sl0e up from %d,%d", startX[0], endY[0]);
                     }
 
@@ -293,15 +294,15 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
 //                    data->diagOut->printf("Two point action\n");
 
                     //Two point touch
-                    if ((abs(startX[0] - endX[0]) < SINGLE_POINT_DISTANCE) &&
-                        (abs(startY[0] - endY[0]) < SINGLE_POINT_DISTANCE) &&
-                        (abs(startX[1] - endX[1]) < SINGLE_POINT_DISTANCE) &&
-                        (abs(startY[1] - endY[1]) < SINGLE_POINT_DISTANCE)) {
+                    if ((abs(startX[0] - endX[0]) <= MULTI_POINT_DISTANCE) &&
+                        (abs(startY[0] - endY[0]) <= MULTI_POINT_DISTANCE) &&
+                        (abs(startX[1] - endX[1]) <= MULTI_POINT_DISTANCE) &&
+                        (abs(startY[1] - endY[1]) <= MULTI_POINT_DISTANCE)) {
 //                        data->diagOut->printf("Single touch at %d,%d", endX[0], endY[0]);
                         dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam,
                                         Event{TWO_POINT_CLICK, 0,
-                                              startX[0], startY[0],
-                                              startX[1], startY[1]});
+                                              endX[0], endY[0],
+                                              endX[1], endY[1]});
                     }
 
                 }
