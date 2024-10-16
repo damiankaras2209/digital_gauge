@@ -267,7 +267,9 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
                     params->lock.release();
                     params->relayState[HEADLIGHTS_PIN] = HIGH;
                 }
-            } else {
+            } else if(false) { //skip turning headlights off
+                //to do
+                //persistent logging of time without frames
                 if (params->relayState[HEADLIGHTS_PIN] == HIGH) {
                     params->lock.lock();
                     Data.mcp23008.digitalWrite(HEADLIGHTS_PIN, LOW);
