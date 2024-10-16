@@ -36,7 +36,11 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
         serverSetup();
         Log.logf("Info; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
 
-        if(Data.getTime().year() > 2098)
+        //wait for rtc initialization
+        while(Data.getTime().year() == 2000)
+            delay(100);
+
+        if(Data.getTime().year() >= 2099)
             Data.adjustTime(&Data.data);
 
     }, ARDUINO_EVENT_WIFI_STA_GOT_IP);
