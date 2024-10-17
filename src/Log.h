@@ -3,18 +3,11 @@
 
 #include <memory>
 #include <string>
-#include <stdexcept>
 #include <HardwareSerial.h>
 #include <AsyncEventSource.h>
 #include <mutex>
-#include <sstream>
-
-//#define LOG_SETTINGS
-//#define LOG_FRAMETIME
-//#define LOG_DETAILED_FRAMETIME
 
 #define MAX_MESSAGES 256
-
 
 typedef std::function<void(std::string, ulong id)> Send;
 
@@ -46,11 +39,13 @@ class LogClass {
         // void onConnect();
 
         template<typename ... Args>
-        void logf(const char* format, Args ... args)
-        {
+        void logf(const char* format, Args ... args) {
             if(sizeof...(args) > 0 ) {
                 const size_t size = snprintf( nullptr, 0, format, args ... ) + 1; // Extra space for '\0'
-                if( size <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
+                if( size <= 0 ) {
+                    logf("Error during formatting. '%s'", format);
+                    return;
+                }
                 const std::unique_ptr<char[]> buf( new char[ size ] );
                 snprintf( buf.get(), size, format, args ... );
                 _log(buf.get(), false);
@@ -59,6 +54,18 @@ class LogClass {
             }
         }
 
+        //Debug log, printed only to Serial
+        template<typename ... Args>
+        void logf_d(const char* format, Args ... args) {
+            const size_t size = snprintf( nullptr, 0, format, args ... ) + 1; // Extra space for '\0'
+            if( size <= 0 ) {
+                logf_d("Error during formatting. '%s'", format);
+                return;
+            }
+            const std::unique_ptr<char[]> buf( new char[ size ] );
+            snprintf( buf.get(), size, format, args ... );
+            Serial.print(buf.get());
+        }
 };
 
 extern LogClass Log;

@@ -126,13 +126,13 @@ void Gauges::getSelected(SettingsClass::DataSource* s) {
 void Gauges::cycleData(Side side) {
     if(side != SIDE_LAST && side != TIME) {
         SettingsClass::DataSource s = selected[side];
-        Log.logf("Current data: %s\n", Settings.dataSourceString[selected[side]].c_str());
+        Log.logf_d("Current data: %s\n", Settings.dataSourceString[selected[side]].c_str());
         do {
             s = static_cast<SettingsClass::DataSource>(s + 1);
             if(s == SettingsClass::LAST)
                 s = static_cast<SettingsClass::DataSource>(0);
         } while (!Settings.general[DATA_BEGIN_BEGIN + s * DATA_SETTINGS_SIZE + DATA_ENABLE_OFFSET]->get<bool>());
-        Log.logf("Changing to: %s\n", Settings.dataSourceString[s].c_str());
+        Log.logf_d("Changing to: %s\n", Settings.dataSourceString[s].c_str());
         setSelected(side, s);
     }
 }
@@ -405,7 +405,7 @@ void Gauges::updateNeedle(int side) {
 
     needleUpdate->setColorDepth(8);
     if(!needleUpdate->createSprite(areaW, areaH)) {
-        Log.logf("Unable to create needle sprite");
+        Log.logf_d("Unable to create needle sprite");
         isSprite = false;
         target = tft;
         tft->loadFont("GaugeHeavyNumbers12");

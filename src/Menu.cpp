@@ -74,7 +74,7 @@ void Menu::draw() {
 
         menuSprite->setColorDepth(8);
         if(!menuSprite->createSprite(_w, _h)) {
-            Log.logf("Unable to create 8bit menu sprite");
+            Log.logf_d("Unable to create 8bit menu sprite");
             menuSprite->setColorDepth(1);
             menuSprite->setBitmapColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
             menuSprite->createSprite(_w, _h);

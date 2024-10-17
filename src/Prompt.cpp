@@ -64,7 +64,7 @@ void Prompt:: draw() {
 
         sprite->setColorDepth(8);
         if(!sprite->createSprite(_w, _h)) {
-            Log.logf("Unable to create 8bit prompt sprite");
+            Log.logf_d("Unable to create 8bit prompt sprite");
             sprite->setColorDepth(1);
             sprite->setBitmapColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
             sprite->createSprite(_w, _h);
