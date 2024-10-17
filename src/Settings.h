@@ -3,6 +3,7 @@
 
 #include "Log.h"
 
+#include <sstream>
 #include <stdint.h>
 #include <fstream>
 #include <cstring>
