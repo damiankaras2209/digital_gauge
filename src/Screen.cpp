@@ -149,7 +149,7 @@ void ScreenClass::init() {
         prompt->setDismissible(false);
         if(WiFi.status() == WL_CONNECTED) {
             Updater.setOnSuccessCallback([this]() {
-                Log.log("Restarting in 5 seconds");
+                Log.logf("Restarting in 5 seconds");
                 appendToPrompt("\nRestarting in 5 seconds");
                 Screen.tick();
                 delay(5000);

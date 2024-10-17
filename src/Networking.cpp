@@ -26,7 +26,7 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
         Log.logf("Connected; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
 
 //        if (!MDNS.begin(HOSTNAME)) { //http://esp32.local
-//            Log.log("Error setting up MDNS responder!");
+//            Log.logf("Error setting up MDNS responder!");
 //        }
 //        Log.logf("mDNS responder started, hostname: http://%s.local\n", HOSTNAME);
 
@@ -59,7 +59,7 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
                      &_credentials,
                      1,
                      &handle))
-        Log.log("Failed to start connectionMaintainer task");
+        Log.logf("Failed to start connectionMaintainer task");
 
 
     Log.logf("Connecting to WiFi network: \"%s\"\n", ssid);
@@ -88,7 +88,7 @@ void NetworkingClass::serverSetup() {
     Log.logf("Objects created; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
 
 //    events->onConnect([](AsyncEventSourceClient *client) {
-//        Log.log("Client connected");
+//        Log.logf("Client connected");
 //        Log.logf("Connected clients: %d", (int)events->count());
 //        Log.setCountClients([](){return events->count();});
 //        Log.onConnect();
@@ -160,7 +160,7 @@ void NetworkingClass::serverSetup() {
         }
 
         if(resetScreen) {
-            Log.log("Resetting screen");
+            Log.logf("Resetting screen");
             Screen.reloadSettings();
         }
         S_STATUS status = Settings.save();
@@ -207,7 +207,7 @@ void NetworkingClass::serverSetup() {
         AsyncWebServerResponse *response = request->beginChunkedResponse("text/plain", [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
 
             if (!index)
-                Log.log("Begin response");
+                Log.logf("Begin response");
 
             int width = Settings.general[WIDTH]->get<int>();
             int height = Settings.general[HEIGHT]->get<int>();
@@ -271,7 +271,7 @@ void NetworkingClass::serverSetup() {
 
     server->begin();
 
-    Log.log("Server started");
+    Log.logf("Server started");
 }
 
 

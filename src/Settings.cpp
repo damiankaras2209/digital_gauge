@@ -131,19 +131,19 @@ S_STATUS SettingsClass::load() {
 
     S_STATUS status = S_SUCCESS;
 
-    Log.log("Loading settings");
+    Log.logf("Loading settings");
     if(SPIFFS.exists("/settings.json")) {
         StaticJsonDocument<5*1024> doc;
         fs::File file = SPIFFS.open("/settings.json", "r");
         DeserializationError error = deserializeJson(doc, file);
         if (error) {
-            Log.log("Failed to read file, using default");
+            Log.logf("Failed to read file, using default");
             status = S_FAIL;
         } else {
             int v = doc[general[VERSION]->getId()] | 0;
             general[VERSION]->setDefault();
             if(v != general[VERSION]->get<int>()) {
-                Log.log("Setting version has changed. Using default");
+                Log.logf("Setting version has changed. Using default");
                 status = S_FAIL;
             } else {
                 for(int i=1; i<SETTINGS_SIZE; i++) {
@@ -182,7 +182,7 @@ S_STATUS SettingsClass::load() {
         file.close();
 
     } else {
-        Log.log("File not found, using defaults");
+        Log.logf("File not found, using defaults");
         status = S_FAIL;
     }
     return status;
@@ -192,7 +192,7 @@ S_STATUS SettingsClass::save(bool waitForCompletion) {
     TaskHandle_t handle;
     S_STATUS status = S_PENDING;
     if(!xTaskCreate([](void * status) {
-            Log.log("Saving settings");
+            Log.logf("Saving settings");
             if(SPIFFS.exists("/settings.json"))
                 SPIFFS.remove("/settings.json");
             fs::File file = SPIFFS.open("/settings.json", "w");
@@ -220,10 +220,10 @@ S_STATUS SettingsClass::save(bool waitForCompletion) {
             }
 
             if (serializeJson(doc, file) == 0) {
-                Log.log("Failed to write to file");
+                Log.logf("Failed to write to file");
                 *(S_STATUS*)status = S_FAIL;
             } else {
-                Log.log("Settings saved");
+                Log.logf("Settings saved");
                 *(S_STATUS*)status = S_SUCCESS;
             }
             file.close();
@@ -234,7 +234,7 @@ S_STATUS SettingsClass::save(bool waitForCompletion) {
         &status,
         1,
         &handle))
-        Log.log("Failed to start saveSettings task");
+        Log.logf("Failed to start saveSettings task");
 
     if(waitForCompletion)
         while(status == S_PENDING)
@@ -248,7 +248,7 @@ void SettingsClass::clear() {
 }
 
 void SettingsClass::loadState() {
-    Log.log("Loading state");
+    Log.logf("Loading state");
     if(SPIFFS.exists("/state.json")) {
         StaticJsonDocument<128> doc;
         fs::File file = SPIFFS.open("/state.json", "r");
@@ -258,15 +258,15 @@ void SettingsClass::loadState() {
         state.selected[2] = doc["sel_2"] | VOLTAGE;
         state.throttleState = doc["throttle"] | false;
         if (error)
-            Log.log("Failed to read file, using default state");
+            Log.logf("Failed to read file, using default state");
         else
-            Log.log("State loaded");
+            Log.logf("State loaded");
     } else {
         state.selected[0] = VOLTAGE;
         state.selected[1] = VOLTAGE;
         state.selected[2] = VOLTAGE;
         state.throttleState = false;
-        Log.log("File not found, using default state");
+        Log.logf("File not found, using default state");
     }
 }
 
@@ -282,9 +282,9 @@ void SettingsClass::saveState() {
     doc["throttle"] = state.throttleState;
 
     if (serializeJson(doc, file) == 0)
-        Log.log("Failed to write to file");
+        Log.logf("Failed to write to file");
 
-    Log.log("State saved");
+    Log.logf("State saved");
 
     file.close();
 }

@@ -57,14 +57,14 @@ void Prompt:: draw() {
             sprite->loadFont("GaugeHeavy12");
 
         std::string str = _text.c_str();
-        //    Log.log(str.c_str());
+        //    Log.logf(str.c_str());
 
         std::size_t nextLine = 0;
         _lines = 1;
 
         sprite->setColorDepth(8);
         if(!sprite->createSprite(_w, _h)) {
-            Log.log("Unable to create 8bit prompt sprite");
+            Log.logf("Unable to create 8bit prompt sprite");
             sprite->setColorDepth(1);
             sprite->setBitmapColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
             sprite->createSprite(_w, _h);
@@ -73,8 +73,8 @@ void Prompt:: draw() {
         sprite->drawRect(0, 0, _w, _h, gen[FONT_COLOR]->get<int>());
         while(nextLine != std::string::npos) {
 
-            //        Log.log(str.c_str());
-            //        Log.log(nextLine);
+            //        Log.logf(str.c_str());
+            //        Log.logf(nextLine);
 
             nextLine = str.find_first_of('\n');
             sprite->drawString(str.substr(0, nextLine).c_str(), _w/2, (_lines++) * (sprite->fontHeight() + _lineSpacing));

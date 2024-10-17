@@ -20,7 +20,6 @@ typedef std::function<void(std::string, ulong id)> Send;
 
 class LogClass {
     private:
-
         typedef struct Data {
             std::vector<std::pair<ulong, std::string>> messages;
             std::function<size_t()> countClients;
@@ -33,9 +32,7 @@ class LogClass {
         Data _data;
         bool _enabled = false;
 
-        void _log(std::string str);
-
-
+        void _log(std::string str, bool addNewLine = false);
         [[noreturn]] static void sendMessages(void *);
 
 
@@ -46,26 +43,22 @@ class LogClass {
         void setEvent(Send send);
         void setCountClients(std::function<size_t()> f);
         void enable();
-        void onConnect();
+        // void onConnect();
 
         template<typename ... Args>
         void logf(const char* format, Args ... args)
         {
-            const size_t size = snprintf( nullptr, 0, format, args ... ) + 1; // Extra space for '\0'
-            if( size <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
-            const std::unique_ptr<char[]> buf( new char[ size ] );
-            snprintf( buf.get(), size, format, args ... );
-            _log(buf.get());
+            if(sizeof...(args) > 0 ) {
+                const size_t size = snprintf( nullptr, 0, format, args ... ) + 1; // Extra space for '\0'
+                if( size <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
+                const std::unique_ptr<char[]> buf( new char[ size ] );
+                snprintf( buf.get(), size, format, args ... );
+                _log(buf.get(), false);
+            } else {
+                _log(format, true);
+            }
         }
 
-        void log(const char*);
-        void log(int);
-        void log(uint32_t);
-        void log(long unsigned int);
-        void log(float);
-        void log(String);
-        void log(StringSumHelper&);
-        void log(unsigned long n, int base);
 };
 
 extern LogClass Log;

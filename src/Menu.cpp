@@ -74,7 +74,7 @@ void Menu::draw() {
 
         menuSprite->setColorDepth(8);
         if(!menuSprite->createSprite(_w, _h)) {
-            Log.log("Unable to create 8bit menu sprite");
+            Log.logf("Unable to create 8bit menu sprite");
             menuSprite->setColorDepth(1);
             menuSprite->setBitmapColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
             menuSprite->createSprite(_w, _h);
@@ -109,7 +109,7 @@ Menu::Entry* Menu::getEntryAt(int x, int y) {
             return entries.at(i);
         }
     }
-//    Log.log("Found none");
+//    Log.logf("Found none");
     return nullptr;
 }
 

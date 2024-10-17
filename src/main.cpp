@@ -49,12 +49,12 @@ void setup(void) {
 
     while (!Serial);
 
-    Log.log("Hello");
+    Log.logf("Hello");
 
 //    Log.logf("Free heap: %d\n", ESP.getFreeHeap());
 
     if (!SPIFFS.begin()) {
-        Log.log("SPIFFS initialisation failed!");
+        Log.logf("SPIFFS initialisation failed!");
     }
 
     Settings.init();
@@ -70,7 +70,7 @@ void setup(void) {
     if(Updater.filesystemTarget != Updater.filesystemCurrent) {
         Screen.setBrightness(255);
         proceed = false;
-        Log.log("Filesystem version does not match target version. Trying to update");
+        Log.logf("Filesystem version does not match target version. Trying to update");
 
         Screen.showPrompt("Filesystem version does not match target version\ncurrent: " +
                           Updater.filesystemCurrent.toString() +
@@ -99,11 +99,11 @@ void setup(void) {
                     Screen.tick();
                     break;
                 case HTTP_UPDATE_NO_UPDATES:
-                    Log.log("HTTP_UPDATE_NO_UPDATES");
+                    Log.logf("HTTP_UPDATE_NO_UPDATES");
                     break;
 
                 case HTTP_UPDATE_OK:
-                    Log.log("HTTP_UPDATE_OK");
+                    Log.logf("HTTP_UPDATE_OK");
                     Settings.save();
                     Screen.appendToPrompt("\nUpdate successful\n Restarting in 3 seconds");
                     Screen.tick();
@@ -126,7 +126,7 @@ void setup(void) {
     //
     //  if (!mcp23008.begin_I2C(0x20, &twoWire)) {
     //      //if (!mcp.begin_SPI(CS_PIN)) {
-    //      Log.log("Error.");
+    //      Log.logf("Error.");
     //      while (1);
     //  }
 
@@ -146,7 +146,7 @@ void setup(void) {
 
         Screen.setBrightness(255);
     }
-  Log.log("setup() complete");
+  Log.logf("setup() complete");
 }
 
 unsigned  long t15;

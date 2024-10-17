@@ -225,7 +225,7 @@ void Gauges::drawScalePiece(void* target, bool isSprite, int deg, int side, int 
         m = -1;
     }
 
-    //Log.log(deg);
+    //Log.logf(deg);
 
     double x1 = arrX[deg];
     double y1 = arrY[deg];
@@ -238,13 +238,13 @@ void Gauges::drawScalePiece(void* target, bool isSprite, int deg, int side, int 
     //tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x2,gen[HEIGHT]->get<int>()/2+y2, TFT_BLUE);
 
 
-    // Log.log(x1);
-    // Log.log(" ");
-    // Log.log(y1);
-    // Log.log(" ");
-    // Log.log(x2);
-    // Log.log(" ");
-    // Log.log(y2);
+    // Log.logf(x1);
+    // Log.logf(" ");
+    // Log.logf(y1);
+    // Log.logf(" ");
+    // Log.logf(x2);
+    // Log.logf(" ");
+    // Log.logf(y2);
 
     TARGET->drawWideLine(
             gen[WIDTH]->get<int>()/2 +side*(gen[NEEDLE_CENTER_OFFSET]->get<int>()+x1) + offsetX,
@@ -405,7 +405,7 @@ void Gauges::updateNeedle(int side) {
 
     needleUpdate->setColorDepth(8);
     if(!needleUpdate->createSprite(areaW, areaH)) {
-        Log.log("Unable to create needle sprite");
+        Log.logf("Unable to create needle sprite");
         isSprite = false;
         target = tft;
         tft->loadFont("GaugeHeavyNumbers12");

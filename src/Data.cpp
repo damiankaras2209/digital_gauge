@@ -16,7 +16,7 @@ DataClass::DataClass() {
 void DataClass::canReset(MCP2515* mcp) {
     MCP2515::ERROR error = mcp->reset();
     if(error == MCP2515::ERROR_OK) {
-//        Log.log("MCP2515 good");
+//        Log.logf("MCP2515 good");
         mcp->setBitrate(CAN_500KBPS, MCP_8MHZ);
         mcp->setListenOnlyMode();
     } else {
@@ -27,7 +27,7 @@ void DataClass::canReset(MCP2515* mcp) {
 void DataClass::POST() {
     std::fill(status, status + D_LAST - 1, false);
 
-    Log.log("POST start");
+    Log.logf("POST start");
 
     status[D_FT5436] = touch.init(&Serial);
     status[D_DS3231] = rtc.begin();
@@ -41,7 +41,7 @@ void DataClass::POST() {
         Log.logf("%s... %s\n", deviceName[i].c_str(), status[i] ? "good" : "fail");
     }
 
-    Log.log("POST completed");
+    Log.logf("POST completed");
 }
 
 void DataClass::init() {
@@ -59,7 +59,7 @@ void DataClass::init() {
     if (status[D_DS3231]) {
         readTime(&data);
         if(rtc.lostPower()) {
-            Log.log("RTC lost power");
+            Log.logf("RTC lost power");
             rtc.adjust(DateTime(2099, 9, 99, 99, 99, 99));
         }
     }
@@ -94,7 +94,7 @@ void DataClass::init() {
         1,
         &adcHandle,
         0))
-        Log.log("Failed to start adcLoop task");
+        Log.logf("Failed to start adcLoop task");
 
     if(status[D_MCP2515]) {
         TaskHandle_t canHandle;
@@ -105,7 +105,7 @@ void DataClass::init() {
             1,
             &canHandle,
             0))
-                Log.log("Failed to start canLoop task");
+                Log.logf("Failed to start canLoop task");
     }
 
 }
@@ -181,11 +181,11 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
                 uint32_t sum = 0;
 //                Log.logf("Readings taken: %d\n", readingsTaken[i]);
                 for(int j=0; j < readingsTaken[i]; j++) {
-//                    Log.log(readings[i][j]);
-//                    Log.log(", ");
+//                    Log.logf(readings[i][j]);
+//                    Log.logf(", ");
                     sum += readings[i][j];
                 }
-//                Log.log("");
+//                Log.logf("");
 
                 double avg = (double)sum / readingsTaken[i];
 
@@ -317,8 +317,8 @@ ulong lastFrame = 0;
 ulong lastCanInit = 0;
 _Noreturn void DataClass::canLoop(void * pvParameters) {
     Log.logf("%s started on core %\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
-//    Log.log(" started on core ");
-//    Log.log(xPortGetCoreID());
+//    Log.logf(" started on core ");
+//    Log.logf(xPortGetCoreID());
 
     struct can_frame canMsg{};
     DataStruct *params = (DataStruct*)pvParameters;
@@ -338,9 +338,9 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 //        params->mcp2515Ptr->sendMessage(&msg);
 
         if(millis() - params->lastFrame > 1000) {
-//            Log.log("Can lost");
+//            Log.logf("Can lost");
             if(millis() - params->lastCanInit > 1000) {
-//                Log.log("Try to init");
+//                Log.logf("Try to init");
                 params->lastCanInit = millis();
                 canReset(params->mcp2515Ptr);
             }
@@ -368,7 +368,7 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 ////                Serial.println(canMsg.data[i], HEX);
 //            }
 //
-//            Log.log(ss.str().c_str());
+//            Log.logf(ss.str().c_str());
 
 
             switch (canMsg.can_id ) {
@@ -488,11 +488,11 @@ void DataClass::readTime(DataClass::DataStruct *params) {
 
 int DataClass::adjustTime(DataStruct *params) {
 
-    Log.log("Getting time from server");
+    Log.logf("Getting time from server");
     struct tm timeinfo;
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     if(!getLocalTime(&timeinfo)){
-        Log.log("Failed to obtain time from server");
+        Log.logf("Failed to obtain time from server");
         return D_FAIL;
     }
     params->lock.lock();

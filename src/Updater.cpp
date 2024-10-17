@@ -30,16 +30,16 @@ void UpdaterClass::readFilesystemVersion(Version *v) {
         for(int i=0; i<20; i++) {
             if(buf[i] != 13/*CR*/) {
                 line[i] = (char)buf[i];
-                //                Log.log(" ");
-                //                Log.log(buf[i]);
+                //                Log.logf(" ");
+                //                Log.logf(buf[i]);
             } else {
                 line[i] = '\0';
                 break;
             }
         }
-        //        Log.log("");
-        //        Log.log("Line: ");
-        //        Log.log(line);
+        //        Log.logf("");
+        //        Log.logf("Line: ");
+        //        Log.logf(line);
 
         char* p = line;
 
@@ -49,7 +49,7 @@ void UpdaterClass::readFilesystemVersion(Version *v) {
         free(line);
 
     } else {
-        Log.log("Version.txt does not exist");
+        Log.logf("Version.txt does not exist");
     }
 }
 
@@ -72,7 +72,7 @@ void UpdaterClass::updateFW(String url) {
             ss << "Success";
             break;
     }
-    Log.log(ss.str().c_str());
+    Log.logf(ss.str().c_str());
     _log("\n");
     _log(ss.str().c_str());
     if(ret == HTTP_UPDATE_OK)
@@ -167,10 +167,10 @@ void UpdaterClass::loop() {
                 _log("\nThis may take a few minutes...");
                 updateFW(ss.str().c_str());
             } else if (latestFound == firmware){
-                Log.log("Firmware is up to date!");
+                Log.logf("Firmware is up to date!");
                 _log("\nFirmware is up to date!");
             } else {
-                Log.log("No files found");
+                Log.logf("No files found");
                 _log("\nNo files found");
             }
         } else {
