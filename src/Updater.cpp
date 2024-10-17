@@ -49,7 +49,7 @@ void UpdaterClass::readFilesystemVersion(Version *v) {
         free(line);
 
     } else {
-        Log.logf("Version.txt does not exist");
+        Log.logf("Version file does not exist");
     }
 }
 

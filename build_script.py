@@ -5,7 +5,7 @@ import shutil
 
 def pre_filesystem_action(source, target, env):
     f = open("data/version", "w")
-    f.write(env.GetProjectOption("filesystem_version").replace(",", "."))
+    f.write(env.GetProjectOption("filesystem_version").replace(",", ".") + "\n")
 
 def post_firmware_action(source, target, env):
     filename = "firmware_v" + env.GetProjectOption("firmware_version").replace(",", ".") + ".bin"
