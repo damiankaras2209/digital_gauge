@@ -29,6 +29,9 @@
 #define SAMPLES_ADC 32
 #define SAMPLES_CAN 4
 
+#define CAN_INACTIVITY_TRESHOLD 2000
+#define CAN_REINIT_AFTER 1000
+
 #define CAN_ID_STEERING_ANGLE 0x80
 #define CAN_ID_RPM_SPEED_GAS 0x201
 #define CAN_ID_AC 0x440
@@ -88,6 +91,7 @@ public:
             ulong lastRTC = 0;
             ulong lastFrame = 0;
             ulong lastCanInit = 0;
+            bool canActive = false;
             bool shouldToggleValve = false;
             ulong lastValveChange = 0;
             ulong lastValvePowerOn = 0;

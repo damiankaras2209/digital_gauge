@@ -260,7 +260,7 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
 
         if(Data.status[D_MCP23008]) {
-            if (millis() - params->lastFrame < 2000) {
+            if (params->canActive) {
                 if (Data.data.dataInput[SettingsClass::CAN_RPM].value > 1000 && params->relayState[HEADLIGHTS_PIN] == LOW) {
                     params->lock.lock();
                     Data.mcp23008.digitalWrite(HEADLIGHTS_PIN, HIGH);
@@ -312,9 +312,6 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
     }
 }
 
-
-ulong lastFrame = 0;
-ulong lastCanInit = 0;
 _Noreturn void DataClass::canLoop(void * pvParameters) {
     Log.logf("%s started on core %\n", pcTaskGetTaskName(NULL), xPortGetCoreID());
 //    Log.logf(" started on core ");
@@ -337,10 +334,10 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 
 //        params->mcp2515Ptr->sendMessage(&msg);
 
-        if(millis() - params->lastFrame > 1000) {
-//            Log.logf("Can lost");
-            if(millis() - params->lastCanInit > 1000) {
-//                Log.logf("Try to init");
+        if(millis() - params->lastFrame > CAN_INACTIVITY_TRESHOLD) {
+            params->canActive = false;
+            Log.logf("Can lost");
+            if(millis() - params->lastCanInit > CAN_REINIT_AFTER) {
                 params->lastCanInit = millis();
                 canReset(params->mcp2515Ptr);
             }
@@ -350,6 +347,11 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
         MCP2515::ERROR err = params->mcp2515Ptr->readMessage(&canMsg);
 
         if (err == MCP2515::ERROR_OK) {
+
+            if(!params->canActive) {
+                params->canActive = true;
+                Log.logf("Can up after %d ms of inactivity", millis() - params->lastFrame);
+            }
 
             params->lastFrame = millis();
 
