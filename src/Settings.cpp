@@ -133,7 +133,7 @@ S_STATUS SettingsClass::load() {
 
     Log.logf("Loading settings");
     if(SPIFFS.exists("/settings.json")) {
-        StaticJsonDocument<5*1024> doc;
+        JsonDocument doc;
         fs::File file = SPIFFS.open("/settings.json", "r");
         DeserializationError error = deserializeJson(doc, file);
         if (error) {
@@ -196,7 +196,7 @@ S_STATUS SettingsClass::save(bool waitForCompletion) {
             if(SPIFFS.exists("/settings.json"))
                 SPIFFS.remove("/settings.json");
             fs::File file = SPIFFS.open("/settings.json", "w");
-            StaticJsonDocument<5*1024> doc;
+            JsonDocument doc;
             doc[Settings.general[VERSION]->getId()] = Settings.general[VERSION]->get<float>();
             for(int i=1; i<SETTINGS_SIZE; i++) {
                 if(Settings.general[i]->isConfigurable()) {
@@ -250,7 +250,7 @@ void SettingsClass::clear() {
 void SettingsClass::loadState() {
     Log.logf("Loading state");
     if(SPIFFS.exists("/state.json")) {
-        StaticJsonDocument<128> doc;
+        JsonDocument doc;
         fs::File file = SPIFFS.open("/state.json", "r");
         DeserializationError error = deserializeJson(doc, file);
         state.selected[0] = doc["sel_0"] | VOLTAGE;
@@ -274,7 +274,7 @@ void SettingsClass::saveState() {
     if(SPIFFS.exists("/state.json"))
         SPIFFS.remove("/state.json");
     fs::File file = SPIFFS.open("/state.json", "w");
-    StaticJsonDocument<128> doc;
+    JsonDocument doc;
 
     doc["sel_0"] = state.selected[0];
     doc["sel_1"] = state.selected[1];
