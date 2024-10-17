@@ -10,8 +10,8 @@
 #include "Clickable.h"
 
 
-#define LINE_SPACING 10
-#define PADDING 20
+#define MENU_LINE_SPACING 10
+#define MENU_PADDING 20
 #define MENU_HEIGHT 200
 #define MENU_ENTRIES 4
 #define MENU_MARGIN 70

@@ -39,7 +39,7 @@ void Gauges::reInit() {
     fillTables();
     prepare();
     selectedInfoCoords[2] = (gen[NEEDLE_CENTER_OFFSET]->get<int>() - gen[NEEDLE_CENTER_RADIUS]->get<int>()) * 2; //width
-    selectedInfoCoords[3] = (textUpdate->fontHeight()+LINE_SPACING)*4 - LINE_SPACING + SCALE_SPRITE_Y_OFFSET_16; //height
+    selectedInfoCoords[3] = (textUpdate->fontHeight()+GAUGES_LINE_SPACING)*4 - GAUGES_LINE_SPACING + SCALE_SPRITE_Y_OFFSET_16; //height
     selectedInfoCoords[0] = gen[WIDTH]->get<int>()/2 + gen[OFFSET_X]->get<int>() - selectedInfoCoords[2]/2; //x
     selectedInfoCoords[1] = gen[HEIGHT]->get<int>()/2 + gen[OFFSET_Y]->get<int>() + 5; //y
     for(auto & s : redraw)

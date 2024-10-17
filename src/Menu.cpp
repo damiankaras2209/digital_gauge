@@ -21,7 +21,7 @@ void Menu::reInit() {
     _h = gen[HEIGHT]->get<int>() - MENU_MARGIN*2;
     _x = gen[WIDTH]->get<int>()/2 - _w/2 + gen[OFFSET_X]->get<int>();
     _y = MENU_MARGIN + gen[OFFSET_Y]->get<int>();
-    entryHeight = menuSprite->fontHeight() + 2*PADDING + 2;
+    entryHeight = menuSprite->fontHeight() + 2*MENU_PADDING + 2;
 }
 
 void Menu::setEntries(std::vector<Entry*> e) {

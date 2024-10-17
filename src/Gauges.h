@@ -16,7 +16,7 @@
 
 #define SCALE_SPRITE_Y_OFFSET_12 2
 #define SCALE_SPRITE_Y_OFFSET_16 3
-#define LINE_SPACING 10
+#define GAUGES_LINE_SPACING 10
 
 double calcX(int16_t startX, double deg, int16_t radius);
 double calcY(int16_t startY, double deg, int16_t radius);

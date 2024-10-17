@@ -396,7 +396,7 @@ String NetworkingClass::processorRoot(const String& var) {
 
         return str;
     }
-
+    return "missing preprocessor case";
 }
 
 String NetworkingClass::processorLog(const String& var) {
@@ -423,5 +423,5 @@ String NetworkingClass::processorLog(const String& var) {
         return str;
 
     }
-
+    return "missing preprocessor case";
 }

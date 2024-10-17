@@ -6,7 +6,7 @@
 #include "Lock.h"
 #include "Clickable.h"
 
-#define LINE_SPACING 5
+#define PROMPT_LINE_SPACING 5
 
 class Prompt : public Clickable {
 
@@ -17,7 +17,7 @@ class Prompt : public Clickable {
 
     String _text;
     int _lines = 0;
-    int _lineSpacing = LINE_SPACING;
+    int _lineSpacing = PROMPT_LINE_SPACING;
     bool _hasChanged = false;
     bool _useDefaultFont = false;
     bool _dismissible = true;
