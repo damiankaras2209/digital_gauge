@@ -1,17 +1,12 @@
 #ifndef _UPDATER_H
 #define _UPDATER_H
 
-#include "Log.h"
-
-#include <stdlib.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include "ArduinoJson.h"
-#include "SPIFFS.h"
 #include "HTTPUpdate.h"
+
+#include "Log.h"
 #include "Settings.h"
-#include <sstream>
-//#include "Networking.h"
 
 #define URL "http://217.11.128.153:1337/"
 

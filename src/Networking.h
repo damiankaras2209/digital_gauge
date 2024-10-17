@@ -1,17 +1,9 @@
 #ifndef _NETWORKING_H_
 #define _NETWORKING_H_
 
-#include "Log.h"
-
-#include <WiFi.h>
-#include <WiFiClient.h>
 #include "ESPAsyncWebServer.h"
-#include <ESPmDNS.h>
-#include "TFT_eSPI.h"
-#include <string>
-
+#include "Log.h"
 #include "Screen.h"
-#include "Settings.h"
 
 #define HOSTNAME "esp32"
 

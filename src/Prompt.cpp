@@ -1,7 +1,3 @@
-//
-// Created by Musztarda on 22.02.2022.
-//
-
 #include "Prompt.h"
 
 void Prompt::init(TFT_eSPI *t, Lock *l, bool* b) {

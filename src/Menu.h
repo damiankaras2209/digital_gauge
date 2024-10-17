@@ -1,14 +1,11 @@
 #ifndef _MENU_H
 #define _MENU_H
 
-#include <utility>
-
 #include "TFT_eSPI.h"
 #include "Settings.h"
 #include "Lock.h"
 #include "GxFT5436.h"
 #include "Clickable.h"
-
 
 #define MENU_LINE_SPACING 10
 #define MENU_PADDING 20

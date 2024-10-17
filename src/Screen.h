@@ -1,22 +1,19 @@
 #ifndef _SCREEN_H_
 #define _SCREEN_H_
 
-#include "Log.h"
-
 #include <SPI.h>
 #include <cmath>
 #include <string>
 #include <sstream>
 #include <iomanip>
 
+#include "Log.h"
 #include "Settings.h"
 #include "Data.h"
 #include "Networking.h"
 
 #include "Wifi.h"
-#include "RTClib.h"
 #include "TFT_eSPI.h"
-#include "ADS1X15.h"
 #include "Gauges.h"
 #include "Menu.h"
 #include "Lock.h"

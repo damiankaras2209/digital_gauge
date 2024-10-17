@@ -1,15 +1,15 @@
 #ifndef _SETTINGS_H_
 #define _SETTINGS_H_
 
-#include "Log.h"
-
 #include <sstream>
-#include <stdint.h>
+#include <cstdint>
 #include <fstream>
 #include <cstring>
 #include <TFT_eSPI.h>
 #include <iomanip>
 #include "ArduinoJson.h"
+
+#include "Log.h"
 #include "Updater.h"
 
 enum S_STATUS {

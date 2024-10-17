@@ -1,30 +1,24 @@
 #ifndef _DATA_H
 #define _DATA_H
 
-#include "Log.h"
-
 #include <cstdio>
+#include <cmath>
+#include <sstream>
+#include <iomanip>
+
+#include "Log.h"
+#include "Settings.h"
+#include "WiFi.h"
+#include "Lock.h"
+#include "Date.h"
 
 #include "mcp2515.h"
 #include "RTClib.h"
-#include "TFT_eSPI.h"
 #include "GxFT5436.h"
 #include "ADS1X15.h"
-#include <Adafruit_MCP23X08.h>
+#include "Adafruit_MCP23X08.h"
 #include "RCSwitch.h"
-
-#include "Settings.h"
-#include "time.h"
-#include "WiFi.h"
-
-#include <numeric>
-#include <algorithm>
-
-#include <sstream>
-#include <iomanip>
 #include "muParser.h"
-#include "Date.h"
-#include "Lock.h"
 
 #define SAMPLES_ADC 32
 #define SAMPLES_CAN 4

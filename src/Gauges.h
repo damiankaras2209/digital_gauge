@@ -1,15 +1,8 @@
 #ifndef _GAUGES_H
 #define _GAUGES_H
 
-#include <SPI.h>
-#include <cmath>
-#include <string>
-#include <sstream>
-#include <iomanip>
-
 #include "Settings.h"
 #include "Data.h"
-
 #include "TFT_eSPI.h"
 #include "Lock.h"
 #include "Clickable.h"

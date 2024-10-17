@@ -1,5 +1,3 @@
-#include <iomanip>
-#include <utility>
 #include "Log.h"
 
 LogClass Log;

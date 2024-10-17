@@ -1,5 +1,3 @@
-#include <Wire.h>
-#include <SPI.h>
 #include <esp_system.h>
 
 #include "Networking.h"
@@ -9,9 +7,7 @@
 #include "Updater.h"
 
 #include <WiFi.h>
-#include "time.h"
 
-#include "TFT_eSPI.h"
 
 bool proceed = true;
 

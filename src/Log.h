@@ -1,8 +1,6 @@
 #ifndef _LOG_H_
 #define _LOG_H_
 
-#include <memory>
-#include <string>
 #include <HardwareSerial.h>
 #include <AsyncEventSource.h>
 #include <mutex>

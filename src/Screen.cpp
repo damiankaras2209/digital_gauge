@@ -1,7 +1,5 @@
 #include "Screen.h"
 
-#include <utility>
-
 ScreenClass Screen;
 
 void ScreenClass::processEvent(GxFT5436::Event event, void* param) {
