@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <HardwareSerial.h>
 #include <AsyncEventSource.h>
+#include <mutex>
 #include <sstream>
 
 //#define LOG_SETTINGS
@@ -15,17 +16,17 @@
 #define MAX_MESSAGES 256
 
 
-typedef std::function<void(std::string)> Send;
+typedef std::function<void(std::string, ulong id)> Send;
 
 class LogClass {
     private:
 
         typedef struct Data {
-            std::vector<std::string> messages;
+            std::vector<std::pair<ulong, std::string>> messages;
             std::function<size_t()> countClients;
             Send _send;
-            int _sent = 0;
-            bool busy = false;
+            uint _sent = 0;
+            std::mutex guard;
             unsigned long time = 0;
         } Data;
 
@@ -35,14 +36,13 @@ class LogClass {
         void _log(std::string str);
 
 
-    private:
         [[noreturn]] static void sendMessages(void *);
-    public:
-        void lock();
-        void release();
 
 
     public:
+        std::vector<std::pair<ulong, std::string>>* getMessages();
+        std::mutex* getGuard();
+        void setSent(uint sent);
         void setEvent(Send send);
         void setCountClients(std::function<size_t()> f);
         void enable();
@@ -51,9 +51,9 @@ class LogClass {
         template<typename ... Args>
         void logf(const char* format, Args ... args)
         {
-            size_t size = snprintf( nullptr, 0, format, args ... ) + 1; // Extra space for '\0'
+            const size_t size = snprintf( nullptr, 0, format, args ... ) + 1; // Extra space for '\0'
             if( size <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
-            std::unique_ptr<char[]> buf( new char[ size ] );
+            const std::unique_ptr<char[]> buf( new char[ size ] );
             snprintf( buf.get(), size, format, args ... );
             _log(buf.get());
         }

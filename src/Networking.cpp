@@ -5,10 +5,10 @@
 NetworkingClass Networking;
 
 
-void NetworkingClass::sendEvent(const char * event, std::string str) {
+void NetworkingClass::sendEvent(const char * event, const std::string& content, const ulong id = 0) const {
     if(events != nullptr)
         if(events->count() > 0)
-            events->send(str.c_str(), event, millis());
+            events->send(content.c_str(), event, id == 0 ? millis() : id);
 }
 
 int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
@@ -35,6 +35,8 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
         sendInfo();
         serverSetup();
         Log.logf("Info; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
+
+        Log.enable();
 
         //wait for rtc initialization
         while(Data.getTime().year() == 2000)
@@ -95,8 +97,10 @@ void NetworkingClass::serverSetup() {
 
     server->addHandler(events);
 //    Log.setEvent([this](std::string str){ sendEvent( "log", std::move(str));});
+    Log.setCountClients([this]() { return events->count(); });
+    Log.setEvent([this](const std::string& str, const ulong id) { sendEvent("log", str, id); });
     Data.setCountClients([this]() { return events->count(); });
-    Data.setEvent([this](const char *event, std::string str) { sendEvent(event, std::move(str)); });
+    Data.setEvent([this](const char *event, const std::string& str) { sendEvent(event, str); });
 
     server->onNotFound([](AsyncWebServerRequest *request) {
         if (request->method() == HTTP_OPTIONS)
@@ -106,11 +110,11 @@ void NetworkingClass::serverSetup() {
     });
 
     server->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(SPIFFS, "/settings.html", "text/html", false, processor);
+        request->send(SPIFFS, "/settings.html", "text/html", false, processorRoot);
     });
 
     server->on("/log", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(SPIFFS, "/log.html", "text/html", false, nullptr);
+        request->send(SPIFFS, "/log.html", "text/html", false, processorLog);
     });
 
     server->on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -287,7 +291,7 @@ void NetworkingClass::sendInfo() {
 //        Serial.println(http.getString());
 }
 
-String NetworkingClass::processor(const String& var) {
+String NetworkingClass::processorRoot(const String& var) {
 
     char c[10];
 
@@ -391,6 +395,33 @@ String NetworkingClass::processor(const String& var) {
         str += "</table>";
 
         return str;
+    }
+
+}
+
+String NetworkingClass::processorLog(const String& var) {
+
+    char c[10];
+
+    String str;
+
+    if(var == "logs"){
+
+        {
+            std::lock_guard<std::mutex> lock(*Log.getGuard());
+            auto messages = Log.getMessages();
+            for(auto & message : *messages) {
+                str += "[";
+                str += message.first;
+                str += "] ";;
+                str += message.second.c_str();
+                str += "<br>";
+            }
+            Log.setSent(messages->size());
+        }
+
+        return str;
+
     }
 
 }

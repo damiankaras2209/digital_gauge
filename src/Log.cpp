@@ -6,25 +6,26 @@ LogClass Log;
 
 void LogClass::_log(std::string str) {
     Serial.print(str.c_str());
-    lock();
-    if(_data.messages.size() < MAX_MESSAGES)
-        _data.messages.push_back(str);
-    release();
+    {
+        std::lock_guard<std::mutex> lock(_data.guard);
+        if(_data.messages.size() < MAX_MESSAGES)
+            _data.messages.emplace_back(millis(),str);
+    }
 }
 
 void LogClass::sendMessages(void *params) {
     auto data = (Data*)params;
     for(;;) {
-        while(data->busy)
-            delay(1);
-        data->busy = true;
-//        Serial.print("Connected clients: ");
-//        Serial.println(data->countClients());
+
+        // Log.logf("Connected clients: %d\n", data->countClients());
         if(data->countClients() > 0) {
-            for(int i=data->_sent; i<data->messages.size();i++) {
-//                Serial.printf("Sending: %s", data->messages.at(i).c_str());
-                data->_send(data->messages.at(i));
-                data->_sent++;
+            {
+                std::lock_guard<std::mutex> lock(data->guard);
+                for(int i=data->_sent; i<data->messages.size();i++) {
+                    //                Serial.printf("Sending: %s", data->messages.at(i).c_str());
+                    data->_send(data->messages.at(i).second, data->messages.at(i).first);
+                    data->_sent++;
+                }
             }
         }
 //        if(!data->messages.empty()) {
@@ -32,19 +33,20 @@ void LogClass::sendMessages(void *params) {
 //            data->_send(data->messages.front());
 //            data->messages.erase(data->messages.begin());
 //        }
-        data->busy = false;
         delay(10);
     }
 }
 
-void LogClass::lock() {
-    while(_data.busy)
-        delay(1);
-    _data.busy = true;
+std::vector<std::pair<ulong, std::string>>* LogClass::getMessages() {
+    return &_data.messages;
 }
 
-void LogClass::release() {
-    _data.busy = false;
+std::mutex* LogClass::getGuard() {
+    return &_data.guard;
+}
+
+void LogClass::setSent(const uint sent) {
+    _data._sent = sent;
 }
 
 void LogClass::setEvent(Send send) {
@@ -64,8 +66,11 @@ void LogClass::enable() {
                                     &_data,
                                     1,
                                     &handle,
-                                    0))
+                                    1))
             log("Failed to start sendMessagesTask task");
+        else {
+            log("sendMessagesTask started on core 0");
+        }
         _enabled = true;
     }
 }

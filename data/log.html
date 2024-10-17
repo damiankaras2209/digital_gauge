@@ -9,8 +9,8 @@
             var x = 0;
             var last = "";
             source.addEventListener('log', function (e) {
-                if(e.data.localeCompare(last) != 0) {
-                    document.getElementById("log").innerHTML += (x++ + ": " +  e.data + "</br>");
+                if(e.data.localeCompare(last) !== 0) {
+                    document.getElementById("log").innerHTML += ("[" + e.lastEventId + "] " +  e.data + "</br>");
                     last = e.data;
                 }
             }, false);
@@ -21,6 +21,6 @@
     <h1>Log</h1>
     <hr>
     <div id="log">
-
+        %LOGS%
     </div>
 </body>

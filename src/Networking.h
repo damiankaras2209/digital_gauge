@@ -21,7 +21,7 @@ class NetworkingClass {
         int connectWiFi(const char* ssid = "", const char* pass = "");
         void sendInfo();
         void serverSetup();
-        void sendEvent(const char *event, std::string content);
+        void sendEvent(const char *event, const std::string& content, ulong id) const;
         bool* getServerOnPointer() {return &_serverOn;};
 
     private:
@@ -38,7 +38,8 @@ class NetworkingClass {
 
         _Noreturn  static void connectionMaintainer(void *);
         static void serverSetupTask(void *);
-        static String processor(const String& var);
+        static String processorRoot(const String& var);
+        static String processorLog(const String& var);
 };
 
 extern NetworkingClass Networking;
