@@ -21,9 +21,9 @@ void UpdaterClass::setOnSuccessCallback(OnSuccessCallback f) {
 }
 
 void UpdaterClass::readFilesystemVersion(Version *v) {
-    if(SPIFFS.exists("/version.txt")) {
+    if(SPIFFS.exists("/version")) {
 
-        fs::File file = SPIFFS.open("/version.txt", "r");
+        fs::File file = SPIFFS.open("/version", "r");
         uint8_t buf[20];
         file.read(buf,20);
         char* line = (char *)malloc(20*sizeof(char));
