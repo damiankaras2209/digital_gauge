@@ -53,7 +53,7 @@ void UpdaterClass::readFilesystemVersion(Version *v) {
     }
 }
 
-void UpdaterClass::updateFW(String url) {
+void UpdaterClass::performFWUpdate(String url) {
     WiFiClient client;
     Log.logf("Updating to: %s\n", url.c_str());
     Log.logf("Free heap: %d\n", ESP.getFreeHeap());
@@ -105,7 +105,15 @@ void UpdaterClass::checkForUpdate(LogCallback log) {
     _check = true;
 }
 
+void UpdaterClass::updateFW(String url) {
+    _performUpdate = true;
+    targetVersionURL = std::move(url);
+}
+
 void UpdaterClass::loop() {
+    if (_performUpdate) {
+        performFWUpdate(targetVersionURL);
+    }
     if(_check) {
 
         HTTPClient http;
@@ -165,7 +173,7 @@ void UpdaterClass::loop() {
                 ss << latestFilename;
                 _log("\nUpdating to " + latestFound.toString());
                 _log("\nThis may take a few minutes...");
-                updateFW(ss.str().c_str());
+                performFWUpdate(ss.str().c_str());
             } else if (latestFound == firmware){
                 Log.logf("Firmware is up to date!");
                 _log("\nFirmware is up to date!");

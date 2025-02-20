@@ -269,6 +269,30 @@ void NetworkingClass::serverSetup() {
         request->send(response);
     });
 
+    server->on("/ota", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(SPIFFS, "/ota.html", "text/html", false, processorOta);
+    });
+
+    server->on("/ota", HTTP_POST, [](AsyncWebServerRequest *request){
+        Log.logf("OTA");
+        int params = request->params();
+        if (params == 1) {
+            Screen.pause(false, false);
+            AsyncWebParameter* p = request->getParam(0);
+            Screen.enableTouch(false);
+            Screen.pause(true, true);
+            Updater.setOnSuccessCallback([] {
+                Log.logf("Restarting in 1 seconds");
+                Screen.tick();
+                delay(1000);
+                Screen.setBrightness(0);
+                esp_restart();
+            });
+            Updater.updateFW(String(URL) + "files/" + p->value().c_str());
+        }
+        request->send(HTTP_CODE_OK);
+    });
+
     server->begin();
 
     Log.logf("Server started");
@@ -425,3 +449,65 @@ String NetworkingClass::processorLog(const String& var) {
     }
     return "missing preprocessor case";
 }
+
+String NetworkingClass::processorOta(const String& var) {
+
+    char c[10];
+
+    String str;
+
+    if(var == "versions"){
+
+        HTTPClient http;
+        http.begin(URL);
+        int httpResponseCode = http.GET();
+
+        if (httpResponseCode>0) {
+            Log.logf("HTTP Response code: %d\n", httpResponseCode);
+            std::string payload = http.getString().c_str();
+
+            std::size_t nextLine = 0;
+            int i = 0;
+
+            while(nextLine != std::string::npos) {
+                nextLine = payload.find_first_of('\n');
+
+                std::string line = payload.substr(0, nextLine);
+                payload = payload.substr(nextLine+1);
+
+                if(line.length() == 0)
+                    continue;
+
+                std::string filename = line.substr(line.find_last_of('/') + 1);
+
+                size_t start = filename.find_last_of("_v") + 1;
+
+                std::string name = filename.substr(0, start - 2);
+                if (name != "firmware")
+                    continue;
+
+                str += "<input type='radio' name='ver' id='ota_";
+                str += i;
+                str += "' value='";
+                str += filename.c_str();
+                str += "'><label for='ota_";
+                str += i;
+                str += "'>";
+                str += filename.c_str();
+                str += "</label></br>";
+                i++;
+            }
+
+        } else {
+            Log.logf("Error code: %d\n", httpResponseCode);
+        }
+
+        http.end();
+
+
+        return str;
+
+    }
+    return "missing preprocessor case";
+}
+

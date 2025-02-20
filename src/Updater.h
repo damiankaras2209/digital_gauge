@@ -48,6 +48,7 @@ class UpdaterClass {
         void setOnFinnish(OnFinnishCallback);
         void setOnSuccessCallback(OnSuccessCallback);
         void checkForUpdate(LogCallback log = nullptr);
+        void updateFW(String url);
         void updateFS(String version, Callback onFinish);
         void loop();
         String getMac();
@@ -57,8 +58,10 @@ class UpdaterClass {
         OnSuccessCallback _onSuccess = nullptr;
         LogCallback _log = nullptr;
         volatile bool _check = false;
+        volatile bool _performUpdate = false;
+        String targetVersionURL;
+        void performFWUpdate(String url);
         static void readFilesystemVersion(Version*);
-        void updateFW(String url);
 
 };
 
