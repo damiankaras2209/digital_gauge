@@ -265,9 +265,7 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
                     params->lock.release();
                     params->relayState[HEADLIGHTS_PIN] = HIGH;
                 }
-            } else if(false) { //skip turning headlights off
-                //to do
-                //persistent logging of time without frames
+            } else {
                 if (params->relayState[HEADLIGHTS_PIN] == HIGH) {
                     params->lock.lock();
                     Data.mcp23008.digitalWrite(HEADLIGHTS_PIN, LOW);
@@ -332,9 +330,11 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 
 //        params->mcp2515Ptr->sendMessage(&msg);
 
-        if(millis() - params->lastFrame > CAN_INACTIVITY_TRESHOLD) {
-            params->canActive = false;
-            Log.logf("Can lost");
+        if(millis() - params->lastFrame > CAN_INACTIVITY_THRESHOLD) {
+            if (params->canActive) {
+                params->canActive = false;
+                Log.logf("Can lost");
+            }
             if(millis() - params->lastCanInit > CAN_REINIT_AFTER) {
                 params->lastCanInit = millis();
                 canReset(params->mcp2515Ptr);
