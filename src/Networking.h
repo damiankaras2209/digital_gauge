@@ -35,6 +35,7 @@ class NetworkingClass {
         static void serverSetupTask(void *);
         static String processorRoot(const String& var);
         static String processorLog(const String& var);
+        static String processorOta(const String& var);
 };
 
 extern NetworkingClass Networking;
