@@ -19,36 +19,6 @@ void ScreenClass::processEvent(GxFT5436::Event event, void* param) {
         }
 
     } else if(event.type == TWO_POINT_CLICK) {
-        auto params = (EventParams*)param;
-        auto clickables =  *(params->clickables);
-
-        if(*(params->touchEnabled) && clickables[LEFT]->isVisible() && clickables[RIGHT]->isVisible() &&
-            (
-                (
-                clickables[LEFT]->isInBoundaries(event.x[0], event.y[0]) &&
-                clickables[RIGHT]->isInBoundaries(event.x[1], event.y[1])
-                ) || (
-                clickables[LEFT]->isInBoundaries(event.x[1], event.y[1]) &&
-                clickables[RIGHT]->isInBoundaries(event.x[0], event.y[0])
-                )
-           )
-        ) {
-            Log.logf("Throttle!\n", 3);
-            if(millis() - Data.data.lastValveChange > THROTTLE_VALVE_DELAY) {
-                params->screen->prompt->setDismissible(false);
-                params->screen->showPrompt(String(Settings.state.throttleState ? "Closing" : "Opening") + " exhaust throttle valve");
-                Data.data.shouldToggleValve = true;
-                while(millis() - Data.data.lastValveChange > THROTTLE_VALVE_DELAY) {
-                    delay(50);
-                }
-                params->screen->closePrompt();
-                params->screen->prompt->setDismissible(true);
-            }
-            else {
-                params->screen->showPrompt("Wait at least " + String(THROTTLE_VALVE_DELAY) + " seconds before\ntoggling exhaust throttle valve again");
-            }
-
-        }
 
     }
 
@@ -81,11 +51,11 @@ void ScreenClass::init() {
         gauges->cycleData(MID);
     });
     gaugesClickables->at(TIME)->setOnClick([this]() {
-        switchView(MENU);
+        showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) +
+        "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) +
+        "\nIP: " + WiFi.localIP().toString());
     });
 
-
-//    clickables.insert(gauges->getClickables()->end(), gauges->getClickables()->begin(), gauges->getClickables()->end());
     prompt = new Prompt;
     prompt->init(tft, lock, Networking.getServerOnPointer());
     prompt->setOnClick([this]() {
@@ -93,83 +63,6 @@ void ScreenClass::init() {
             switchView(previousView);
     });
     clickables.push_back(prompt);
-    menu = new Menu();
-    menu->init(tft, lock, Networking.getServerOnPointer());
-    std::vector<Menu::Entry*> entries;
-    entries.push_back(new Menu::Entry("BACK", [this]() {
-        Log.logf_d("Fired entry %d\n", 1);
-        switchView(GAUGES);
-    }));
-    entries.push_back(new Menu::Entry("SHOW INFO", [this]() {
-        Log.logf_d("Fired entry %d\n", 2);
-        showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) +
-        "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) +
-        "\nIP: " + WiFi.localIP().toString() +
-        "\nFW: " + Updater.firmware.toString() +" FS: " + Updater.filesystemCurrent.toString() +
-        "\nMAC: " + Updater.getMac());
-    }));
-    entries.push_back(new Menu::Entry("SYNC TIME", [this]() {
-        Log.logf_d("Fired entry %d\n", 3);
-        prompt->setDismissible(false);
-        showPrompt("Getting time from server... ");
-        if(WiFi.status() == WL_CONNECTED) {
-            switch (Data.adjustTime(&Data.data)) {
-                case  D_SUCCESS: appendToPrompt("\nSuccess"); break;
-                case  D_FAIL: appendToPrompt("\nFail"); break;
-            }
-        } else {
-            appendToPrompt("\nNo connection");
-            prompt->setDismissible(true);
-        }
-        prompt->setDismissible(true);
-    }));
-    entries.push_back(new Menu::Entry("POST", [this]() {
-        Log.logf_d("Fired entry %d\n", 4);
-        showPrompt("POST:");
-        for(int i=0; i<Device::D_LAST; i++)
-            appendToPrompt("\n" + deviceName[i] + ": " + (Data.status[i] ? "good" : "fail"));
-    }));
-    entries.push_back(new Menu::Entry("RESET WIFI CREDENTIALS", [this]() {
-        Log.logf_d("Fired entry %d\n", 5);
-        Settings.general[WIFI_SSID]->setDefault();
-        Settings.general[WIFI_PASS]->setDefault();
-        Settings.save(false);
-        showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) +
-             "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()));
-    }));
-    entries.push_back(new Menu::Entry("RESTART", [this]() {
-        Log.logf_d("Fired entry %d\n", 6);
-        esp_restart();
-    }));
-    entries.push_back(new Menu::Entry("CHECK FOR UPDATE", [this]() {
-        Log.logf_d("Fired entry %d\n", 7);
-        showPrompt("Checking for updates... ");
-        prompt->setDismissible(false);
-        if(WiFi.status() == WL_CONNECTED) {
-            Updater.setOnSuccessCallback([this]() {
-                Log.logf("Restarting in 5 seconds");
-                appendToPrompt("\nRestarting in 5 seconds");
-                Screen.tick();
-                delay(5000);
-                setBrightness(0);
-                esp_restart();
-            });
-            Updater.setOnFinnish([this]() {
-                prompt->setDismissible(true);
-            });
-            Updater.checkForUpdate([this](String str) {
-                appendToPrompt(std::move(str));
-                Screen.tick();
-            });
-        } else {
-            appendToPrompt("\nNo connection");
-            prompt->setDismissible(true);
-        }
-    }));
-    menu->setEntries(entries);
-    for (auto clickable: entries) {
-        clickables.push_back(clickable);
-    }
     eventParams = {&clickables, &_touchEnabled, this};
     Data.touch.addOnEvent(processEvent, (void*)&eventParams);
 }
@@ -192,10 +85,6 @@ void ScreenClass::switchView(View view) {
     for(auto clickable : clickables)
         clickable->setVisibility(false);
 
-    if(previousView == MENU && currentView != MENU) {
-        menu->clean();
-    }
-
     switch(currentView) {
         case INIT: break;
         case GAUGES:  {
@@ -211,13 +100,6 @@ void ScreenClass::switchView(View view) {
         }
         case PROMPT:  {
             prompt->setVisibility(true);
-            break;
-        }
-        case MENU:  {
-            menu->prepare();
-            menu->resetPosition();
-            for(auto clickable : menu->entries)
-                clickable->setVisibility(true);
             break;
         }
     }
@@ -240,7 +122,6 @@ void ScreenClass::tick() {
         if(reset) {
             tft->fillScreen(gen[BACKGROUND_COLOR]->get<int>());
             gauges->reInit();
-            menu->reInit();
             prompt->reInit();
             reset = false;
         }
@@ -271,10 +152,6 @@ void ScreenClass::tick() {
             }
             case PROMPT:  {
                 prompt->draw();
-                break;
-            }
-            case MENU:  {
-                menu->draw();
                 break;
             }
         }
@@ -314,16 +191,4 @@ void ScreenClass::closePrompt() {
 void ScreenClass::setBrightness(uint8_t x) {
     _brightness = x;
     ledcWrite(0, x);
-}
-
-void ScreenClass::pause(bool b, bool wait) {
-//    Log.logf("Pause");
-    _pause = b;
-    if(wait)
-        while(_paused != b)
-            delay(1);
-}
-
-void ScreenClass::enableTouch(bool b) {
-    _touchEnabled = b;
 }

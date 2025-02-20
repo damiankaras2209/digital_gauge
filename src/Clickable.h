@@ -28,26 +28,25 @@ class Clickable {
             _w = w;
             _h = h;
         }
-        int16_t getX() {
+        int16_t getX() const {
             return _x;
         }
-        int16_t getY() {
+        int16_t getY() const {
             return _y;
         }
-        int16_t getWidth() {
+        int16_t getWidth() const {
             return _w;
         }
-        int16_t getHeight() {
+        int16_t getHeight() const {
             return _h;
         }
         void setVisibility(bool b) {
             _visible = b;
         }
-        bool isVisible() {
+        bool isVisible() const {
             return _visible;
         }
-        bool isInBoundaries(int x, int y) {
-            //                    Log.logf("x: %d, _x: %d, _w: %d, y: %d, _y: %d, _h: %d\n", x, _x, _w, y, _y, _h);
+        bool isInBoundaries(int x, int y) const {
             return x > _x && x < (_x + _w) && y > _y && y < (_y + _h);
         }
 };

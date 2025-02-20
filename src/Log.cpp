@@ -67,7 +67,3 @@ void LogClass::enable() {
         _enabled = true;
     }
 }
-
-// void LogClass::onConnect() {
-//     _data._sent = 0;
-// }

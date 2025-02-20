@@ -15,16 +15,14 @@
 #include "Wifi.h"
 #include "TFT_eSPI.h"
 #include "Gauges.h"
-#include "Menu.h"
 #include "Lock.h"
-#include "Updater.h"
 #include "Prompt.h"
 
 #define SCALE_SPRITE_Y_OFFSET_12 2
 #define SCALE_SPRITE_Y_OFFSET_16 3
 
 enum View {
-    INIT, GAUGES, CLOCK, PROMPT, MENU
+    INIT, GAUGES, CLOCK, PROMPT
 };
 
 class ScreenClass {
@@ -39,11 +37,8 @@ class ScreenClass {
 		View getView();
 		void tick();
 		void setBrightness(uint8_t x);
-        void pause(bool b, bool wait);
-        void enableTouch(bool b);
 
 		Gauges *gauges;
-		Menu *menu;
 
         TFT_eSPI *tft;
 

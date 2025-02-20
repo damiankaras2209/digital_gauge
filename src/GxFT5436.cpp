@@ -46,21 +46,10 @@ bool GxFT5436::init(Stream* pDiagnosticOutput)
   uint8_t error = I2C->endTransmission();
   if (error != 0)
   {
-//    DiagOut.println("GxFT5436::init() - I2C failed for address 0x"); DiagOut.print(FT5436_I2C_ADDR, HEX);
     return false;
   }
-//  DiagOut.println("GxFT5436 init() successful");
   I2C_Write(FT5436_I2C_ADDR, FT_REG_DEV_MODE, 0);
-//  I2C_Write(FT5436_I2C_ADDR, FT_REG_THGROUP, 1);
-//  I2C_Write(FT5436_I2C_ADDR, 0x81, 1);
-//  I2C_Write(FT5436_I2C_ADDR, 0x82, 1);
   I2C_Write(FT5436_I2C_ADDR, FT_REG_POINT_RATE, 14);
-//  DiagOut.print("THGROUP: ");
-//  DiagOut.println(I2C_Read(FT5436_I2C_ADDR, FT_REG_THGROUP));
-//  DiagOut.print("THPEAK: ");
-//  DiagOut.println(I2C_Read(FT5436_I2C_ADDR, 0x81));
-//  DiagOut.print("ERROR: ");
-//  DiagOut.println(I2C_Read(FT5436_I2C_ADDR, 0xA9), HEX);
     return true;
 }
 
@@ -72,12 +61,10 @@ GxFT5436::TouchInfo GxFT5436::scan()
   uint8_t touch_count = _registers[FT_TD_STATUS] & FT_MAX_ID;
   if (touch_count > CFG_MAX_TOUCH_POINTS)
   {
-//    DiagOut.print("scan() got invalid touch_count: "); DiagOut.print(touch_count); DiagOut.print(" 0x"); DiagOut.println(_registers[FT_TD_STATUS], HEX);
-    I2C_Read(FT5436_I2C_ADDR, FT_REG_DEV_MODE, _registers, POINT_READ_BUF);
+   I2C_Read(FT5436_I2C_ADDR, FT_REG_DEV_MODE, _registers, POINT_READ_BUF);
     touch_count = _registers[FT_TD_STATUS] & FT_MAX_ID;
     if (touch_count > CFG_MAX_TOUCH_POINTS) touch_count = 0;
   }
-  //std::swap(_act_idx, _prev_idx);
   int16_t t = _act_idx; _act_idx = _prev_idx; _prev_idx = t;
   _info[_act_idx].touch_count = touch_count;
   for (uint8_t i = 0; i < CFG_MAX_TOUCH_POINTS; i++)
@@ -95,10 +82,6 @@ GxFT5436::TouchInfo GxFT5436::scan()
   }
 
   uint32_t elapsed2 = micros() - start;
-  if (touch_count > 0)
-  {
-    //DiagOut.print("scan() "); DiagOut.print(elapsed1); DiagOut.print(" "); DiagOut.println(elapsed2);
-  }
   (void) elapsed1;
   (void) elapsed2;
   return _info[_act_idx];
@@ -171,8 +154,6 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
     }
 
     while(1) {
-//        data->diagOut->print("millis() - touchDetectedTime: ");
-//        data->diagOut->print (millis() - touchDetectedTime);
 
         //any touch detected
         if(millis() - touchDetectedTime < 100) {
@@ -195,7 +176,6 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
                 uint8_t id = touchInfo.id[i];
                 if(!down[id]) {
                     down[id] = true;
-//                    data->diagOut->printf("Touch down (%d)", id);
                     dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam, Event{TOUCH_DOWN, id, touchInfo.x[i], touchInfo.y[i]});
                     startX[id] = touchInfo.x[i];
                     startY[id] = touchInfo.y[i];
@@ -219,8 +199,7 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
                 prevX[id] = touchInfo.x[i];
                 prevY[id] = touchInfo.y[i];
 
-//                data->diagOut->printf("touch id: %d, last: %lu (%d,%d)\n", touchInfo.id[i], millis() - last[id], touchInfo.x[i], touchInfo.y[i]);
-            }
+           }
 
             //count active touch points
             downCount = 0;
@@ -229,30 +208,14 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
             }
             maxDownCount = max(maxDownCount, downCount);
 
-//            data->diagOut->printf("downCount: %d, maxDownCount: %d\n", downCount, maxDownCount);
-
-//            for (uint8_t id = 0; id < 5; id++) {
-//                data->diagOut->printf("detected: %d, down: %d", detected[id], down[id]);
-//            }
-//            data->diagOut->printf("\n");
-
-
             //Process TOUCH_UP event for individual points
             for (uint8_t i = 0; i < maxDownCount; i++) {
                 if(!detected[i] && down[i]) {
                     down[i] = false;
-//                    data->diagOut->printf("Touch up (%hu) start(%hu, %hu) end(%hu,%hu)\n", i, startX[i], startY[i],
-//                                          endX[i], endY[i]);
                     dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam,
                                     Event{TOUCH_UP, i, endX[i], endY[i]});
                 }
             }
-
-//                    Event event;
-//                    event.startX = startX[id];
-//                    event.startY = startY[id];
-//                    event.endX = endX[id];
-//                    event.endY = endY[id];
 
             //touch ended, process events
             if(downCount == 0) {
@@ -263,42 +226,34 @@ void GxFT5436::dispatchOnChange(std::vector<onChangeCallback> *arr, std::vector<
                     //Single touch
                     if ((abs(startX[0] - endX[0]) <= SINGLE_POINT_DISTANCE) &&
                         (abs(startY[0] - endY[0]) <= SINGLE_POINT_DISTANCE)) {
-//                        data->diagOut->printf("Single touch at %d,%d", endX[0], endY[0]);
                             dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam,
                                         Event{SINGLE_CLICK, 0, endX[0], endY[0]});
                     }
                         //Slide right
                     else if ((abs(startX[0] - endX[0]) >= SLIDE_ALONG_DISTANCE) &&
                              (abs(startY[0] - endY[0]) <= SLIDE_ACROSS_DISTANCE) && (endX[0] > startX[0])) {
-//                        data->diagOut->printf("Sl0e right from %d,%d", startX[0], endY[0]);
-//                        event.type = SLIDE_LEFT;
                     }
                         //Slide left
                     else if ((abs(startX[0] - endX[0]) >= SLIDE_ALONG_DISTANCE) &&
                              (abs(startY[0] - endY[0]) <= SLIDE_ACROSS_DISTANCE) && (endX[0] < startX[0])) {
-//                        data->diagOut->printf("Sl0e left from %d,%d", startX[0], endY[0]);
                     }
                         //Slide down
                     else if ((abs(startX[0] - endX[0]) <= SLIDE_ACROSS_DISTANCE) &&
                              (abs(startY[0] - endY[0]) >= SLIDE_ALONG_DISTANCE) && (endY[0] > startY[0])) {
-//                        data->diagOut->printf("Sl0e down from %d,%d", startX[0], endY[0]);
                     }
                         //Slide up
                     else if ((abs(startX[0] - endX[0]) <= SLIDE_ACROSS_DISTANCE) &&
                              (abs(startY[0] - endY[0]) >= SLIDE_ALONG_DISTANCE) && (endY[0] < startY[0])) {
-//                        data->diagOut->printf("Sl0e up from %d,%d", startX[0], endY[0]);
                     }
 
                 //Two point events
                 } else if (maxDownCount == 2) {
-//                    data->diagOut->printf("Two point action\n");
 
                     //Two point touch
                     if ((abs(startX[0] - endX[0]) <= MULTI_POINT_DISTANCE) &&
                         (abs(startY[0] - endY[0]) <= MULTI_POINT_DISTANCE) &&
                         (abs(startX[1] - endX[1]) <= MULTI_POINT_DISTANCE) &&
                         (abs(startY[1] - endY[1]) <= MULTI_POINT_DISTANCE)) {
-//                        data->diagOut->printf("Single touch at %d,%d", endX[0], endY[0]);
                         dispatchOnEvent(&data->actionCallbacks, &data->actionCallbacksParam,
                                         Event{TWO_POINT_CLICK, 0,
                                               endX[0], endY[0],
@@ -327,12 +282,10 @@ void GxFT5436::check(const char text[], TouchInfo& touchinfo)
 
 void GxFT5436::I2C_Write(uint8_t dev_addr, uint8_t reg_addr, uint8_t data)
 {
-  //DiagOut.println("I2C_Write");
   I2C->beginTransmission(dev_addr);
   I2C->write(reg_addr);
   I2C->write(data);
   I2C->endTransmission();
-  //DiagOut.println("I2C_Write done");
 }
 
 uint8_t GxFT5436::I2C_Read(uint8_t dev_addr, uint8_t reg_addr)
@@ -360,7 +313,6 @@ void GxFT5436::I2C_Read(uint8_t dev_addr, uint8_t reg_addr, uint8_t* data, uint8
   {
     data[i++] = I2C->read();
   }
-  //DiagOut.print("I2C_Read "); DiagOut.println(i);
 }
 
 

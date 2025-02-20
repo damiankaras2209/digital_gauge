@@ -151,10 +151,7 @@ void Gauges::fillTables() {
             for(int nx=1; nx<(a+1)*density; nx++) {
                 double x = 1.0/density*nx;
                 double y=tga*x;
-                //tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x,gen[HEIGHT]->get<int>()/2+y, TFT_RED);
-                if(1.0*(x+offset)*(x+offset)/(a*a)+1.0*y*y/(b*b)> 0.98) {
-                    //tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x,gen[HEIGHT]->get<int>()/2+y, TFT_WHITE);
-                    arrX[i] = x;
+                if(1.0*(x+offset)*(x+offset)/(a*a)+1.0*y*y/(b*b)> 0.98) {arrX[i] = x;
                     arrY[i] = y;
                     arrR[i] = sqrt(x*x+y*y);
                     break;
@@ -164,10 +161,7 @@ void Gauges::fillTables() {
             for(int ny=1; ny<(b+1)*density; ny++) {
                 double y = 1.0/density*ny;
                 double x=y/tga;
-                //tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x,gen[HEIGHT]->get<int>()/2+y, TFT_RED);
                 if(1.0*(x+offset)*(x+offset)/(a*a)+1.0*y*y/(b*b)> 0.98) {
-                    //tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x,gen[HEIGHT]->get<int>()/2+y, TFT_WHITE);
-
                     arrX[i] = x;
                     arrY[i] = y;
                     arrR[i] = sqrt(x*x+y*y);
@@ -209,7 +203,6 @@ void Gauges::createScaleSprites(Side side) {
             delay(1);
         }
     }
-    //    Log.logf("Sprites creation time: %lu", millis()-t4);
 }
 
 void Gauges::drawScalePiece(void* target, bool isSprite, int deg, int side, int offsetX, int offsetY, int length, int width, uint16_t color) {
@@ -232,20 +225,6 @@ void Gauges::drawScalePiece(void* target, bool isSprite, int deg, int side, int 
     double x2 = sqrt((arrR[deg]-length)*(arrR[deg]-length)/(1+tan(rad(deg))*tan(rad(deg))));
     double y2 = tan(rad(deg))*x2;
 
-    //if(deg <1) {
-
-    //tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x1,gen[HEIGHT]->get<int>()/2+y1, TFT_PINK);
-    //tft->drawPixel(gen[WIDTH]->get<int>()/2+gen[NEEDLE_CENTER_OFFSET]->get<int>()+x2,gen[HEIGHT]->get<int>()/2+y2, TFT_BLUE);
-
-
-    // Log.logf(x1);
-    // Log.logf(" ");
-    // Log.logf(y1);
-    // Log.logf(" ");
-    // Log.logf(x2);
-    // Log.logf(" ");
-    // Log.logf(y2);
-
     TARGET->drawWideLine(
             gen[WIDTH]->get<int>()/2 +side*(gen[NEEDLE_CENTER_OFFSET]->get<int>()+x1) + offsetX,
             gen[HEIGHT]->get<int>()/2 +m*(y1) + offsetY,
@@ -254,7 +233,6 @@ void Gauges::drawScalePiece(void* target, bool isSprite, int deg, int side, int 
             width,
             color,
             gen[BACKGROUND_COLOR]->get<int>());
-    // }
 }
 
 unsigned long t3;
@@ -307,14 +285,6 @@ Log.logf(" draw numbers: %lu", millis()-t3);
 #endif
 }
 
-//static const uint16_t pallete[] = {
-//	TFT_BLACK,		//  0  ^
-// 	TFT_GREEN,   	//  1  |
-//  	TFT_RED,   		//  2  |
-//  	TFT_DARKGREY,   //  3  |
-//	TFT_BLUE		//	4  |
-//};
-
 int xx = 0;
 
 int pX[2], pY[2], pW[2], pH[2], pDeg[2];
@@ -329,16 +299,10 @@ void Gauges::updateNeedle(int side) {
     int start, end;
     double value;
 
-    if(gen[DEMO]->get<bool>()) {
-        value =  (sin((xx + (side ? 0 : 180))/PI/18)/2+0.5);
-        start = 0;
-        end = 1;
-    } else {
-        value = Data.dataInput[selected[side]].value;
-//        value = gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_VALUE_OFFSET]->get<float>();
-        start = gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
-        end = gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
-    }
+
+    value = Data.dataInput[selected[side]].value;
+    start = gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_START_OFFSET]->get<int>();
+    end = gen[DATA_BEGIN_BEGIN + selected[side] * DATA_SETTINGS_SIZE + DATA_SCALE_END_OFFSET]->get<int>();
 
     double val = (value-start)/(end-start);
 
@@ -373,7 +337,6 @@ void Gauges::updateNeedle(int side) {
     }
 
     x = gen[WIDTH]->get<int>() / 2 + (gen[NEEDLE_CENTER_OFFSET]->get<int>() - gen[NEEDLE_CENTER_RADIUS]->get<int>());
-    w = gen[ELLIPSE_A]->get<int>()-gen[NEEDLE_CENTER_OFFSET]->get<int>()+gen[NEEDLE_CENTER_RADIUS]->get<int>();
     w = max(needleBBoxW + gen[NEEDLE_CENTER_RADIUS]->get<int>(), gen[NEEDLE_CENTER_RADIUS]->get<int>() * 2);
     h = max(needleBBoxH + gen[NEEDLE_CENTER_RADIUS]->get<int>(), gen[NEEDLE_CENTER_RADIUS]->get<int>() * 2);
 
@@ -424,8 +387,6 @@ void Gauges::updateNeedle(int side) {
     offsetX = - areaX + offsetX;
     offsetY = - areaY + offsetY;
 
-//    needleUpdate->drawRect(x + offsetX, y + offsetY, w, h, TFT_RED);
-
 #ifdef LOG_DETAILED_FRAMETIME
     Log.logf("first calc: %lu draw scale: {", millis()-t2);
     t2 = millis();
@@ -451,8 +412,6 @@ void Gauges::updateNeedle(int side) {
         gen[NEEDLE_TOP_WIDTH]->get<int>(),
         gen[NEEDLE_COLOR]->get<int>()
     );
-
-//    needleUpdate->drawRect(0, 0, areaW, areaH, TFT_VIOLET);
 
     TARGET->fillCircle(
         needleX + offsetX,
@@ -504,13 +463,6 @@ void Gauges::updateNeedle(int side) {
     pDeg[side] = deg;
     pSource[side] = selected[side];
     redraw[side] = false;
-
-    if(gen[DEMO]->get<bool>()) {
-        xx+=2;
-        if(xx>=360) {
-            xx-=360;
-        }
-    }
 }
 
 int pMinute = -1, pDay = -1;

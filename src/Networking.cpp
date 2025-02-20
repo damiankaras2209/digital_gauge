@@ -32,7 +32,6 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
 
 //        Log.logf("MDNS; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
 
-        sendInfo();
         serverSetup();
         Log.logf("Info; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
 
@@ -201,94 +200,9 @@ void NetworkingClass::serverSetup() {
         request->send(HTTP_CODE_OK);
     });;
 
-    server->on("/screenshot", HTTP_POST, [](AsyncWebServerRequest *request){
-        Screen.enableTouch(false);
-        Screen.pause(true, true);
-        AsyncWebServerResponse *response = request->beginChunkedResponse("text/plain", [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-
-            if (!index)
-                Log.logf("Begin response");
-
-            int width = Settings.general[WIDTH]->get<int>();
-            int height = Settings.general[HEIGHT]->get<int>();
-            int lineSize = 3 * width;
-
-            int line = (int) floor(index / 3) / width;
-            int newLine = (int) floor(index / 3) % width;
-
-            if (line == height) {
-                Screen.pause(false, false);
-                Screen.enableTouch(true);
-                return 0;
-            }
-
-
-//            Log.logf("index: %d, maxLen: %d, line: %d, lineProgress: %d\n", index, maxLen, line, newLine);
-
-            int writtenNow = 0;
-            int linesWritten = 0;
-
-            if (newLine > 0) {
-                int length = min(width - newLine, (int) floor(maxLen / 3));
-                Screen.tft->readRectRGB(newLine, line, length, 1, buffer);
-//                Log.logf("writing %d pixels from %d to line end\n", length, newLine);
-                writtenNow += 3 * length;
-            }
-
-            line = (int) floor((index + writtenNow) / 3) / width;
-            newLine = (int) floor((index + writtenNow) / 3) % width;
-
-            if (newLine > 0)
-                return writtenNow;
-
-            while (maxLen - writtenNow > lineSize && line < height) {
-//                Log.logf("writing line: %d\n", line);
-                Screen.tft->readRectRGB(0, line, width, 1, buffer + writtenNow);
-                line++;
-                linesWritten++;
-                writtenNow += lineSize;
-            }
-
-            if (line < height - 1) {
-                int spaceLeft = (int) floor((maxLen - writtenNow) / 3);
-//                Log.logf("writing remaining space: %d\n", spaceLeft);
-                Screen.tft->readRectRGB(0, line, spaceLeft, 1, buffer + writtenNow);
-                writtenNow += 3 * spaceLeft;
-            }
-
-//            Log.logf("\n");
-
-            if (writtenNow == 0) {
-                Screen.pause(false, false);
-                Screen.enableTouch(true);
-            }
-
-            return writtenNow;
-        });
-        response->setContentType("application/octet-stream");
-        request->send(response);
-    });
-
     server->begin();
 
     Log.logf("Server started");
-}
-
-
-void NetworkingClass::sendInfo() {
-    std::stringstream url;
-    url << URL << "info.php";
-    HTTPClient http;
-    http.begin(url.str().c_str());
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    std::stringstream data;
-    data << "mac=" << Updater.getMac().c_str() << "&version=" << Updater.firmware.toString().c_str();
-//    Log.logf("POST data: %s\n", data.str().c_str());
-    int httpResponseCode = http.POST((String)data.str().c_str());
-    Log.logf("Info HTTP Response code: %d\n", httpResponseCode);
-//    http.end();
-//    if (httpResponseCode>0)
-//        Serial.println(http.getString());
 }
 
 String NetworkingClass::processorRoot(const String& var) {
@@ -319,7 +233,6 @@ String NetworkingClass::processorRoot(const String& var) {
 
     } else if(var == "CONSTS") {
 
-        str += (String)"const MAC = '" + Updater.getMac().c_str() + "';\n";
         str += (String)"const GENERAL_SETTINGS_SIZE = " + GENERAL_SETTINGS_SIZE + ";\n";
         str += (String)"const VISUAL_SETTINGS_START = " + VISUAL_SETTINGS_START + ";\n";
         str += (String)"const VISUAL_SETTINGS_END = " + VISUAL_SETTINGS_END + ";\n";
@@ -349,7 +262,7 @@ String NetworkingClass::processorRoot(const String& var) {
             if(i<4)
                 str += (String) "<tr clastr='input.ADS1115_" + i + "'><td>ADS1115_" + i + "</td>";
             else
-                str += (String) "<tr clastr='input.ADC" + i + "'><td>ADC" + i + "</td>";
+                str += (String) "<tr clastr='input.ADC" + i + "'><td>VOLTAGE</td>";
 
             str += (String) "<td>Preset <select id='input_" + i + "_preset' onchange='return preset(" + i +");' type='checkbox' ><option value='0'>Puste</option><option value='1'>Ciśń. oleju</option><option value='2'>Temp. oleju</option></section></td>";
 

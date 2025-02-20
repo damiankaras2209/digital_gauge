@@ -24,7 +24,6 @@ void SettingsClass::init() {
 #endif
 
     general[VERSION] = new Field("version", "version", 1.0f, false);
-    general[DEMO] = (new Field("demo", "Demo mode", 0.0f))->setType(CHECKBOX);
     general[WIFI_SSID] = new Field("ssid", "SSID", MY_SSID);
     general[WIFI_PASS] = new Field("pass", "pass", MY_PASS);
     general[WIDTH] = new Field("width", "", 480, false);
@@ -71,59 +70,24 @@ void SettingsClass::init() {
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_PULLUP_OFFSET] = (new Field("pullup_" + (String)i + "_" + INPUT_PULLUP_OFFSET, "Pull-up R", 0.0f))->setStep(0.1f);
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_PULLDOWN_OFFSET] = (new Field("pulldown_" + (String)i + "_" + INPUT_PULLDOWN_OFFSET, "Pull-down R", 0.0f, false))->setStep(0.1f);
         general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_SERIES_OFFSET] = (new Field("input_" + (String)i + "_" + INPUT_SERIES_OFFSET, "Input R", 0.0f, false))->setStep(0.1f);
-        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_EXPRESSION_OFFSET] = new Field("exp_" + (String)i + "_" + INPUT_EXPRESSION_OFFSET, "Expression", i==(INPUT_SIZE-1) ? "v*5.7" : "v");
+        general[INPUT_BEGIN_BEGIN + INPUT_SETTINGS_SIZE * i + INPUT_EXPRESSION_OFFSET] = new Field("exp_" + (String)i + "_" + INPUT_EXPRESSION_OFFSET, "Wyrażenie", i==(INPUT_SIZE-1) ? "v*5.7" : "v");
     }
 
-    for(int i=ADS1115_0; i<=ADC_6; i++) {
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_ENABLE_OFFSET] = (new Field("enable_" + (String)i + "_" + DATA_ENABLE_OFFSET, "enable", 0.0f))->setType(CHECKBOX);
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_NAME_OFFSET] = new Field("name_" + (String)i + "_" + DATA_NAME_OFFSET, "name", "");
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_UNIT_OFFSET] = new Field("unit_" + (String)i + "_" + DATA_UNIT_OFFSET, "unit", "");
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_SCALE_START_OFFSET] = new Field("scale_start_" + (String)i + "_" + DATA_SCALE_START_OFFSET, "scale_start", 0.0f);
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_SCALE_END_OFFSET] = new Field("scale_end_" + (String)i + "_" + DATA_SCALE_END_OFFSET, "scale_end", 0.0f);
-        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_PRECISION_OFFSET] = new Field("precision_" + (String)i + "_" + DATA_PRECISION_OFFSET, "precision", 1);
+    for(int i=ADS1115_0; i<=VOLTAGE; i++) {
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_ENABLE_OFFSET] = (new Field("enable_" + (String)i + "_" + DATA_ENABLE_OFFSET, "włączone", 0.0f))->setType(CHECKBOX);
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_NAME_OFFSET] = new Field("name_" + (String)i + "_" + DATA_NAME_OFFSET, "nazwa", "");
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_UNIT_OFFSET] = new Field("unit_" + (String)i + "_" + DATA_UNIT_OFFSET, "jednostka", "");
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_SCALE_START_OFFSET] = new Field("scale_start_" + (String)i + "_" + DATA_SCALE_START_OFFSET, "początek skali", 0.0f);
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_SCALE_END_OFFSET] = new Field("scale_end_" + (String)i + "_" + DATA_SCALE_END_OFFSET, "koniec skali", 0.0f);
+        general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * i + DATA_PRECISION_OFFSET] = new Field("precision_" + (String)i + "_" + DATA_PRECISION_OFFSET, "precyzja", 1);
     }
 
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_ENABLE_OFFSET] = (new Field("voltage_enable", "enable", 1))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_NAME_OFFSET] = new Field("voltage_name", "name", "Voltage");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_UNIT_OFFSET] = new Field("voltage_unit", "unit", "V");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_START_OFFSET] = new Field("voltage_scale_start", "scale_start", 6);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_END_OFFSET] = new Field("voltage_scale_end", "scale_end", 18);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_PRECISION_OFFSET] = new Field("voltage_precision", "precision", 1);
-
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_ENABLE_OFFSET] = (new Field("cam_sw_", "enable", 0.0f))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_NAME_OFFSET] = new Field("cam_sw_name", "name", "SW");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_UNIT_OFFSET] = new Field("cam_sw_unit", "unit", "°");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_START_OFFSET] = new Field("cam_sw_scale_start", "scale_start", -550);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_SCALE_END_OFFSET] = new Field("cam_sw_scale_end", "scale_end", 550);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_STEERING_ANGLE + DATA_PRECISION_OFFSET] = new Field("cam_sw_precision", "precision", 0.0f);
-
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_ENABLE_OFFSET] = (new Field("can_speed_enable", "enable", 0.0f))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_NAME_OFFSET] = new Field("can_speed_name", "name", "Speed");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_UNIT_OFFSET] = new Field("can_speed_unit", "unit", "km/h");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_START_OFFSET] = new Field("can_speed_scale_start", "scale_start", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_SCALE_END_OFFSET] = new Field("can_speed_scale_end", "scale_end", 280);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_SPEED + DATA_PRECISION_OFFSET] = new Field("can_speed_precision", "precision", 1);
-
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_ENABLE_OFFSET] = (new Field("can_rpm_enable", "enable", 0.0f))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_NAME_OFFSET] = new Field("can_rpm_name", "name", "RPM");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_UNIT_OFFSET] = new Field("can_rpm_unit", "unit", "rpm");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_START_OFFSET] = new Field("can_rpm_scale_start", "scale_start", 0);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_SCALE_END_OFFSET] = new Field("can_rpm_scale_end", "scale_end", 8000);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_RPM + DATA_PRECISION_OFFSET] = new Field("can_rpm_precision", "precision", 0.0f);
-
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_ENABLE_OFFSET] = (new Field("can_gas_enable", "enable", 0.0f))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_NAME_OFFSET] = new Field("can_gas_name", "name", "Throttle");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_UNIT_OFFSET] = new Field("can_gas_unit", "unit", "%");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_START_OFFSET] = new Field("can_gas_scale_start", "scale_start", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_SCALE_END_OFFSET] = new Field("can_gas_scale_end", "scale_end", 100);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_GAS + DATA_PRECISION_OFFSET] = new Field("can_gas_precision", "precision", 0.1f);
-
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_ENABLE_OFFSET] = (new Field("can_hb_enable", "enable", 0.0f))->setType(CHECKBOX);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_NAME_OFFSET] = new Field("can_hb_name", "name", "Handbrake");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_UNIT_OFFSET] = new Field("can_hb_unit", "unit", "");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_START_OFFSET] = new Field("can_hb_scale_start", "scale_start", 0.0f);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_SCALE_END_OFFSET] = new Field("can_hb_scale_end", "scale_end", 1);
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * CAN_HB + DATA_PRECISION_OFFSET] = new Field("can_hb_precision", "precision", 0.0f);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_ENABLE_OFFSET] = (new Field("voltage_enable", "włączone", 1))->setType(CHECKBOX);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_NAME_OFFSET] = new Field("voltage_name", "nazwa", "Voltage");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_UNIT_OFFSET] = new Field("voltage_unit", "jednostka", "V");
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_START_OFFSET] = new Field("voltage_scale_start", "początek skaliv", 6);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_END_OFFSET] = new Field("voltage_scale_end", "koniec skali", 18);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_PRECISION_OFFSET] = new Field("voltage_precision", "precyzja", 1);
 
 }
 
@@ -256,7 +220,6 @@ void SettingsClass::loadState() {
         state.selected[0] = doc["sel_0"] | VOLTAGE;
         state.selected[1] = doc["sel_1"] | VOLTAGE;
         state.selected[2] = doc["sel_2"] | VOLTAGE;
-        state.throttleState = doc["throttle"] | false;
         if (error)
             Log.logf("Failed to read file, using default state");
         else
@@ -265,7 +228,6 @@ void SettingsClass::loadState() {
         state.selected[0] = VOLTAGE;
         state.selected[1] = VOLTAGE;
         state.selected[2] = VOLTAGE;
-        state.throttleState = false;
         Log.logf("File not found, using default state");
     }
 }
@@ -279,7 +241,6 @@ void SettingsClass::saveState() {
     doc["sel_0"] = state.selected[0];
     doc["sel_1"] = state.selected[1];
     doc["sel_2"] = state.selected[2];
-    doc["throttle"] = state.throttleState;
 
     if (serializeJson(doc, file) == 0)
         Log.logf("Failed to write to file");

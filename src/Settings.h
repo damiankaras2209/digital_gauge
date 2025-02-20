@@ -10,7 +10,6 @@
 #include "ArduinoJson.h"
 
 #include "Log.h"
-#include "Updater.h"
 
 enum S_STATUS {
     S_PENDING, S_SUCCESS, S_FAIL, S_MISSING
@@ -20,7 +19,6 @@ enum Field : uint16_t{
 
     VERSION,
 
-    DEMO,
     WIFI_SSID,
     WIFI_PASS,
 
@@ -67,22 +65,13 @@ enum Field : uint16_t{
     INPUT_1_BEGIN,     INPUT_1_1,  INPUT_1_2,  INPUT_1_END,
     INPUT_2_BEGIN,     INPUT_2_1,  INPUT_2_2,  INPUT_2_END,
     INPUT_3_BEGIN,     INPUT_3_1,  INPUT_3_2,  INPUT_3_END,
-    INPUT_4_BEGIN,     INPUT_4_1,  INPUT_4_2,  INPUT_4_END,
-    INPUT_5_BEGIN,     INPUT_5_1,  INPUT_5_2,  INPUT_5_END,
-    INPUT_6_BEGIN,     INPUT_6_1,  INPUT_6_2,  INPUT_END_END,
+    INPUT_4_BEGIN,     INPUT_4_1,  INPUT_4_2,  INPUT_END_END,
 
     DATA_BEGIN_BEGIN,  DATA_0_1,   DATA_0_2,   DATA_0_3,   DATA_0_4,   DATA_0_END,
     DATA_1_BEGIN,      DATA_1_1,   DATA_1_2,   DATA_1_3,   DATA_1_4,   DATA_1_END,
     DATA_2_BEGIN,      DATA_2_1,   DATA_2_2,   DATA_2_3,   DATA_2_4,   DATA_2_END,
     DATA_3_BEGIN,      DATA_3_1,   DATA_3_2,   DATA_3_3,   DATA_3_4,   DATA_3_END,
-    DATA_4_BEGIN,      DATA_4_1,   DATA_4_2,   DATA_4_3,   DATA_4_4,   DATA_4_END,
-    DATA_5_BEGIN,      DATA_5_1,   DATA_5_2,   DATA_5_3,   DATA_5_4,   DATA_5_END,
-    DATA_6_BEGIN,      DATA_6_1,   DATA_6_2,   DATA_6_3,   DATA_6_4,   DATA_6_END,
-    DATA_7_BEGIN,      DATA_7_1,   DATA_7_2,   DATA_7_3,   DATA_7_4,   DATA_7_END,
-    DATA_8_BEGIN,      DATA_8_1,   DATA_8_2,   DATA_8_3,   DATA_8_4,   DATA_8_END,
-    DATA_9_BEGIN,      DATA_9_1,   DATA_9_2,   DATA_9_3,   DATA_9_4,   DATA_9_END,
-    DATA_10_BEGIN,     DATA_10_1,  DATA_10_2,  DATA_10_3,  DATA_10_4,  DATA_10_END,
-    DATA_11_BEGIN,     DATA_11_1,  DATA_11_2,  DATA_11_3,  DATA_11_4,  DATA_END_END,
+    DATA_4_BEGIN,      DATA_4_1,   DATA_4_2,   DATA_4_3,   DATA_4_4,   DATA_END_END,
 
     SETTINGS_LAST
 };
@@ -137,8 +126,7 @@ class SettingsClass {
         } InputSettings;
 
         enum DataSource {
-            ADS1115_0, ADS1115_1, ADS1115_2, ADS1115_3, ADC_5, ADC_6, VOLTAGE,
-            CAN_STEERING_ANGLE, CAN_RPM, CAN_SPEED, CAN_GAS, CAN_HB, LAST
+            ADS1115_0, ADS1115_1, ADS1115_2, ADS1115_3, VOLTAGE, LAST
         };
 
         const String dataSourceString[LAST] = {
@@ -146,20 +134,8 @@ class SettingsClass {
                 "ADS1115_1",
                 "ADS1115_2",
                 "ADS1115_3",
-                "ADC_4",
-                "ADC_5",
-                "VOLTAGE",
-                "CAN_STEERING_ANGLE",
-                "CAN_RPM",
-                "CAN_SPEED",
-                "CAN_GAS",
-                "CAN_HB"
+                "VOLTAGE"
         };
-
-        //enum InputSource {
-        //    ADS1115, ADC, CAN
-        //};
-
 
         typedef struct DataDisplaySettings {
             boolean enable = false;
@@ -167,10 +143,8 @@ class SettingsClass {
             char unit[10] = "";
             int16_t scaleStart = 0;
             int16_t scaleEnd = 100;
-//            DataSource source;
             float value = 0;
         } DataDisplaySettings;
-
 
         enum Type {
             FLOAT, STRING, LIST, CHECKBOX, COLOR
@@ -340,7 +314,6 @@ class SettingsClass {
 
     typedef struct State {
         DataSource* selected;
-        bool throttleState;
     } State;
 
 
