@@ -293,9 +293,9 @@ String NetworkingClass::processorRoot(const String& var) {
                     str += (String) "<td>" + Settings.general[ind]->getHTMLInput(ind).c_str() + "</td>";
             }
 
-            str +=  (String)"<td id='voltage_" + i + "'>Voltage: </td>";
-            str +=  (String) + "<td id='resistance_" + i + "'>Resistance: </td>";
-            str +=  (String) + "<td id='value_" + i + "'>Value: </td>";
+            str +=  (String)"<td id='voltage_" + i + "'>Napięcie: </td>";
+            str +=  (String) + "<td id='resistance_" + i + "'>Obliczona oporność: </td>";
+            str +=  (String) + "<td id='value_" + i + "'>Obliczona wartość: </td>";
 
             str += "</tr>\n";
         }

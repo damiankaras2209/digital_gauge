@@ -12,13 +12,23 @@
 
             window.onload = function init() {
                 for(let i=0; i<SETTINGS_SIZE; i++) {
+
+                    console.log(i)
                     if(configurable[i] == 1) {
-                        document.getElementById(i).addEventListener("change", () => {hasChanged[i] = true;});
+                        try {
+                            document.getElementById(i).addEventListener("change", () => {hasChanged[i] = true;});
+                        } catch (e) {
+
+                        }
                     }
                 }
                 for(let i=0; i<SETTINGS_SIZE; i++) {
                     if(configurable[i] == 1) {
-                        document.getElementById(i).addEventListener("change", () => {send();});
+                        try {
+                            document.getElementById(i).addEventListener("change", () => {send();});
+                        } catch (e) {
+
+                        }
                     }
                 }
             }
@@ -148,8 +158,6 @@
             <p style="clear:both"></p>
             <button type="button" onclick='post("reset_all", true);'>Przywróć domyślne (wszystkie)</button>
             <button type="button" onclick='post("time");'>Wymuś synchronizację czasu</button>
-            <a href="/log">Logi</a>
-            <a href="/ota">OTA</a>
             </br></br>
             <a id="canvas_a" style="display:none"><canvas id="canvas" width="480", height="320"></canvas></a>
             %general%
