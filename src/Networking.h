@@ -4,6 +4,7 @@
 #include "ESPAsyncWebServer.h"
 #include "Log.h"
 #include "Screen.h"
+#include "Updater.h"
 
 #define HOSTNAME "esp32"
 

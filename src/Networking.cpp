@@ -198,7 +198,28 @@ void NetworkingClass::serverSetup() {
             Settings.general[i]->setDefault();
         Settings.save();
         request->send(HTTP_CODE_OK);
-    });;
+    });
+
+    server->on("/ota", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(SPIFFS, "/ota.html", "text/html", false, processorOta);
+    });
+
+    server->on("/ota", HTTP_POST, [](AsyncWebServerRequest *request){
+        Log.logf("OTA");
+        int params = request->params();
+        if (params == 1) {
+            AsyncWebParameter* p = request->getParam(0);
+            Updater.setOnSuccessCallback([] {
+                Log.logf("Restarting in 1 seconds");
+                Screen.tick();
+                delay(1000);
+                Screen.setBrightness(0);
+                esp_restart();
+            });
+            Updater.updateFW(String(URL) + "files/" + p->value().c_str());
+        }
+        request->send(HTTP_CODE_OK);
+    });
 
     server->begin();
 
