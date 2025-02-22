@@ -195,7 +195,7 @@
 
             let presets = Array(3);
             presets[0] = [0, 0, 0, "v",                                                         false, "", "u", 0 ,0 ,0]; //emptyy
-            presets[1] = [null, null, null, "(r-3)/(160-3)*10",                                 true, "Oil press", "bar", 0 ,12 ,1]; //oil pressure
+            presets[1] = [null, null, null, "max(0,(r-3)/(160-3)*10)",                          true, "Oil press", "bar", 0 ,12 ,1]; //oil pressure
             presets[2] = [null, null, null, "3800*298.15/(3800+(298.15)*log(r/58000))-273.15",  true, "Oil temp", "°C", 30 ,150 ,1]; //oil pressure
 
             for(let i=0; i<INPUT_SETTINGS_SIZE + DATA_SETTINGS_SIZE; i++) {
