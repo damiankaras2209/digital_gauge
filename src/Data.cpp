@@ -217,7 +217,10 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
 
                 try {
-                    p.SetExpr(Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + INPUT_EXPRESSION_OFFSET]->getString());
+                    std::string expr = Settings.general[INPUT_BEGIN_BEGIN + i * INPUT_SETTINGS_SIZE + INPUT_EXPRESSION_OFFSET]->getString();
+                    if (expr.empty())
+                        continue;
+                    p.SetExpr(expr);
                     params->dataInput[i].value = (float)p.Eval();
                 } catch (mu::Parser::exception_type &e) {
                     Log.logf("Exception at %d: %s, \"%s\"\n", i, e.GetMsg().c_str(), e.GetExpr().c_str());
