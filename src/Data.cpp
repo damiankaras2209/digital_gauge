@@ -258,20 +258,18 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
 
 
         if(Data.status[D_MCP23008]) {
-            if (params->canActive) {
-                if (Data.data.dataInput[SettingsClass::CAN_RPM].value > 1000 && params->relayState[HEADLIGHTS_PIN] == LOW) {
-                    params->lock.lock();
-                    Data.mcp23008.digitalWrite(HEADLIGHTS_PIN, HIGH);
-                    params->lock.release();
-                    params->relayState[HEADLIGHTS_PIN] = HIGH;
-                }
-            } else {
-                if (params->relayState[HEADLIGHTS_PIN] == HIGH) {
-                    params->lock.lock();
-                    Data.mcp23008.digitalWrite(HEADLIGHTS_PIN, LOW);
-                    params->lock.release();
-                    params->relayState[HEADLIGHTS_PIN] = LOW;
-                }
+            if (params->engineRunning && params->relayState[HEADLIGHTS_PIN] == LOW) {
+                params->lock.lock();
+                Data.mcp23008.digitalWrite(HEADLIGHTS_PIN, HIGH);
+                params->lock.release();
+                params->relayState[HEADLIGHTS_PIN] = HIGH;
+            }
+
+            if (!params->engineRunning && params->relayState[HEADLIGHTS_PIN] == HIGH) {
+                params->lock.lock();
+                Data.mcp23008.digitalWrite(HEADLIGHTS_PIN, LOW);
+                params->lock.release();
+                params->relayState[HEADLIGHTS_PIN] = LOW;
             }
 
             if (!params->relayState[THROTTLE_POWER_PIN] && params->shouldToggleValve && millis() - params->lastValveChange > THROTTLE_VALVE_DELAY) {
@@ -300,8 +298,6 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
                 params->lastValveChange = millis();
 
             }
-
-
         }
 
         delay(1);
@@ -330,11 +326,20 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 
 //        params->mcp2515Ptr->sendMessage(&msg);
 
+        if (millis() - params->lastNonZeroRPM > ZERO_RPM_TIME) {
+            params->engineRunning = false;
+            Log.logf("Zero RPM");
+        }
+
         if(millis() - params->lastFrame > CAN_INACTIVITY_THRESHOLD) {
             if (params->canActive) {
                 params->canActive = false;
+                params->engineRunning = false;
                 Log.logf("Can lost");
             }
+        }
+
+        if(millis() - params->lastFrame > CAN_INACTIVITY_THRESHOLD) {
             if(millis() - params->lastCanInit > CAN_REINIT_AFTER) {
                 params->lastCanInit = millis();
                 canReset(params->mcp2515Ptr);
@@ -420,6 +425,15 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
                     params->dataInput[SettingsClass::CAN_RPM].value = (float) sumRPM / SAMPLES_CAN / 4;
                     params->dataInput[SettingsClass::CAN_SPEED].value = (float)  sumSpeed / SAMPLES_CAN * 2;
                     params->dataInput[SettingsClass::CAN_GAS].value = (float) sumGas / SAMPLES_CAN / 51200 * 100;
+
+                    if (params->dataInput[SettingsClass::CAN_RPM].value > 1000) {
+                        params->engineRunning = true;
+                    }
+
+                    if (params->dataInput[SettingsClass::CAN_RPM].value > 0) {
+                        params->lastNonZeroRPM = millis();
+                    }
+
 //                    Serial.printf("rpm: %f", settings->dataDisplay[Settings::CAN_RPM].value);
 //                    Serial.printf("speed: %f", settings->dataDisplay[Settings::CAN_SPEED].value);
 //                    Serial.printf("gas: %f", settings->dataDisplay[Settings::CAN_GAS].value);

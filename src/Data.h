@@ -26,6 +26,8 @@
 #define CAN_INACTIVITY_THRESHOLD 6000
 #define CAN_REINIT_AFTER 1000
 
+#define ZERO_RPM_TIME 1000
+
 #define CAN_ID_STEERING_ANGLE 0x80
 #define CAN_ID_RPM_SPEED_GAS 0x201
 #define CAN_ID_AC 0x440
@@ -74,23 +76,25 @@ public:
     } DataInput;
 
     typedef struct DataStruct {
-            RTC_DS3231* rtcPtr;
-            MCP2515* mcp2515Ptr;
-            ADS1115* adsPtr;
-            Adafruit_MCP23X08* mcp23X08Ptr;
-            RCSwitch* rcPtr;
+        RTC_DS3231* rtcPtr;
+        MCP2515* mcp2515Ptr;
+        ADS1115* adsPtr;
+        Adafruit_MCP23X08* mcp23X08Ptr;
+        RCSwitch* rcPtr;
 
-            DataInput *dataInput;
-            DateTime now;
-            ulong lastRTC = 0;
-            ulong lastFrame = 0;
-            ulong lastCanInit = 0;
-            bool canActive = false;
-            bool shouldToggleValve = false;
-            ulong lastValveChange = 0;
-            ulong lastValvePowerOn = 0;
-            bool relayState[8] = {LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW};
-            Lock lock;
+        DataInput *dataInput;
+        DateTime now;
+        ulong lastRTC = 0;
+        ulong lastFrame = 0;
+        ulong lastCanInit = 0;
+        ulong lastNonZeroRPM = 0;
+        bool canActive = false;
+        bool engineRunning = false;
+        bool shouldToggleValve = false;
+        ulong lastValveChange = 0;
+        ulong lastValvePowerOn = 0;
+        bool relayState[8] = {LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW};
+        Lock lock;
     } DataStruct;
 
         DataClass();
