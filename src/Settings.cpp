@@ -85,7 +85,7 @@ void SettingsClass::init() {
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_ENABLE_OFFSET] = (new Field("voltage_enable", "włączone", 1))->setType(CHECKBOX);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_NAME_OFFSET] = new Field("voltage_name", "nazwa", "Voltage");
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_UNIT_OFFSET] = new Field("voltage_unit", "jednostka", "V");
-    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_START_OFFSET] = new Field("voltage_scale_start", "początek skaliv", 6);
+    general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_START_OFFSET] = new Field("voltage_scale_start", "początek skali", 6);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_SCALE_END_OFFSET] = new Field("voltage_scale_end", "koniec skali", 18);
     general[DATA_BEGIN_BEGIN + DATA_SETTINGS_SIZE * VOLTAGE + DATA_PRECISION_OFFSET] = new Field("voltage_precision", "precyzja", 1);
 

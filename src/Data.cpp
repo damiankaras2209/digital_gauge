@@ -112,11 +112,7 @@ _Noreturn void DataClass::adcLoop(void * pvParameters) {
                     readings[i][0] = params->adsPtr->readADC(i);
                     params->lock.release();
                     delay(1);
-                } else if(i==4)
-                    readings[i][0] = analogReadMilliVolts(36);
-                else if(i==5)
-                    readings[i][0] = analogReadMilliVolts(39);
-                else if(i == SettingsClass::VOLTAGE)
+                } else if(i == SettingsClass::VOLTAGE)
                     readings[i][0] = analogReadMilliVolts(34);
 
                 readingsTaken[i] = min(++readingsTaken[i], SAMPLES_ADC);
