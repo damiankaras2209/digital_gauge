@@ -26,8 +26,6 @@
 #define CAN_INACTIVITY_THRESHOLD 6000
 #define CAN_REINIT_AFTER 1000
 
-#define ZERO_RPM_TIME 1000
-
 #define CAN_ID_STEERING_ANGLE 0x80
 #define CAN_ID_RPM_SPEED_GAS 0x201
 #define CAN_ID_AC 0x440
@@ -87,7 +85,6 @@ public:
         ulong lastRTC = 0;
         ulong lastFrame = 0;
         ulong lastCanInit = 0;
-        ulong lastNonZeroRPM = 0;
         bool canActive = false;
         bool engineRunning = false;
         bool shouldToggleValve = false;

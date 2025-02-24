@@ -329,11 +329,6 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 
 //        params->mcp2515Ptr->sendMessage(&msg);
 
-        if (millis() - params->lastNonZeroRPM > ZERO_RPM_TIME) {
-            params->engineRunning = false;
-            Log.logf("Zero RPM");
-        }
-
         if(millis() - params->lastFrame > CAN_INACTIVITY_THRESHOLD) {
             if (params->canActive) {
                 params->canActive = false;
@@ -352,7 +347,11 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 
         MCP2515::ERROR err = params->mcp2515Ptr->readMessage(&canMsg);
 
-        if (err == MCP2515::ERROR_OK) {
+        if (err != MCP2515::ERROR_OK) {
+            if(err != MCP2515::ERROR_NOMSG) {
+                Log.logf("Error: %d", err);
+            }
+        } else {
 
             if(!params->canActive) {
                 params->canActive = true;
@@ -429,12 +428,12 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
                     params->dataInput[SettingsClass::CAN_SPEED].value = (float)  sumSpeed / SAMPLES_CAN * 2;
                     params->dataInput[SettingsClass::CAN_GAS].value = (float) sumGas / SAMPLES_CAN / 51200 * 100;
 
-                    if (params->dataInput[SettingsClass::CAN_RPM].value > 1000) {
+                    if (params->dataInput[SettingsClass::CAN_RPM].value > 700) {
                         params->engineRunning = true;
                     }
 
-                    if (params->dataInput[SettingsClass::CAN_RPM].value > 0) {
-                        params->lastNonZeroRPM = millis();
+                    if (params->dataInput[SettingsClass::CAN_RPM].value == 0) {
+                        params->engineRunning = false;
                     }
 
 //                    Serial.printf("rpm: %f", settings->dataDisplay[Settings::CAN_RPM].value);
@@ -463,10 +462,6 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
 //                    Serial.printf("RPM: %f, time: %ld\n", settings->dataDisplay[Settings::CAN_RPM].value, millis()-canLoopTime);
 //                    canLoopTime = millis();
 
-        } else {
-            if(err != MCP2515::ERROR_NOMSG) {
-                 Log.logf("Error: %d", err);
-            }
         }
         delay(1); //1
     }
