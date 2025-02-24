@@ -428,12 +428,14 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
                     params->dataInput[SettingsClass::CAN_SPEED].value = (float)  sumSpeed / SAMPLES_CAN * 2;
                     params->dataInput[SettingsClass::CAN_GAS].value = (float) sumGas / SAMPLES_CAN / 51200 * 100;
 
-                    if (params->dataInput[SettingsClass::CAN_RPM].value > 700) {
+                    if (!params->engineRunning && params->dataInput[SettingsClass::CAN_RPM].value > 700) {
                         params->engineRunning = true;
+                        Log.logf("Engine started");
                     }
 
-                    if (params->dataInput[SettingsClass::CAN_RPM].value == 0) {
+                    if (params->engineRunning && params->dataInput[SettingsClass::CAN_RPM].value == 0) {
                         params->engineRunning = false;
+                        Log.logf("Engine stopped");
                     }
 
 //                    Serial.printf("rpm: %f", settings->dataDisplay[Settings::CAN_RPM].value);
