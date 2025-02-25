@@ -332,7 +332,7 @@ _Noreturn void DataClass::canLoop(void * pvParameters) {
         if(millis() - params->lastFrame > CAN_INACTIVITY_THRESHOLD) {
             if (params->canActive) {
                 params->canActive = false;
-                params->engineRunning = false;
+                // params->engineRunning = false;
                 Log.logf("Can lost");
             }
         }
