@@ -96,12 +96,28 @@ void ScreenClass::init() {
     menu = new Menu();
     menu->init(tft, lock, Networking.getServerOnPointer());
     std::vector<Menu::Entry*> entries;
+
     entries.push_back(new Menu::Entry("BACK", [this]() {
-        Log.logf_d("Fired entry %d\n", 1);
         switchView(GAUGES);
     }));
+    entries.push_back(new Menu::Entry("GATE", [this]() {
+        HTTPClient http;
+        http.begin(URL1);
+        prompt->setDismissible(false);
+        showPrompt("Sending gate request... ");
+        if(WiFi.status() == WL_CONNECTED) {
+            const int httpResponseCode = http.POST("");
+            if (httpResponseCode == 200) {
+                appendToPrompt("\nSuccess");
+            } else {
+                appendToPrompt("\nFail");
+            }
+        } else {
+            appendToPrompt("\nNo connection");
+        }
+        prompt->setDismissible(true);
+    }));
     entries.push_back(new Menu::Entry("SHOW INFO", [this]() {
-        Log.logf_d("Fired entry %d\n", 2);
         showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) +
         "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) +
         "\nIP: " + WiFi.localIP().toString() +
@@ -109,7 +125,6 @@ void ScreenClass::init() {
         "\nMAC: " + Updater.getMac());
     }));
     entries.push_back(new Menu::Entry("SYNC TIME", [this]() {
-        Log.logf_d("Fired entry %d\n", 3);
         prompt->setDismissible(false);
         showPrompt("Getting time from server... ");
         if(WiFi.status() == WL_CONNECTED) {
@@ -124,13 +139,11 @@ void ScreenClass::init() {
         prompt->setDismissible(true);
     }));
     entries.push_back(new Menu::Entry("POST", [this]() {
-        Log.logf_d("Fired entry %d\n", 4);
         showPrompt("POST:");
         for(int i=0; i<Device::D_LAST; i++)
             appendToPrompt("\n" + deviceName[i] + ": " + (Data.status[i] ? "good" : "fail"));
     }));
     entries.push_back(new Menu::Entry("RESET WIFI CREDENTIALS", [this]() {
-        Log.logf_d("Fired entry %d\n", 5);
         Settings.general[WIFI_SSID]->setDefault();
         Settings.general[WIFI_PASS]->setDefault();
         Settings.save(false);
@@ -138,11 +151,9 @@ void ScreenClass::init() {
              "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()));
     }));
     entries.push_back(new Menu::Entry("RESTART", [this]() {
-        Log.logf_d("Fired entry %d\n", 6);
         esp_restart();
     }));
     entries.push_back(new Menu::Entry("CHECK FOR UPDATE", [this]() {
-        Log.logf_d("Fired entry %d\n", 7);
         showPrompt("Checking for updates... ");
         prompt->setDismissible(false);
         if(WiFi.status() == WL_CONNECTED) {
@@ -307,8 +318,8 @@ void ScreenClass::appendToPrompt(String text) {
 }
 
 void ScreenClass::closePrompt() {
-    if(currentView == PROMPT)
-        switchView(previousView);
+    if(currentView == PROMPT);
+        // switchView(previousView);
 }
 
 void ScreenClass::setBrightness(uint8_t x) {
