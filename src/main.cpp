@@ -97,16 +97,22 @@ void setup() {
   Log.logf("setup() complete");
 }
 
-unsigned  long t15;
+unsigned  long t15, t16 = 0;
+int f;
 void loop() {
 
     t15 = millis();
 
     Screen.tick();
 
-    std::stringstream ss;
-    ss << millis()-t15;
-    Networking.sendEvent("frametime", ss.str(), millis());
+    f++;
+
+    if (millis() > t16 + 1000) {
+        const int fps = lround(static_cast<double>(f*1000)/(millis()-t16));
+        Log.logf("FPS: %d\n", fps);
+        t16 = millis();
+        f = 0;
+    }
 
     Updater.loop();
 }
