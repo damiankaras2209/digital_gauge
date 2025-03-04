@@ -87,14 +87,14 @@ void ScreenClass::init() {
 
 //    clickables.insert(gauges->getClickables()->end(), gauges->getClickables()->begin(), gauges->getClickables()->end());
     prompt = new Prompt;
-    prompt->init(tft, lock, Networking.getServerOnPointer());
+    prompt->init(tft, lock, WebServer.getServerOnPointer());
     prompt->setOnClick([this]() {
         if(prompt->isDismissible())
             switchView(previousView);
     });
     clickables.push_back(prompt);
     menu = new Menu();
-    menu->init(tft, lock, Networking.getServerOnPointer());
+    menu->init(tft, lock, WebServer.getServerOnPointer());
     std::vector<Menu::Entry*> entries;
 
     entries.push_back(new Menu::Entry("BACK", [this]() {

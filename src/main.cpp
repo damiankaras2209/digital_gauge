@@ -156,5 +156,5 @@ void loop() {
 
     std::stringstream ss;
     ss << millis()-t15;
-    Networking.sendEvent("frametime", ss.str(), millis());
+    WebServer.sendEvent("frametime", ss.str(), millis());
 }
