@@ -50,6 +50,10 @@ void WebServerClass::serverSetup() {
         request->send(SPIFFS, "/style.css", "text/css");
     });
 
+    server->on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(SPIFFS, "/script.js", "text/javascript", false, processorScript);
+    });
+
     server->on("/settingsSet", HTTP_POST, [](AsyncWebServerRequest *request){
         int params = request->params();
         bool resetScreen = false;
@@ -270,30 +274,6 @@ String WebServerClass::processorRoot(const String& var) {
         }
         return str;
 
-    } else if(var == "CONSTS") {
-
-        str += (String)"const MAC = '" + Updater.getMac().c_str() + "';\n";
-        str += (String)"const GENERAL_SETTINGS_SIZE = " + GENERAL_SETTINGS_SIZE + ";\n";
-        str += (String)"const VISUAL_SETTINGS_START = " + VISUAL_SETTINGS_START + ";\n";
-        str += (String)"const VISUAL_SETTINGS_END = " + VISUAL_SETTINGS_END + ";\n";
-        str += (String)"const INPUT_SETTINGS_SIZE = " + INPUT_SETTINGS_SIZE + ";\n";
-        str += (String)"const INPUT_SIZE = " + INPUT_SIZE + ";\n";
-        str += (String)"const INPUT_BEGIN_BEGIN = " + INPUT_BEGIN_BEGIN + ";\n";
-        str += (String)"const DATA_SETTINGS_SIZE = " + DATA_SETTINGS_SIZE + ";\n";
-        str += (String)"const DATA_SIZE = " + DATA_SIZE + ";\n";
-        str += (String)"const DATA_BEGIN_BEGIN = " + DATA_BEGIN_BEGIN + ";\n";
-        str += (String)"const SETTINGS_SIZE = " + SETTINGS_SIZE + ";\n";
-
-        str += "let configurable = [";
-
-        for(int i=0; i<SETTINGS_SIZE; i++)
-            str += (String) (Settings.general[i]->isConfigurable() ? "1," : "0,");
-
-        str.remove(str.length()-1);
-        str += "];";
-
-        return str;
-
     } else if(var == "input_table") {
 
         str += "<table>\n";
@@ -349,7 +329,39 @@ String WebServerClass::processorRoot(const String& var) {
 
         return str;
     }
-    return "missing preprocessor case";
+    return "missing preprocessor case \"" + var + "\"";
+}
+
+String WebServerClass::processorScript(const String& var) {
+    char c[10];
+
+    String str;
+
+    if(var == "CONSTS") {
+
+        str += (String)"const MAC = '" + Updater.getMac().c_str() + "';\n";
+        str += (String)"const GENERAL_SETTINGS_SIZE = " + GENERAL_SETTINGS_SIZE + ";\n";
+        str += (String)"const VISUAL_SETTINGS_START = " + VISUAL_SETTINGS_START + ";\n";
+        str += (String)"const VISUAL_SETTINGS_END = " + VISUAL_SETTINGS_END + ";\n";
+        str += (String)"const INPUT_SETTINGS_SIZE = " + INPUT_SETTINGS_SIZE + ";\n";
+        str += (String)"const INPUT_SIZE = " + INPUT_SIZE + ";\n";
+        str += (String)"const INPUT_BEGIN_BEGIN = " + INPUT_BEGIN_BEGIN + ";\n";
+        str += (String)"const DATA_SETTINGS_SIZE = " + DATA_SETTINGS_SIZE + ";\n";
+        str += (String)"const DATA_SIZE = " + DATA_SIZE + ";\n";
+        str += (String)"const DATA_BEGIN_BEGIN = " + DATA_BEGIN_BEGIN + ";\n";
+        str += (String)"const SETTINGS_SIZE = " + SETTINGS_SIZE + ";\n";
+
+        str += "let configurable = [";
+
+        for(int i=0; i<SETTINGS_SIZE; i++)
+            str += (String) (Settings.general[i]->isConfigurable() ? "1," : "0,");
+
+        str.remove(str.length()-1);
+        str += "];";
+
+        return str;
+    }
+    return "missing preprocessor case \"" + var + "\"";
 }
 
 String WebServerClass::processorLog(const String& var) {
@@ -376,7 +388,7 @@ String WebServerClass::processorLog(const String& var) {
         return str;
 
     }
-    return "missing preprocessor case";
+    return "missing preprocessor case \"" + var + "\"";
 }
 
 String WebServerClass::processorOta(const String& var) {
@@ -437,5 +449,5 @@ String WebServerClass::processorOta(const String& var) {
         return str;
 
     }
-    return "missing preprocessor case";
+    return "missing preprocessor case \"" + var + "\"";
 }
