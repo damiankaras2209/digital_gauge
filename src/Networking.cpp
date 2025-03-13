@@ -125,7 +125,7 @@ void NetworkingClass::serverSetup() {
         bool resetScreen = false;
         Log.logf("%d, %d\n", VISUAL_SETTINGS_START, VISUAL_SETTINGS_END);
         for(int i=0;i<params;i++){
-            AsyncWebParameter* p = request->getParam(i);
+            const AsyncWebParameter* p = request->getParam(i);
             if(p->isPost()){
 
                 int ind = (int)strtof(p->name().c_str(), nullptr);
@@ -208,7 +208,7 @@ void NetworkingClass::serverSetup() {
         Log.logf("OTA");
         int params = request->params();
         if (params == 1) {
-            AsyncWebParameter* p = request->getParam(0);
+            const AsyncWebParameter* p = request->getParam(static_cast<size_t>(0));
             Updater.setOnSuccessCallback([] {
                 Log.logf("Restarting in 1 seconds");
                 Screen.tick();
