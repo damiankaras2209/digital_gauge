@@ -50,7 +50,6 @@ void DataClass::init() {
     data.rtcPtr = &rtc;
     data.mcp23X08Ptr = &mcp23008;
     data.mcp2515Ptr = &mcp;
-    data.rcPtr = &rc;
     data.dataInput = dataInput;
 
 
@@ -78,9 +77,6 @@ void DataClass::init() {
             mcp23008.digitalWrite(i,LOW);
         }
     }
-
-    rc.enableReceive(3);
-
 
     touch.enableInterrupt(33, &(data.lock), 1, 0);
 

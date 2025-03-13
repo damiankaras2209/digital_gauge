@@ -17,7 +17,6 @@
 #include "GxFT5436.h"
 #include "ADS1X15.h"
 #include "Adafruit_MCP23X08.h"
-#include "RCSwitch.h"
 #include "muParser.h"
 
 #define SAMPLES_ADC 32
@@ -78,7 +77,6 @@ public:
         MCP2515* mcp2515Ptr;
         ADS1115* adsPtr;
         Adafruit_MCP23X08* mcp23X08Ptr;
-        RCSwitch* rcPtr;
 
         DataInput *dataInput;
         DateTime now;
@@ -103,7 +101,6 @@ public:
         MCP2515 mcp = MCP2515(5);
         ADS1115 ads = ADS1115(0x48);
         Adafruit_MCP23X08 mcp23008;
-        RCSwitch rc;
 
         DataInput* getDataInput();
         DateTime getTime();
