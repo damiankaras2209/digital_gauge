@@ -1,1 +1,0 @@
-Stripped down version for engineering  degree
