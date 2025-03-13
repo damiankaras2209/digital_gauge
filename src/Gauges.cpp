@@ -28,8 +28,11 @@ void Gauges::init(TFT_eSPI *t, Lock *l) {
     needleUpdate = new TFT_eSprite(tft);
     textUpdate = new TFT_eSprite(tft);
 
-    for(int i=0; i<SIDE_LAST; i++)
+    for(int i=0; i<SIDE_SIZE; i++)
         clickables.push_back(new Clickable);
+
+    for(bool & icon : icons)
+        icon = false;
 
     reInit();
 
@@ -117,14 +120,14 @@ void Gauges::setSelected(Side side, SettingsClass::DataSource s) {
 }
 
 void Gauges::getSelected(SettingsClass::DataSource* s) {
-    for(int i=LEFT; i<SIDE_LAST; i++)
+    for(int i=LEFT; i<SIDE_SIZE; i++)
         s[i] = selected[i];
 }
 
 
 
 void Gauges::cycleData(Side side) {
-    if(side != SIDE_LAST && side != TIME) {
+    if(side != SIDE_SIZE && side != TIME) {
         SettingsClass::DataSource s = selected[side];
         Log.logf_d("Current data: %s\n", Settings.dataSourceString[selected[side]].c_str());
         do {
@@ -610,6 +613,52 @@ void Gauges::updateText() {
 #endif
 }
 
+void Gauges::updateStatusBar() {
+
+    bool currentStatus[STATUS_BAR_SIZE];
+    currentStatus[WIFI] = WiFi.status() == WL_CONNECTED;
+    currentStatus[BT] = false; //todo
+
+    bool needToRedraw = redraw[STATUS_BAR];
+    for(int i = 0; i < STATUS_BAR_SIZE; i++) {
+        if(currentStatus[i] != icons[i]) {
+            needToRedraw = true;
+        }
+    }
+
+    if(needToRedraw) {
+        tft->setTextColor(gen[FONT_COLOR]->get<int>(), gen[BACKGROUND_COLOR]->get<int>());
+        tft->setTextDatum(MR_DATUM);
+        tft->loadFont("icons16", true);
+
+        std::stringstream ss;
+        ss << (icons[BT] ? STATUS_BT_SYMBOL : "") << (icons[BT] && icons[WIFI] ? " " : "") << (icons[WIFI] ? STATUS_WIFI_SYMBOL : "");
+
+        std::stringstream ss2;
+        ss2 << (currentStatus[BT] ? STATUS_BT_SYMBOL : "") << (currentStatus[BT] && currentStatus[WIFI] ? " " : "") << (currentStatus[WIFI] ? STATUS_WIFI_SYMBOL : "");
+
+        int w = max(tft->textWidth(ss.str().c_str()), tft->textWidth(ss2.str().c_str()));
+        int h = tft->fontHeight();
+        tft->fillRect(
+                gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>()+gen[STATUS_POS_X]->get<int>() - w,
+                gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[STATUS_POS_Y]->get<int>() - h/2,
+                w,
+                h,
+                gen[BACKGROUND_COLOR]->get<int>()
+        );
+        tft->drawString(
+                ss2.str().c_str(),
+                gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>()+gen[STATUS_POS_X]->get<int>(),
+                gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[STATUS_POS_Y]->get<int>());
+
+        for(int i = 0; i < STATUS_BAR_SIZE; i++) {
+            icons[i] = currentStatus[i];
+        }
+
+        redraw[STATUS_BAR] = false;
+    }
+}
+
 
 void Gauges::drawSelectedInfo() {
 
@@ -662,7 +711,7 @@ void Gauges::processEvent(GxFT5436::Event event, void *param) {
 
     //change gauge
 
-    Side side = SIDE_LAST;
+    Side side = SIDE_SIZE;
     if(x < Settings.general[WIDTH]->get<int>() / 2 - Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
         side = LEFT;
     else if(x > Settings.general[WIDTH]->get<int>() / 2 + Settings.general[NEEDLE_CENTER_OFFSET]->get<int>())
@@ -672,7 +721,7 @@ void Gauges::processEvent(GxFT5436::Event event, void *param) {
     y > Settings.general[HEIGHT]->get<int>() / 2)
         side = MID;
 
-    if(side != SIDE_LAST) {
+    if(side != SIDE_SIZE) {
         SettingsClass::DataSource selected[3];
         ((Gauges*)param)->getSelected(selected);
 

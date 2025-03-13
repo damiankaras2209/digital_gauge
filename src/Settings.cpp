@@ -48,6 +48,8 @@ void SettingsClass::init() {
     general[DATE_POS_Y] = (new Field("date_pos_Y", "Date position Y", -35))->setBounds(-150.0f, 150.0f);
 //    general[DATE_SIZE] = (new Field("date_size", 16, false))->setBounds(0.0f, 150.0f);
 //    general[SCALE_SIZE] = (new Field("scale_size", 12, false))->setBounds(0.0f, 150.0f);
+    general[STATUS_POS_X] = (new Field("status_pos_X", "Status position X", 55))->setBounds(-150.0f, 150.0f);
+    general[STATUS_POS_Y] = (new Field("status_pos_Y", "Status position Y", -100))->setBounds(-150.0f, 150.0f);
 
     general[SCALE_LARGE_WIDTH] = (new Field("scale_large_width", "scale_large_width", 4))->setBounds(0.0f, 30.0f);
     general[SCALE_SMALL_WIDTH] = (new Field("scale_small_width", "scale_small_width", 2))->setBounds(0.0f, 30.0f);

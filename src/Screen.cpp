@@ -259,6 +259,7 @@ void ScreenClass::tick() {
             case GAUGES:  {
                 t1 = millis();
                 gauges->updateText();
+                gauges->updateStatusBar();
 #ifdef LOG_DETAILED_FRAMETIME
                 Log.logf(" mid: %lu\n", millis()-t1);
              t1 = millis();

@@ -45,6 +45,8 @@ enum Field : uint16_t{
     DATE_POS_Y,
 //    DATE_SIZE,
 //    SCALE_SIZE,
+    STATUS_POS_X,
+    STATUS_POS_Y,
 
     SCALE_LARGE_WIDTH,
     SCALE_SMALL_WIDTH,

@@ -11,12 +11,19 @@
 #define SCALE_SPRITE_Y_OFFSET_16 3
 #define GAUGES_LINE_SPACING 10
 
+#define STATUS_WIFI_SYMBOL "a"
+#define STATUS_BT_SYMBOL "b"
+
 double calcX(int16_t startX, double deg, int16_t radius);
 double calcY(int16_t startY, double deg, int16_t radius);
 double rad(double);
 
+enum StatusBar {
+    WIFI, BT, STATUS_BAR_SIZE
+};
+
 enum Side {
-    LEFT, RIGHT, MID, TIME, SIDE_LAST
+    LEFT, RIGHT, MID, TIME, STATUS_BAR, SIDE_SIZE
 };
 
 class Gauges {
@@ -33,10 +40,12 @@ public:
         TFT_eSprite* needleUpdate;
         TFT_eSprite* textUpdate;
 
-        boolean redraw[SIDE_LAST];
+        boolean redraw[SIDE_SIZE];
         int16_t selectedInfoCoords[4]; // x, y, w, h;
         bool selectedInfoVisible;
         ulong selectedInfoTimestamp;
+
+        bool icons[STATUS_BAR_SIZE];
 
         void init(TFT_eSPI *t, Lock *l);
         void reInit();
@@ -49,6 +58,7 @@ public:
         void drawScale(void* target, bool isSprite, int side, int offsetX, int offsetY, int w, int start, int end);
         void updateNeedle(int side);
         void updateText();
+        void updateStatusBar();
         void drawSelectedInfo();
         void clearSelectedInfo();
 
