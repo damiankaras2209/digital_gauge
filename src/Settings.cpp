@@ -259,6 +259,7 @@ void SettingsClass::loadState() {
         state.selected[1] = doc["sel_1"] | VOLTAGE;
         state.selected[2] = doc["sel_2"] | VOLTAGE;
         state.throttleState = doc["throttle"] | false;
+        state.networkType = doc["network"] | NetworkingClass::NETWORK_TYPE_WIFI;
         if (error)
             Log.logf("Failed to read file, using default state");
         else
@@ -268,6 +269,7 @@ void SettingsClass::loadState() {
         state.selected[1] = VOLTAGE;
         state.selected[2] = VOLTAGE;
         state.throttleState = false;
+        state.networkType = NetworkingClass::NETWORK_TYPE_WIFI;
         Log.logf("File not found, using default state");
     }
 }
@@ -282,6 +284,7 @@ void SettingsClass::saveState() {
     doc["sel_1"] = state.selected[1];
     doc["sel_2"] = state.selected[2];
     doc["throttle"] = state.throttleState;
+    doc["network"] = state.networkType;
 
     if (serializeJson(doc, file) == 0)
         Log.logf("Failed to write to file");

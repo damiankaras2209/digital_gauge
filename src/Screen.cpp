@@ -100,6 +100,9 @@ void ScreenClass::init() {
     entries.push_back(new Menu::Entry("BACK", [this]() {
         switchView(GAUGES);
     }));
+    // entries.push_back(new Menu::Entry("BLE TEST", [this]() {
+    //     Networking.sendMessage(MESSAGE_GATE);
+    // }));
     entries.push_back(new Menu::Entry("GATE", [this]() {
         HTTPClient http;
         http.begin(URL1);
@@ -117,6 +120,24 @@ void ScreenClass::init() {
         }
         prompt->setDismissible(true);
     }));
+    // String networkStr = "";
+    // switch (Settings.state.networkType) {
+    //     case NetworkingClass::BLE:
+    //         networkStr = "BLE";
+    //     case NetworkingClass::WIFI:
+    //         networkStr = "WIFI";
+    //     default:
+    // }
+    // entries.push_back(new Menu::Entry("NETWORK: " + networkStr, [this]() {
+    //     switch (Settings.state.networkType) {
+    //         case NetworkingClass::BLE:
+    //             Settings.state.networkType = NetworkingClass::WIFI;
+    //         case NetworkingClass::WIFI:
+    //             Settings.state.networkType = NetworkingClass::BLE;
+    //         default:
+    //     }
+    //     Settings.saveState();
+    // }));
     entries.push_back(new Menu::Entry("SHOW INFO", [this]() {
         showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) +
         "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) +

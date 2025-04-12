@@ -3,9 +3,10 @@
 
 #include "ESPAsyncWebServer.h"
 #include "Log.h"
-#include <Screen.h>
+#include "Screen.h"
 
 class WebServerClass {
+
     public:
         WebServerClass() = default;
         void sendInfo();
@@ -27,8 +28,6 @@ class WebServerClass {
         static String processorOta(const String& var);
 };
 
-
 extern WebServerClass WebServer;
 
-
-#endif //_WEBSERVER_H
+#endif

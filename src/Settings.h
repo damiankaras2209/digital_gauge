@@ -7,10 +7,11 @@
 #include <cstring>
 #include <TFT_eSPI.h>
 #include <iomanip>
+
 #include "ArduinoJson.h"
 
 #include "Log.h"
-#include "Updater.h"
+#include "Networking/Networking.h"
 
 enum S_STATUS {
     S_PENDING, S_SUCCESS, S_FAIL, S_MISSING
@@ -343,6 +344,7 @@ class SettingsClass {
     typedef struct State {
         DataSource* selected;
         bool throttleState;
+        NetworkingClass::NetworkType networkType;
     } State;
 
 

@@ -8,7 +8,6 @@
 
 #include "Log.h"
 #include "Settings.h"
-#include "WiFi.h"
 #include "Lock.h"
 #include "Date.h"
 

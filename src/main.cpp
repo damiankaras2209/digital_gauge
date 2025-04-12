@@ -1,13 +1,10 @@
 #include <esp_system.h>
 
-#include "Networking.h"
-#include "Data.h"
-#include "Settings.h"
+// #include "Networking/Updater.h"
+// #include "Networking/Networking.h"
+// #include "Data.h"
 #include "Screen.h"
-#include "Updater.h"
-
-#include <WiFi.h>
-
+#include "Settings.h"
 
 bool proceed = true;
 
@@ -109,7 +106,31 @@ void setup(void) {
         });
     } else  {
 
-         Networking.connectWiFi((char *)Settings.general[WIFI_SSID]->getString().c_str(), (char *)Settings.general[WIFI_PASS]->getString().c_str());
+        Networking.setOnWiFiConnectedCallback([] {
+            // delay(5000);
+            // // WebServer.sendInfo();
+            WebServer.serverSetup();
+            Log.logf("Info; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
+
+            // Log.enable();
+
+            //wait for rtc initialization
+            while(Data.getTime().year() == 2000)
+                delay(100);
+
+            if(Data.getTime().year() >= 2099)
+                Data.adjustTime(&Data.data);
+        });
+
+        switch (Settings.state.networkType) {
+            case NetworkingClass::NETWORK_TYPE_BLE:
+                // Networking.connectBLE();
+                break;
+            case NetworkingClass::NETWORK_TYPE_WIFI:
+            default:
+            Networking.connectWiFi(Settings.general[WIFI_SSID]->getString().c_str(), Settings.general[WIFI_PASS]->getString().c_str());
+        }
+
 
          Data.POST();
          Data.init();

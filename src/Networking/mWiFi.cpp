@@ -1,8 +1,12 @@
-#include "Networking.h"
+#include "mWiFi.h"
 
-NetworkingClass Networking;
+MWiFiClass MWiFi;
 
-int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
+bool MWiFiClass::isConnected() {
+    return WiFi.status() == WL_CONNECTED;
+}
+
+int MWiFiClass::connectWiFi(const char* ssid, const char* pass) {
 
     if (WiFi.status() == WL_CONNECTED)
         return WiFi.status();
@@ -22,19 +26,8 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
 //        Log.logf("mDNS responder started, hostname: http://%s.local\n", HOSTNAME);
 
 //        Log.logf("MDNS; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
+    onConnectedCallback();
 
-        // WebServer.sendInfo();
-        WebServer.serverSetup();
-        Log.logf("Info; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
-
-        Log.enable();
-
-        //wait for rtc initialization
-        while(Data.getTime().year() == 2000)
-            delay(100);
-
-        if(Data.getTime().year() >= 2099)
-            Data.adjustTime(&Data.data);
 
     }, ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
@@ -57,7 +50,7 @@ int NetworkingClass::connectWiFi(const char* ssid, const char* pass) {
     return 0;
 }
 
-_Noreturn void NetworkingClass::connectionMaintainer(void * pvParameters) {
+_Noreturn void MWiFiClass::connectionMaintainer(void * pvParameters) {
     for(;;) {
         while(WiFi.status() != WL_CONNECTED) {
             WiFi.reconnect();

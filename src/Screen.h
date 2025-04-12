@@ -9,15 +9,14 @@
 
 #include "Log.h"
 #include "Settings.h"
-#include "Data.h"
-#include "Networking.h"
+#include "Networking/WebServer.h"
 
 #include "Wifi.h"
 #include "TFT_eSPI.h"
 #include "Gauges.h"
 #include "Menu.h"
 #include "Lock.h"
-#include "Updater.h"
+#include "Networking/Updater.h"
 #include "Prompt.h"
 
 #define SCALE_SPRITE_Y_OFFSET_12 2

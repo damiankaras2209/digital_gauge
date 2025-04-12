@@ -616,8 +616,11 @@ void Gauges::updateText() {
 void Gauges::updateStatusBar() {
 
     bool currentStatus[STATUS_BAR_SIZE];
-    currentStatus[WIFI] = WiFi.status() == WL_CONNECTED;
-    currentStatus[BT] = false; //todo
+    for (auto& s : currentStatus) {
+        s = false;
+    }
+    currentStatus[WIFI] = Networking.isWiFiConnected();
+    // currentStatus[BT] = Networking.isBLEConnected();
 
     bool needToRedraw = redraw[STATUS_BAR];
     for(int i = 0; i < STATUS_BAR_SIZE; i++) {
