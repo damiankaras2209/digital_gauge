@@ -621,6 +621,8 @@ void Gauges::updateStatusBar() {
     }
     currentStatus[WIFI] = Networking.isWiFiConnected();
     // currentStatus[BT] = Networking.isBLEConnected();
+    currentStatus[HEADLIGHTS] = Data.data.engineRunning;
+    currentStatus[THROTTLE] = Settings.state.throttleState;
 
     bool needToRedraw = redraw[STATUS_BAR];
     for(int i = 0; i < STATUS_BAR_SIZE; i++) {
@@ -635,12 +637,29 @@ void Gauges::updateStatusBar() {
         tft->loadFont("icons16", true);
 
         std::stringstream ss;
-        ss << (icons[BT] ? STATUS_BT_SYMBOL : "") << (icons[BT] && icons[WIFI] ? " " : "") << (icons[WIFI] ? STATUS_WIFI_SYMBOL : "");
+        if(icons[BT])
+            ss << STATUS_BT_SYMBOL << " ";
+        if(icons[WIFI])
+            ss << STATUS_WIFI_SYMBOL << " ";
+        if(icons[HEADLIGHTS])
+            ss << STATUS_HEADLIGHT_SYMBOL << " ";
+        if(icons[THROTTLE])
+            ss << STATUS_THROTTLE_SYMBOL << " ";
 
         std::stringstream ss2;
-        ss2 << (currentStatus[BT] ? STATUS_BT_SYMBOL : "") << (currentStatus[BT] && currentStatus[WIFI] ? " " : "") << (currentStatus[WIFI] ? STATUS_WIFI_SYMBOL : "");
+        if(currentStatus[BT])
+            ss2 << STATUS_BT_SYMBOL << " ";
+        if(currentStatus[WIFI])
+            ss2 << STATUS_WIFI_SYMBOL << " ";
+        if(currentStatus[HEADLIGHTS])
+            ss2 << STATUS_HEADLIGHT_SYMBOL << " ";
+        if(currentStatus[THROTTLE])
+            ss2 << STATUS_THROTTLE_SYMBOL << " ";
 
-        int w = max(tft->textWidth(ss.str().c_str()), tft->textWidth(ss2.str().c_str()));
+        std::string string1 = ss.str();
+        std::string string2 = ss2.str();
+
+        int w = max(tft->textWidth(string1.c_str()), tft->textWidth(string2.c_str()));
         int h = tft->fontHeight();
         tft->fillRect(
                 gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>()+gen[STATUS_POS_X]->get<int>() - w,
@@ -650,7 +669,7 @@ void Gauges::updateStatusBar() {
                 gen[BACKGROUND_COLOR]->get<int>()
         );
         tft->drawString(
-                ss2.str().c_str(),
+                string2.c_str(),
                 gen[WIDTH]->get<int>()/2+gen[OFFSET_X]->get<int>()+gen[STATUS_POS_X]->get<int>(),
                 gen[HEIGHT]->get<int>()/2+gen[OFFSET_Y]->get<int>()+gen[STATUS_POS_Y]->get<int>());
 

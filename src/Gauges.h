@@ -13,13 +13,15 @@
 
 #define STATUS_WIFI_SYMBOL "a"
 #define STATUS_BT_SYMBOL "b"
+#define STATUS_HEADLIGHT_SYMBOL "c"
+#define STATUS_THROTTLE_SYMBOL "d"
 
 double calcX(int16_t startX, double deg, int16_t radius);
 double calcY(int16_t startY, double deg, int16_t radius);
 double rad(double);
 
 enum StatusBar {
-    WIFI, BT, STATUS_BAR_SIZE
+    WIFI, BT, HEADLIGHTS, THROTTLE, STATUS_BAR_SIZE
 };
 
 enum Side {
