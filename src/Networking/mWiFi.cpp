@@ -26,7 +26,9 @@ int MWiFiClass::connectWiFi(const char* ssid, const char* pass) {
 //        Log.logf("mDNS responder started, hostname: http://%s.local\n", HOSTNAME);
 
 //        Log.logf("MDNS; total: %d, block: %d\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
-    onConnectedCallback();
+
+    if (onConnectedCallback != nullptr)
+        onConnectedCallback();
 
 
     }, ARDUINO_EVENT_WIFI_STA_GOT_IP);
