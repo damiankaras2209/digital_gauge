@@ -18,6 +18,10 @@ void Prompt::reInit() {
     _y = gen[HEIGHT]->get<int>()/2 - _h/2  + gen[OFFSET_Y]->get<int>();
 }
 
+void Prompt::setGetText(std::function<String()> f) {
+    _getText = std::move(f);
+}
+
 void Prompt::setText(String t) {
     _text = std::move(t);
     _hasChanged = true;
@@ -38,6 +42,10 @@ void Prompt::setUseDefaultFont(bool b) {
     _hasChanged = true;
 }
 
+void Prompt::setAutoRefresh(int ms) {
+    _autoRefresh = ms;
+}
+
 void Prompt::setDismissible(bool b ) {
     _dismissible = b;
 }
@@ -47,6 +55,11 @@ bool Prompt::isDismissible() {
 }
 
 void Prompt:: draw() {
+    if (_autoRefresh > 0 && millis() - _autoRefresh > _lastRefreshTime) {
+        setText(_getText());
+        _lastRefreshTime = millis();
+    }
+
     if(_hasChanged) {
         _hasChanged = false;
         if(!_useDefaultFont)

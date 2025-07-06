@@ -89,8 +89,9 @@ void ScreenClass::init() {
     prompt = new Prompt;
     prompt->init(tft, lock, WebServer.getServerOnPointer());
     prompt->setOnClick([this]() {
-        if(prompt->isDismissible())
-            switchView(previousView);
+        if(prompt->isDismissible()) {
+            closePrompt();
+        }
     });
     clickables.push_back(prompt);
     menu = new Menu();
@@ -139,11 +140,17 @@ void ScreenClass::init() {
     //     Settings.saveState();
     // }));
     entries.push_back(new Menu::Entry("SHOW INFO", [this]() {
-        showPrompt("SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) +
-        "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) +
-        "\nIP: " + WiFi.localIP().toString() +
-        "\nFW: " + Updater.firmware.toString() +" FS: " + Updater.filesystemCurrent.toString() +
-        "\nMAC: " + Updater.getMac());
+        showPrompt("");
+        prompt->setAutoRefresh(1000);
+        prompt->setGetText([]() {
+            return
+                "SSID: " + String((char *)Settings.general[WIFI_SSID]->getString().c_str()) +
+                "\npass: " + String((char *)Settings.general[WIFI_PASS]->getString().c_str()) +
+                "\nIP: " + WiFi.localIP().toString() +
+                "\nRSSI: " + WiFi.RSSI() + "dB" +
+                "\nFW: " + Updater.firmware.toString() +" FS: " + Updater.filesystemCurrent.toString() +
+                "\nMAC: " + Updater.getMac();
+        });
     }));
     entries.push_back(new Menu::Entry("SYNC TIME", [this]() {
         prompt->setDismissible(false);
@@ -325,7 +332,7 @@ void ScreenClass::showPrompt(String text, int lineSpacing, boolean useDefaultFon
     if(currentView != PROMPT)
         switchView(PROMPT);
     lock->lock();
-    prompt->setText(text);
+    prompt->setText(std::move(text));
     prompt->setLineSpacing(lineSpacing);
     prompt->setUseDefaultFont(useDefaultFont);
 //    prompt->draw();
@@ -334,14 +341,16 @@ void ScreenClass::showPrompt(String text, int lineSpacing, boolean useDefaultFon
 
 void ScreenClass::appendToPrompt(String text) {
     lock->lock();
-    prompt->appendText(text);
+    prompt->appendText(std::move(text));
 //    draw()
     lock->release();
 }
 
 void ScreenClass::closePrompt() {
-    if(currentView == PROMPT);
-        // switchView(previousView);
+    if(currentView == PROMPT) {
+        prompt->setAutoRefresh(0);
+        switchView(previousView);
+    }
 }
 
 void ScreenClass::setBrightness(uint8_t x) {

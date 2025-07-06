@@ -15,6 +15,9 @@ class Prompt : public Clickable {
     Lock *lock;
     bool* serverOn;
 
+    ulong _lastRefreshTime = 0;
+    uint _autoRefresh = 0;
+    std::function<String()> _getText;
     String _text;
     int _lines = 0;
     int _lineSpacing = PROMPT_LINE_SPACING;
@@ -27,10 +30,12 @@ public:
 
     void init(TFT_eSPI *t, Lock *l, bool* serverOn);
     void reInit();
+    void setGetText(std::function<String()> f);
     void setText(String text);
     void appendText(String text);
     void setLineSpacing(int spacing);
     void setUseDefaultFont(bool b);
+    void setAutoRefresh(int ms);
     void setDismissible(bool b);
     bool isDismissible();
     void draw();
