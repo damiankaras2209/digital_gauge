@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <thread>
 
 #include "Log.h"
 #include "Settings.h"

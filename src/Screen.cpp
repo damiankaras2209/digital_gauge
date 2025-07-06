@@ -120,6 +120,11 @@ void ScreenClass::init() {
             appendToPrompt("\nNo connection");
         }
         prompt->setDismissible(true);
+        std::thread t1([this](){
+            delay(2000);
+            closePrompt();
+        });
+        t1.detach();
     }));
     // String networkStr = "";
     // switch (Settings.state.networkType) {
